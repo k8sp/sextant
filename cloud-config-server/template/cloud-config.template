@@ -1,0 +1,57 @@
+#cloud-config
+
+coreos:
+    etcd2:
+        discovery: "https://discovery.etcd.io/5e2d8844b9047f48d45fa70ab4a93765"{{if eq .EtcdRole "proxy" }}
+        proxy: "on"{{end}}
+        # multi-region and multi-cloud deployments need to use $public_ipv4
+        advertise-client-urls: "http://{{ .IP }}:2379"
+        initial-advertise-peer-urls: "http://{{ .IP }}:2380"
+        # listen on both the official ports and the legacy ports
+        # legacy ports can be omitted if your application doesn't depend on them
+        listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
+        listen-peer-urls: "http://{{ .IP }}:2380,http://{{ .IP }}:7001"
+    update:
+        reboot-strategy: "etcd-lock"
+    locksmith:
+        window_start: "03:00"
+        window_length: "3h"
+#    flannel:
+#        interface: "{{ .IP }}"
+    units:
+        - name: "etcd2.service"
+          command: "start"
+        - name: "fleet.service"
+          command: "start"
+        - name: "docker.socket"
+          command: "start"
+        - name: "flanneld.service"
+          drop-ins:
+            - name: 50-network-config.conf
+              content: |
+                [Service]
+                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+          command: "start"
+        - name: "settimezone.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Set the time zone
+
+            [Service]
+            ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+            RemainAfterExit=yes
+            Type=oneshot
+
+hostname: "{{ .Hostname }}"
+
+ssh_authorized_keys:
+{{ .SSHAuthorizedKeys }}
+
+write_files:
+  - path: "/home/core/.ssh/id_rsa"
+    permissions: "0600"
+    owner: "core"
+    content: |
+{{ .SSHPrivateKey }}
+
