@@ -2,15 +2,18 @@
 
 coreos:
     etcd2:
-        discovery: "https://discovery.etcd.io/5e2d8844b9047f48d45fa70ab4a93765"{{if eq .EtcdRole "proxy" }}
-        proxy: "on"{{end}}
-        # multi-region and multi-cloud deployments need to use $public_ipv4
-        advertise-client-urls: "http://{{ .IP }}:2379"
-        initial-advertise-peer-urls: "http://{{ .IP }}:2380"
-        # listen on both the official ports and the legacy ports
-        # legacy ports can be omitted if your application doesn't depend on them
+        name: "%H"
         listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
-        listen-peer-urls: "http://{{ .IP }}:2380,http://{{ .IP }}:7001"
+        initial-cluster: "{{ .InitialClaster }}" 
+        {{- with .IP }}
+        initial-cluster-token: "etcd-cluster-1"
+        initial-advertise-peer-urls: "http://{{ . }}:2380"
+        listen-peer-urls: "http://{{ . }}:2380,http://{{ . }}:7001"
+        advertise-client-urls: "http://{{ . }}:2379"
+        initial-cluster-state: new
+        {{- else }}
+        proxy: on
+        {{- end }}
     update:
         reboot-strategy: "etcd-lock"
     locksmith:

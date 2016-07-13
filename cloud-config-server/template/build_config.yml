@@ -1,16 +1,13 @@
 nodes:
-  "00:25:90:c0:f7:80":
-    ip: "10.10.10.201"
-  "00:25:90:c0:f6:ee":
-    ip: "10.10.10.202"
-  "00:25:90:c0:f6:d6":
-    ip: "10.10.10.203"
-  "00:25:90:c0:f7:ac":
-    ip: "10.10.10.204"
-  "00:25:90:c0:f7:7e":
-    ip: "10.10.10.205"
+  00-25-90-c0-f7-80: "10.10.10.201"
+  00-25-90-c0-f6-ee: "10.10.10.202"
+  00-25-90-c0-f6-d6: "10.10.10.203"
+  00-25-90-c0-f7-ac: "10.10.10.204"
+  00-25-90-c0-f7-7e: "10.10.10.205"
 
 global:
+  initial_cluster: "00-25-90-c0-f7-80=http://10.10.10.201:2380,00-25-90-c0-f6-ee=http://10.10.10.202:2380,00-25-90-c0-f6-d6=http://10.10.10.203:2380,00-25-90-c0-f7-ac=http://10.10.10.204:2380,00-25-90-c0-f7-7e=http://10.10.10.205:2380"
+
   ssh_authorized_keys: |2+
       - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVwfLAgA8DICHp0//xfBTgfU34fVOtKpxgrkceC605HGQ6GIPsBHKw6CYeGziwZBDNtMZxTeyQ7+79sqA2VUR2I5nrhlxw/Wc80yTsjbRmcIbr3mUNCd3+cOqnOAsWEucZCHHcNYwUQ3wIOoyP0cBLKI4b25ucgtawxCmB7PJ1Cme+vIf1cVffeQqedu7hmlpQf/DnQc7O1iBRhEAqKgy1Y+hb0Ryc7StAe0nDHCj+2b08vHlNXaS2sJKrXUE0HhCZZP46APaLmZPmmHeoJKx31M0IERWYaZRvLe0Pl7Pp6DueOSJvvNwR5YbNe5aQ2pO3xiv3wCj6n66dlqAhpmmD vien.lee@localhost"

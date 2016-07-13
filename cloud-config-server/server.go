@@ -5,19 +5,20 @@ import (
     "log"
     "net/http"
     "io/ioutil"
+    "strings"
     "time"
     "github.com/gorilla/mux"
     "golang.org/x/net/context"
     "github.com/coreos/etcd/client"
     "text/template"
     "gopkg.in/yaml.v2"
-    tp "template-server/template"
+    tp "cloud-config-server/template"
 )
 
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
-var template_url = "https://raw.githubusercontent.com/k8sp/cloud-configs/jiameng-template-server/template/cloud-config.template"
-var config_url = "https://raw.githubusercontent.com/k8sp/cloud-configs/jiameng-template-server/template/build_config.yml"
+var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/cloud-config.template"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/build_config.yml"
 
 var kapi client.KeysAPI
 
@@ -33,12 +34,6 @@ func init() {
         log.Fatal(err)
     }
     kapi = client.NewKeysAPI(c)
-}
-
-func main() {
-    router := mux.NewRouter().StrictSlash(true)
-    router.HandleFunc("/cloud-config/{mac}", HttpHandler)
-    log.Fatal(http.ListenAndServe(":8080", router))
 
     ticker := time.NewTicker(time.Minute * 10)
     go func() {
@@ -52,9 +47,17 @@ func main() {
     }()
 }
 
+func main() {
+    router := mux.NewRouter().StrictSlash(true)
+    router.HandleFunc("/cloud-config/{mac}", HttpHandler)
+    log.Fatal(http.ListenAndServe(":8080", router))
+}
+
 func HttpHandler(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    mac_addr := vars["mac"]
+
+    mac := strings.ToLower(vars["mac"])
+    mac = strings.Replace(mac, ":", "-", -1)
 
     templ, config, err := RetriveFromGithub(10 * time.Second)
     if err != nil {
@@ -68,7 +71,7 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
     tpl := template.Must(template.New("template").Parse(templ))
     cfg := &tp.Config{}
     err = yaml.Unmarshal([]byte(config), &cfg)
-    tp.Execute(tpl, cfg, mac_addr, w)
+    tp.Execute(tpl, cfg, mac, w)
 }
 
 func RetriveFromGithub(timeout time.Duration) (template string, config string, err error){
