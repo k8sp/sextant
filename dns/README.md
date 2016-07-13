@@ -1,7 +1,7 @@
 # DNS
 DNS using SkyDNS and etcd
 
-目的： 通过 etcd 和 SkyDNS 实现为集群提供通用 DNS 服务, 其中 etcd 作为后端存储(key-value), 集群中的机器在开机获得IP后，把 IP 和 hostname写入 etcd， SkyDNS 通过查询 etcd 存储的 hostname 和 IP 信息提供 DNS 服务。
+目的： 通过 etcd 和 SkyDNS 实现为集群提供通用 DNS 服务, 其中 etcd 作为后端存储(key-value) hostname/IP 信息, 集群中的机器在开机获得IP后，把 hostname/IP 信息写入 etcd， SkyDNS 通过查询 etcd 存储的 hostname/IP 信息提供 DNS 服务。
 
 说明：在本例中，10.10.10.214 （简称214）作为集群外一台机器向集群中各机器提供 DNS 服务，10.10.10.201-205为以 discovery 方式运行的 etcd 5节点集群，214 以 proxy 方式启动 etcd 从集群获取 hostname/IP 信息。
 
@@ -49,9 +49,58 @@ DNS using SkyDNS and etcd
    2016/07/13 21:02:14 skydns: ready for queries on skydns.local. for udp://10.10.10.214:53 [rcache 0]
    ```
 
-# 验证
+# 解析验证
 
-# 自动写入 hostname/IP 信息到 etcd
+1. 在集群中一台机器 10.10.10.201 执行把 IP/hostname 信息写入 etcd, hostname 为 machine1.ailab.skydns.local, IP 为 10.10.10.201。
+
+    ```
+    core@zodiac-01 ~ $ curl -XPUT http://127.0.0.1:4001/v2/keys/skydns/local/skydns/ailab/machine1 -d value='{
+    "host":"10.10.10.201",
+    "port":12345,
+    "priority":20,
+    "weight":100,
+    "text":"it is a info for this machine",
+    "ttl":3600,
+    "targetstrip":1,
+    "group":"g1"
+    }'
+    ```
+
+1. 在其他机器上，做域名查询验证
+
+    ```
+    core@zodiac-04 ~ $ dig @10.10.10.214 machine1.ailab.skydns.local
+
+    ; <<>> DiG 9.10.2-P4 <<>> @10.10.10.214 machine1.ailab.skydns.local
+    ; (1 server found)
+    ;; global options: +cmd
+    ;; Got answer:
+    ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48726
+    ;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+    ;; QUESTION SECTION:
+    ;machine1.ailab.skydns.local.   IN      A
+
+    ;; ANSWER SECTION:
+    machine1.ailab.skydns.local. 3600 IN    A       10.10.10.201
+
+    ;; Query time: 1 msec
+    ;; SERVER: 10.10.10.214#53(10.10.10.214)
+    ;; WHEN: Wed Jul 13 21:04:23 CST 2016
+    ;; MSG SIZE  rcvd: 61
+    ```
+
+1. 查询外网域名
+
+    ```
+    core@zodiac-04 ~ $ dig @10.10.10.214 www.baidu.com +short
+    www.a.shifen.com.
+    61.135.169.125
+    61.135.169.121
+    ```
+
+
+# 自动写 hostname/IP 信息到 etcd
 
 # 详细配置
 
