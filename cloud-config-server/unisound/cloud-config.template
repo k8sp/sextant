@@ -4,7 +4,7 @@ coreos:
     etcd2:
         name: "%H"
         listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
-        initial-cluster: "{{ .InitialClaster }}" 
+        initial-cluster: "{{ .InitialCluster }}" 
         {{- with .IP }}
         initial-cluster-token: "etcd-cluster-1"
         initial-advertise-peer-urls: "http://{{ . }}:2380"

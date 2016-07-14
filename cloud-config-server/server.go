@@ -12,7 +12,7 @@ import (
     "github.com/coreos/etcd/client"
     "text/template"
     "gopkg.in/yaml.v2"
-    tp "cloud-config-server/template"
+    tp "cloud-config-server/unisound"
 )
 
 var etcd_template_key = "/unisound/template_server/template"
@@ -85,7 +85,7 @@ func RetriveFromGithub(timeout time.Duration) (template string, config string, e
         log.Fatal(err)
         return "", "", err
     }
-    return template, config, nil 
+    return template, config, nil
 }
 
 func RetrieveFromEtcd() (template string, config string, err error){

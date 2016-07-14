@@ -1,20 +1,12 @@
-package template
+package unisound
 
 import (
 	"io"
-//	"os"
 	"text/template"
 )
-/*
-type PerNodeConfig struct {
-	IP       string `yaml:"ip"`
-	EtcdRole string `yaml:"etcd_role"`
-	Hostname string `yaml:"hostname"`
-	NicName  string `yaml:"nic_name"`
-}*/
 
 type GlobalConfig struct {
-	InitialClaster    string `yaml:"initial_cluster"`
+	InitialCluster    string `yaml:"initial_cluster"`
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
 	SSHPrivateKey     string `yaml:"ssh_private_key"`
 }

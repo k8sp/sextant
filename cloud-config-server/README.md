@@ -68,7 +68,7 @@ go func() {
   for {
     Sleep(10m)
     template, config := RetriveFromGithub(timeout = infinite)
-	WriteToEtcd(template, config)
+	CacheToEtcd(template, config)
   }
 }
 ```
