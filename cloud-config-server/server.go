@@ -12,13 +12,13 @@ import (
     "github.com/coreos/etcd/client"
     "text/template"
     "gopkg.in/yaml.v2"
-    tp "cloud-config-server/unisound"
+    "cloud-config-server/unisound"
 )
 
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
-var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/cloud-config.template"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/build_config.yml"
+var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/unisound/cloud-config.template"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/unisound/build_config.yml"
 
 var kapi client.KeysAPI
 
@@ -69,9 +69,9 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
         CacheToEtcd(templ, config)
     }
     tpl := template.Must(template.New("template").Parse(templ))
-    cfg := &tp.Config{}
+    cfg := &unisound.Config{}
     err = yaml.Unmarshal([]byte(config), &cfg)
-    tp.Execute(tpl, cfg, mac, w)
+    unisound.Execute(tpl, cfg, mac, w)
 }
 
 func RetriveFromGithub(timeout time.Duration) (template string, config string, err error){
