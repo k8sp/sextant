@@ -103,6 +103,59 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
 
 ## 自动写 hostname/IP 信息到 etcd
 
+1. 在 cloud-config 创建 sendhostname service 用于开机启动时，自动将 hostname/IP 信息写入 etcd，其中，%H 代表 hostname, $public_ipv4 代表 public ipv4。
+
+    ```
+    - name: "sendhostname.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Send hostname and IP to etcd2
+            Requires=etcd2.service
+            After=etcd2.service
+
+            [Service]
+            ExecStart=/usr/bin/etcdctl set skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}'
+            Type=oneshot
+    ```
+
+1. 执行  coreos-cloudinit  --from-file /var/lib/coreos-install/user_data 使配置生效
+
+1. 可以查看 sendhostname service 状态
+
+    ```
+    zodiac-03 coreos-install # systemctl status sendhostname
+    ● sendhostname.service - Send hostname and IP to etcd2
+   Loaded: loaded (/etc/systemd/system/sendhostname.service; static; vendor preset: disabled)
+   Active: inactive (dead)
+
+    Jul 15 01:48:34 zodiac-03 systemd[1]: Starting Send hostname and IP to etcd2...
+    Jul 15 01:48:35 zodiac-03 etcdctl[24808]: {"host":"10.10.10.203"}
+    Jul 15 01:48:35 zodiac-03 systemd[1]: Started Send hostname and IP to etcd2.
+    ```
+
+1. ping 和 dig 测试
+
+   ```
+   zodiac-01 coreos-install # cat /etc/resolv.conf
+   nameserver 10.10.10.214
+   zodiac-01 coreos-install # ping zodiac-03.ailab.unisound.com
+   PING zodiac-03.ailab.unisound.com (10.10.10.203) 56(84) bytes of data.
+   64 bytes from 10.10.10.203: icmp_seq=1 ttl=64 time=0.153 ms
+   64 bytes from 10.10.10.203: icmp_seq=2 ttl=64 time=0.198 ms
+   64 bytes from 10.10.10.203: icmp_seq=3 ttl=64 time=0.220 ms
+   64 bytes from 10.10.10.203: icmp_seq=4 ttl=64 time=0.199 ms
+   ^C
+   --- zodiac-03.ailab.unisound.com ping statistics ---
+   4 packets transmitted, 4 received, 0% packet loss, time 3001ms
+   rtt min/avg/max/mdev = 0.153/0.192/0.220/0.028 ms
+   zodiac-01 coreos-install # dig @10.10.10.214 zodiac-03.ailab.unisound.com +short
+   10.10.10.203
+    ```
+
 ## 详细配置
 
 ## 附注
+
+1. https://coreos.com/docs/launching-containers/launching/getting-started-with-systemd/
+1. https://coreos.com/os/docs/latest/cloud-config.html
