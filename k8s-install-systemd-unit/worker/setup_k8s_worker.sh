@@ -27,7 +27,7 @@ export CONTROLLER_ENDPOINT="https://$(awk -F= '/KUBERNETES_MASTER_IPV4/ {print $
 export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)'|awk '{print $2}')
 export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
 export ENV_FILE=/run/coreos-kubernetes/options.env
-export ETCD_ENDPOINTS="http://${COREOS_PUBLIC_IPV4}:2379"
+export ETCD_ENDPOINTS="http://127.0.0.1:2379"
 export K8S_VER=v1.2.4_coreos.cni.1
 export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
 export POD_NETWORK=10.2.0.0/16
