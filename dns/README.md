@@ -5,10 +5,10 @@ DNS using SkyDNS and etcd
 
 说明：在本例中，10.10.10.214 （简称214）作为集群外一台机器向集群中各机器提供 DNS 服务，10.10.10.201-205为以 discovery 方式运行的 etcd 5节点集群。
 
-1. 配置方案一 ：214 以 proxy 方式启动 etcd 从集群获取 hostname/IP 信息，SkyDNS 访问 214本机的 etcd。
-1. 配置方案二 ：214 的 SkyDNS 直接从集群的 etcd 获取 hostname/IP 信息。
 
-通过 etcdctl 可以先看下当前集群信息
+方案 ：214 的 SkyDNS 直接从集群的 etcd 获取 hostname/IP 信息。
+
+在集群中任意一台机器执行 etcdctl 可以先看下当前集群信息，在214上可以加上 --endpoints 指定集群信息（./etcdctl  --endpoints=http://10.10.10.201:2379 member list），集群内机器可以无需指定，使用默认endpoints。
 
 ```
 ./etcdctl member list
@@ -19,98 +19,50 @@ DNS using SkyDNS and etcd
 cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10.205:2380 clientURLs=http://10.10.10.205:2379 isLeader=false
 ```
 
-# 配置方案一
-
-1. 在214上启动 etcd, 以 proxy 模式
-
-    ```
-    ./etcd --proxy on  --discovery https://discovery.etcd.io/5e2d8844b9047f48d45fa70ab4a93765  --listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001
-    2016-07-13 20:51:29.345329 I | etcdmain: etcd Version: 2.3.6
-    2016-07-13 20:51:29.345388 I | etcdmain: Git SHA: 128344c
-    2016-07-13 20:51:29.345399 I | etcdmain: Go Version: go1.6.2
-    2016-07-13 20:51:29.345416 I | etcdmain: Go OS/Arch: linux/amd64
-    2016-07-13 20:51:29.345426 I | etcdmain: setting maximum number of CPUs to 40, total number of available CPUs is 40
-    2016-07-13 20:51:29.345437 W | etcdmain: no data-dir provided, using default data-dir ./default.etcd
-    2016-07-13 20:51:30.384527 I | etcdmain: proxy: using peer urls [http://10.10.10.201:2380 http://10.10.10.202:2380 http://10.10.10.203:2380 http://10.10.10.204:2380 http://10.10.10.205:2380]
-    2016-07-13 20:51:30.417701 I | etcdmain: proxy: listening for client requests on http://0.0.0.0:2379
-    2016-07-13 20:51:30.417959 I | proxy: endpoints found ["http://10.10.10.202:2379" "http://10.10.10.201:2379" "http://10.10.10.204:2379" "http://10.10.10.203:2379" "http://10.10.10.205:2379"]
-    2016-07-13 20:51:30.418091 I | etcdmain: proxy: listening for client requests on http://0.0.0.0:4001
-    ```
-
-1. 在214上配置 SkyDNS, DNS 的监听地址 和 上游 DNS
-
-    ```
-    curl -XPUT http://127.0.0.1:4001/v2/keys/skydns/config \
-   -d value='{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers": ["8.8.8.8:53","8.8.4.4:53"]}'
-    ```
-
-1. 在 214 启动 SkyDNS
-
-   ```
-   sudo ./skydns
-   2016/07/13 21:02:14 skydns: metrics enabled on :/metrics
-   2016/07/13 21:02:14 skydns: ready for queries on skydns.local. for tcp://10.10.10.214:53 [rcache 0]
-   2016/07/13 21:02:14 skydns: ready for queries on skydns.local. for udp://10.10.10.214:53 [rcache 0]
-   ```
-
-# 配置方案二
+## 配置
 
 1. 配置 SkyDNS, DNS 的监听地址 和 上游 DNS
 
     ```
-    curl -XPUT http://10.10.10.201:4001/v2/keys/skydns/config \
-   -d value='{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers": ["8.8.8.8:53","8.8.4.4:53"]}'
+    curl -XPUT http://10.10.10.201:2379/v2/keys/skydns/config  -d value='{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers": ["8.8.8.8:53","8.8.4.4:53","domain":"unisound.com"]}'
     ```
+
+    或者通过etcdctl命令
+
+    ```
+    ./etcdctl --endpoints=http://10.10.10.201:2379 set /skydns/config '{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers":["8.8.8.8:53", "8.8.4.4:53","domain":"unisound.com"]}'
+    ```
+
+   curl 命令和 etcdctl 都可以传递json参数，下面仅用etcdctl 命令举例。
+
+   skydns默认的域名域是 skydns.local. 通过domain参数用户可以指定自己的域名域，比如 unisound.com。
+
 
 1. 在 214 启动 SkyDNS
 
    ```
-   sudo ./skydns  -machines="http://10.10.10.201:4001"
-   2016/07/13 22:25:04 skydns: metrics enabled on :/metrics
-   2016/07/13 22:25:04 skydns: ready for queries on skydns.local. for tcp://10.10.10.214:53 [rcache 0]
-   2016/07/13 22:25:04 skydns: ready for queries on skydns.local. for udp://10.10.10.214:53 [rcache 0]
+   sudo ./skydns  -machines="http://10.10.10.201:2379"
+   2016/07/15 00:07:44 skydns: metrics enabled on :/metrics
+   2016/07/15 00:07:44 skydns: ready for queries on unisound.com. for tcp://10.10.10.214:53 [rcache 0]
+   2016/07/15 00:07:44 skydns: ready for queries on unisound.com. for udp://10.10.10.214:53 [rcache 0]
    ```
 
 
-# 解析验证
+## 解析验证
 
-1. 在集群中一台机器 10.10.10.201 执行把 IP/hostname 信息写入 etcd, hostname 为 machine1.ailab.skydns.local, IP 为 10.10.10.201。
+1. 在集群中一台机器 10.10.10.201 执行把 IP/hostname 信息写入 etcd, hostname 为 machine1.ailab.unisound.com, IP 为 10.10.10.201。
 
     ```
-    core@zodiac-01 ~ $ curl -XPUT http://127.0.0.1:4001/v2/keys/skydns/local/skydns/ailab/machine1 -d value='{
-    "host":"10.10.10.201",
-    "port":12345,
-    "priority":20,
-    "weight":100,
-    "text":"it is a info for this machine",
-    "ttl":3600,
-    "targetstrip":1,
-    "group":"g1"
-    }'
+    core@zodiac-01 ~ $ etcdctl set skydns/com/unisound/ailab/machine1 '{"host":"10.10.10.201"}'
+    {"host":"10.10.10.201"}
     ```
 
+    在上述命令参数中 skydns/com/unisound/ailab/machine1，以 / 分割字符串，其中第一个 skydns 代表前缀，后面的 com/unisound/ailab/machine1 是和 hostname 倒序对应，并以 / 代替 hostname 中的 . 分隔符。
 1. 在其他机器上，做域名查询验证
 
     ```
-    core@zodiac-04 ~ $ dig @10.10.10.214 machine1.ailab.skydns.local
-
-    ; <<>> DiG 9.10.2-P4 <<>> @10.10.10.214 machine1.ailab.skydns.local
-    ; (1 server found)
-    ;; global options: +cmd
-    ;; Got answer:
-    ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48726
-    ;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
-
-    ;; QUESTION SECTION:
-    ;machine1.ailab.skydns.local.   IN      A
-
-    ;; ANSWER SECTION:
-    machine1.ailab.skydns.local. 3600 IN    A       10.10.10.201
-
-    ;; Query time: 1 msec
-    ;; SERVER: 10.10.10.214#53(10.10.10.214)
-    ;; WHEN: Wed Jul 13 21:04:23 CST 2016
-    ;; MSG SIZE  rcvd: 61
+    core@zodiac-04 ~ $ dig @10.10.10.214 machine1.ailab.unisound.com +short
+    10.10.10.201
     ```
 
 1. 查询外网域名
@@ -122,9 +74,35 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
     61.135.169.121
     ```
 
+1. ping 测试，暂时手工改 /etc/resolv.conf 中的 nameserver 验证（等 DHCP 自动分配DNS Server 完成再重新测试）
 
-# 自动写 hostname/IP 信息到 etcd
+    ```
+    zodiac-04 core # cat /etc/resolv.conf
+    nameserver 10.10.10.214
+    zodiac-04 core # ping machine1.ailab.unisound.com
+    PING machine1.ailab.unisound.com (10.10.10.201) 56(84) bytes of data.
+    64 bytes from 10.10.10.201: icmp_seq=1 ttl=64 time=0.139 ms
+    64 bytes from 10.10.10.201: icmp_seq=2 ttl=64 time=0.161 ms
+    64 bytes from 10.10.10.201: icmp_seq=3 ttl=64 time=0.219 ms
+    ^C
+    --- machine1.ailab.unisound.com ping statistics ---
+    3 packets transmitted, 3 received, 0% packet loss, time 2003ms
+    rtt min/avg/max/mdev = 0.139/0.173/0.219/0.033 ms
+    zodiac-04 core # ping www.baidu.com
+    PING www.a.shifen.com (61.135.169.125) 56(84) bytes of data.
+    64 bytes from 61.135.169.125: icmp_seq=1 ttl=51 time=2.01 ms
+    64 bytes from 61.135.169.125: icmp_seq=2 ttl=51 time=1.84 ms
+    64 bytes from 61.135.169.125: icmp_seq=3 ttl=51 time=1.95 ms
+    ^C
+    --- www.a.shifen.com ping statistics ---
+    3 packets transmitted, 3 received, 0% packet loss, time 2002ms
+    rtt min/avg/max/mdev = 1.845/1.938/2.019/0.087 ms
+    ```
 
-# 详细配置
 
-# 附注
+
+## 自动写 hostname/IP 信息到 etcd
+
+## 详细配置
+
+## 附注
