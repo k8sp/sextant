@@ -31,7 +31,7 @@ func init() {
     }
     c, err := client.New(cfg)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
     }
     kapi = client.NewKeysAPI(c)
 
@@ -52,7 +52,7 @@ func init() {
 func main() {
     router := mux.NewRouter().StrictSlash(true)
     router.HandleFunc("/cloud-config/{mac}", HttpHandler)
-    log.Fatal(http.ListenAndServe(":8080", router))
+    log.Printf("%v\n", http.ListenAndServe(":8080", router))
 }
 
 func HttpHandler(w http.ResponseWriter, r *http.Request) {
@@ -86,12 +86,12 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 func RetriveFromGithub(timeout time.Duration) (template string, config string, err error){
     template, err = httpGet(template_url, timeout)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", "", err
     }
     config, err = httpGet(config_url, timeout)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", "", err
     }
     return template, config, nil
@@ -100,14 +100,14 @@ func RetriveFromGithub(timeout time.Duration) (template string, config string, e
 func RetrieveFromEtcd() (template string, config string, err error){
     resp, err := kapi.Get(context.Background(), etcd_template_key, nil)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", "", err
     } else {
         template = resp.Node.Value
     }
     resp, err = kapi.Get(context.Background(), etcd_config_key, nil)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", "", err
     } else {
         config = resp.Node.Value
@@ -122,7 +122,7 @@ func CacheToEtcd(template string, config string){
     fmt.Printf("%#v\n", etcd_template_key)
     resp, err := kapi.Set(context.Background(), etcd_template_key, template, nil)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
     } else {
         // print common key info
         log.Printf("Set is done. Metadata is %q\n", resp)
@@ -130,7 +130,7 @@ func CacheToEtcd(template string, config string){
     fmt.Printf("%#v\n", etcd_config_key)
     resp, err = kapi.Set(context.Background(), etcd_config_key, config, nil)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
     } else {
         // print common key info
         log.Printf("Set is done. Metadata is %q\n", resp)
@@ -143,13 +143,13 @@ func httpGet(url string, timeout time.Duration) (string, error) {
     }
     resp, err := client.Get(url)
     if err != nil || resp.StatusCode != 200 {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", err
     }
     defer resp.Body.Close()
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
-        log.Fatal(err)
+        log.Printf("%v\n",err)
         return "", err
     }
     return string(body), nil
