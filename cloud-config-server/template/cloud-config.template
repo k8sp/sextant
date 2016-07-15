@@ -47,7 +47,7 @@ coreos:
             Type=oneshot
 
         - name: "sendhostname.service"
-          command: stop #TODO: start
+          command: start
           content: |
             [Unit]
             Description=Send hostname and IP to etcd2

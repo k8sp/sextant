@@ -37,10 +37,8 @@ CCTS 每隔一段时间试着访问 Github 看是否有更新，如果有，则�
 替换缓存中的内容。
 
 最简答的缓存机制是 CCTS 在内存中维护，但是如果CCTS 被重启，则缓存信息
-就丢失了。一种更合理的方式是缓存在 etcd 里。鉴于我们安装和配置
-CoreOS/Kubernetes 机群之前需要先有一个 etcd 机群作为 discovery service
-来启动（bootstrap）Kubernetes机群里的etcd机群，我们可以利用这个
-bootstrapping etcd机群来缓存模板和配置信息。
+就丢失了。一种更合理的方式是缓存在 etcd 里，目前在CCTS服务器上安装了一
+个单节点的 etcd 来缓存。
 
 ## 相关算法
 

@@ -18,7 +18,7 @@ import (
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
 var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/cloud-config.template"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/build_config.yml"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/unisound-ailab/build_config.yml"
 
 var kapi client.KeysAPI
 

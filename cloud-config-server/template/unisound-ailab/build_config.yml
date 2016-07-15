@@ -2,7 +2,7 @@ nodes:
   "00-25-90-c0-f7-80":
     ip: "10.10.10.201"
     ceph_role: "member"
-    k8s_role: "master" # can be "master" or "worker" or "" (empty string)
+    k8s_role: "master" # can be "master" or "worker" or "" (empty string == worker)
   "00-25-90-c0-f6-ee":
     ip: "10.10.10.202"
     ceph_role: "member"
