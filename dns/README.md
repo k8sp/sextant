@@ -8,10 +8,10 @@ DNS using SkyDNS and etcd
 
 方案 ：214 的 SkyDNS 直接从集群的 etcd 获取 hostname/IP 信息。
 
-在集群中任意一台机器执行 etcdctl 可以先看下当前集群信息，在214上可以加上 --endpoints 指定集群信息（./etcdctl  --endpoints=http://10.10.10.201:2379 member list），集群内机器可以无需指定，使用默认endpoints。
+执行 etcdctl 可以先看下当前集群信息，在214上可以加上 --endpoints 指定集群信息，集群内机器可以无需指定，使用默认endpoints。
 
 ```
-./etcdctl member list
+./etcdctl --endpoints=http://10.10.10.201:2379 member list
 49a8e51ca7dc5ea: name=3d2326809f634b249a120b4fcbb88525 peerURLs=http://10.10.10.204:2380 clientURLs=http://10.10.10.204:2379 isLeader=false
 4325d2c4ed410428: name=04bd5c359f3a48e58f74c760a0b42419 peerURLs=http://10.10.10.203:2380 clientURLs=http://10.10.10.203:2379 isLeader=false
 6a0e53b4280500a5: name=ac5485bf26264e2eac22e938c4548b49 peerURLs=http://10.10.10.201:2380 clientURLs=http://10.10.10.201:2379 isLeader=true
@@ -21,43 +21,34 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
 
 ## 配置
 
-1. 配置 SkyDNS, DNS 的监听地址 和 上游 DNS
-
-    ```
-    curl -XPUT http://10.10.10.201:2379/v2/keys/skydns/config  -d value='{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers": ["8.8.8.8:53","8.8.4.4:53","domain":"unisound.com"]}'
-    ```
-
-    或者通过etcdctl命令
-
-    ```
-    ./etcdctl --endpoints=http://10.10.10.201:2379 set /skydns/config '{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers":["8.8.8.8:53", "8.8.4.4:53","domain":"unisound.com"]}'
-    ```
-
-   curl 命令和 etcdctl 都可以传递json参数，下面仅用etcdctl 命令举例。
-
-   skydns默认的域名域是 skydns.local. 通过domain参数用户可以指定自己的域名域，比如 unisound.com。
-
-
-1. 在 214 启动 SkyDNS
+1. 配置 SkyDNS 并启动
 
    ```
-   sudo ./skydns  -machines="http://10.10.10.201:2379"
-   2016/07/15 00:07:44 skydns: metrics enabled on :/metrics
-   2016/07/15 00:07:44 skydns: ready for queries on unisound.com. for tcp://10.10.10.214:53 [rcache 0]
-   2016/07/15 00:07:44 skydns: ready for queries on unisound.com. for udp://10.10.10.214:53 [rcache 0]
+   sudo ./skydns -machines="http://10.10.10.201:2379" -addr="10.10.10.214:53" -nameservers="8.8.8.8:53,8.8.4.4:53" -domain="unisound.com."
+   2016/07/15 09:16:17 skydns: metrics enabled on :/metrics
+   2016/07/15 09:16:17 skydns: ready for queries on unisound.com. for tcp://10.10.10.214:53 [rcache 0]
+   2016/07/15 09:16:17 skydns: ready for queries on unisound.com. for udp://10.10.10.214:53 [rcache 0]
    ```
+
+   参数说明：
+   * `machines` : etcd machines 列表，默认是 `http://127.0.0.1::2379`，本例使用 `http://10.10.10.201:2379`
+   * `addr` : DNS 服务器监听 IP 地址和端口，默认是 `127.0.0.1:53`，本例使用 `10.10.10.214:53`
+   * `nameservers` : 上游 DNS server 列表，本例使用 `8.8.8.8:53,8.8.4.4:53`
+   * `domain` : SkyDNS 域名域，默认是 `skydns.local.`，本例使用 `unisound.com.`
+
+   更多参数参考skydns文档 https://github.com/skynetservices/skydns
 
 
 ## 解析验证
 
-1. 在集群中一台机器 10.10.10.201 执行把 IP/hostname 信息写入 etcd, hostname 为 machine1.ailab.unisound.com, IP 为 10.10.10.201。
+1. 在集群中一台机器 10.10.10.201 执行把 IP/hostname 信息写入 etcd, hostname 为 `machine1.ailab.unisound.com`, IP 为 `10.10.10.201`。
 
     ```
-    core@zodiac-01 ~ $ etcdctl set skydns/com/unisound/ailab/machine1 '{"host":"10.10.10.201"}'
-    {"host":"10.10.10.201"}
+    core@zodiac-01 ~ $ etcdctl set /skydns/com/unisound/ailab/machine1 '{"host":"10.10.10.201"}'
     ```
 
-    在上述命令参数中 skydns/com/unisound/ailab/machine1，以 / 分割字符串，其中第一个 skydns 代表前缀，后面的 com/unisound/ailab/machine1 是和 hostname 倒序对应，并以 / 代替 hostname 中的 . 分隔符。
+    在上述命令参数中 `/skydns/com/unisound/ailab/machine1`，以 / 分割字符串，其中最前面 skydns 代表 path 前缀，后面的 `com/unisound/ailab/machine1` 是和 hostname 倒序对应，并以 / 代替 hostname 中的 . 分隔符。
+
 1. 在其他机器上，做域名查询验证
 
     ```
@@ -74,7 +65,7 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
     61.135.169.121
     ```
 
-1. ping 测试，暂时手工改 /etc/resolv.conf 中的 nameserver 验证（等 DHCP 自动分配DNS Server 完成再重新测试）
+1. ping 测试，暂时手工改 `/etc/resolv.conf` 中的 nameserver 验证（等 DHCP 自动分配DNS Server 完成再重新测试）
 
     ```
     zodiac-04 core # cat /etc/resolv.conf
@@ -115,11 +106,11 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
             After=etcd2.service
 
             [Service]
-            ExecStart=/usr/bin/etcdctl set skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}'
+            ExecStart=/usr/bin/etcdctl set /skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}'
             Type=oneshot
     ```
 
-1. 执行  coreos-cloudinit  --from-file /var/lib/coreos-install/user_data 使配置生效
+1. 执行  `coreos-cloudinit  --from-file /var/lib/coreos-install/user_data` 使配置生效
 
 1. 可以查看 sendhostname service 状态
 
@@ -155,7 +146,27 @@ cfdaeff1078df3b4: name=e0e2fe6de3734ed8919d18b1b24333d2 peerURLs=http://10.10.10
 
 ## 详细配置
 
+1. etcdctl vs. curl
+
+   SkyDNS 的配置信息存储在 etcd 中，可以通过 etcdctl 或者 curl 设置，以下两个命令效果等同
+
+   ```
+   curl -XPUT http://10.10.10.201:2379/v2/keys/skydns/config  -d value='{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers": ["8.8.8.8:53","8.8.4.4:53","domain":"unisound.com"]}'
+
+   etcdctl --endpoints=http://10.10.10.201:2379 set /skydns/config '{"dns_addr":"10.10.10.214:53","ttl":3600, "nameservers":["8.8.8.8:53", "8.8.4.4:53","domain":"unisound.com"]}'
+   ```
+   SkyDNS 配置更新后，须重新执行 SkyDNS 命令以生效。
+
+   设置 hostname 和 IP 同样可以用 etcdctl 或者 curl，效果等同。
+
+   ```
+   curl -XPUT http://10.10.10.201:2379/v2/keys/skydns/com/unisound/ailab/machine1 -d value='{"host":"10.10.10.201"}'
+
+   etcdctl  --endpoints=http://10.10.10.201:2379 set /skydns/com/unisound/ailab/machine1 '{"host":"10.10.10.201"}'
+   ```
+
 ## 附注
 
+1. https://github.com/skynetservices/skydns
 1. https://coreos.com/docs/launching-containers/launching/getting-started-with-systemd/
 1. https://coreos.com/os/docs/latest/cloud-config.html
