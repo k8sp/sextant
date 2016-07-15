@@ -1,4 +1,4 @@
-package unisound
+package template
 
 import (
 	"io"
@@ -14,7 +14,7 @@ import (
 
 func TestExecute(t *testing.T) {
 
-	config := candy.WithOpened("build_config.yml", func(r io.Reader) interface{} {
+	config := candy.WithOpened("./unisound-ailab/build_config.yml", func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
 

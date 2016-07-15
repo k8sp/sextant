@@ -12,13 +12,13 @@ import (
     "github.com/coreos/etcd/client"
     "text/template"
     "gopkg.in/yaml.v2"
-    "cloud-config-server/unisound"
+    tp "cloud-config-server/template"
 )
 
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
-var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/unisound/cloud-config.template"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/unisound/build_config.yml"
+var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/cloud-config.template"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/build_config.yml"
 
 var kapi client.KeysAPI
 
@@ -38,8 +38,10 @@ func init() {
     ticker := time.NewTicker(time.Minute * 10)
     go func() {
         for _ = range ticker.C {
-            template, config, err := RetriveFromGithub(30 * time.Second)
+            template, config, err := RetriveFromGithub(5 * time.Second)
             if err != nil {
+                template = ""
+                config = ""
                 continue
             }
             CacheToEtcd(template, config)
@@ -57,9 +59,10 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
 
     mac := strings.ToLower(vars["mac"])
+    mac = strings.Replace(mac, ".yml", "", -1)
     mac = strings.Replace(mac, ":", "-", -1)
 
-    templ, config, err := RetriveFromGithub(10 * time.Second)
+    templ, config, err := RetriveFromGithub(3 * time.Second)
     if err != nil {
         templ, config, err = RetrieveFromEtcd()
         if err != nil {
@@ -69,9 +72,9 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
         CacheToEtcd(templ, config)
     }
     tpl := template.Must(template.New("template").Parse(templ))
-    cfg := &unisound.Config{}
+    cfg := &tp.Config{}
     err = yaml.Unmarshal([]byte(config), &cfg)
-    unisound.Execute(tpl, cfg, mac, w)
+    tp.Execute(tpl, cfg, mac, w)
 }
 
 func RetriveFromGithub(timeout time.Duration) (template string, config string, err error){
@@ -107,6 +110,9 @@ func RetrieveFromEtcd() (template string, config string, err error){
 }
 
 func CacheToEtcd(template string, config string){
+    if template == "" || config == "" {
+        return
+    }
     fmt.Printf("%#v\n", etcd_template_key)
     resp, err := kapi.Set(context.Background(), etcd_template_key, template, nil)
     if err != nil {
@@ -130,7 +136,7 @@ func httpGet(url string, timeout time.Duration) (string, error) {
         Timeout: timeout,
     }
     resp, err := client.Get(url)
-    if err != nil {
+    if err != nil || resp.StatusCode != 200 {
         log.Fatal(err)
         return "", err
     }

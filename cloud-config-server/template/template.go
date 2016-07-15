@@ -1,9 +1,15 @@
-package unisound
+package template
 
 import (
 	"io"
 	"text/template"
 )
+
+type PerNodeConfig struct {
+	IP       string `yaml:"ip"`
+	CephRole string `yaml:"ceph_role"`
+	K8sRole  string `yaml:"k8s_role"`
+}
 
 type GlobalConfig struct {
 	InitialCluster    string `yaml:"initial_cluster"`
@@ -12,13 +18,13 @@ type GlobalConfig struct {
 }
 
 type ExecutionConfig struct {
-	IP string
 	Hostname string
+	PerNodeConfig
 	GlobalConfig
 }
 
 type Config struct {
-	Nodes  map[string]string
+	Nodes  map[string]PerNodeConfig
 	Global GlobalConfig
 }
 
@@ -26,8 +32,8 @@ type Config struct {
 // given MAC address.
 func Execute(tmpl *template.Template, config *Config, mac string, w io.Writer) error {
 	ec := ExecutionConfig{
-		IP:            config.Nodes[mac],
 		Hostname:      mac,
+		PerNodeConfig: config.Nodes[mac],
 		GlobalConfig:  config.Global,
 	}
 	return tmpl.Execute(w, ec)

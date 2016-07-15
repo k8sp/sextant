@@ -1,9 +1,24 @@
 nodes:
-  00-25-90-c0-f7-80: "10.10.10.201"
-  00-25-90-c0-f6-ee: "10.10.10.202"
-  00-25-90-c0-f6-d6: "10.10.10.203"
-  00-25-90-c0-f7-ac: "10.10.10.204"
-  00-25-90-c0-f7-7e: "10.10.10.205"
+  "00-25-90-c0-f7-80":
+    ip: "10.10.10.201"
+    ceph_role: "member"
+    k8s_role: "master" # can be "master" or "worker" or "" (empty string)
+  "00-25-90-c0-f6-ee":
+    ip: "10.10.10.202"
+    ceph_role: "member"
+    k8s_role: "master"
+  "00-25-90-c0-f6-d6":
+    ip: "10.10.10.203"
+    ceph_role: "member"
+    k8s_role: "master"
+  "00-25-90-c0-f7-ac":
+    ip: "10.10.10.204"
+    ceph_role: "member"
+    k8s_role: "master"
+  "00-25-90-c0-f7-7e":
+    ip: "10.10.10.205"
+    ceph_role: "member"
+    k8s_role: "master"
 
 global:
   initial_cluster: "00-25-90-c0-f7-80=http://10.10.10.201:2380,00-25-90-c0-f6-ee=http://10.10.10.202:2380,00-25-90-c0-f6-d6=http://10.10.10.203:2380,00-25-90-c0-f7-ac=http://10.10.10.204:2380,00-25-90-c0-f7-7e=http://10.10.10.205:2380"
