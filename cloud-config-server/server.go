@@ -24,7 +24,7 @@ var kapi client.KeysAPI
 
 func init() {
     cfg := client.Config{
-        Endpoints:               []string{"http://127.0.0.1:2379"},
+        Endpoints:               []string{"http://10.10.10.192:2379"},
         Transport:               client.DefaultTransport,
         // set timeout per request to fail fast when the target endpoint is unavailable
         HeaderTimeoutPerRequest: time.Second * 2,
@@ -56,6 +56,12 @@ func main() {
 }
 
 func HttpHandler(w http.ResponseWriter, r *http.Request) {
+    defer func() {
+        if err := recover(); err != nil {
+            http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+        }
+    }()
+
     vars := mux.Vars(r)
 
     mac := strings.ToLower(vars["mac"])
