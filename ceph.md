@@ -1,4 +1,4 @@
-# ceph架构
+# 1.ceph架构
 
 ![](http://www.ibm.com/developerworks/cn/linux/l-ceph/figure1.gif)
 
@@ -9,7 +9,7 @@ Ceph Client 是 Ceph 文件系统的用户。Ceph Metadata Daemon 提供了元�
 Scalable Hashing(CRUSH)的伪随机的数据分布算法放入集群节点中。
 
 
-# ceph部署
+# 2.ceph部署
 ![](http://docs.ceph.com/docs/master/_images/ditaa-cffd08dd3e192a5f1d724ad7930cb04200b9b425.png)
 
 一个ceph存储集群需要至少一个ceph monitor和至少两个ceph OSD Daemons，当运行ceph Filesystem clients时需要ceph Metadata Server。
