@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# This function converts a net mask to an CIDR.
+# To start a Ceph monitor by running the docker container ceph/daemon, an
+# environment variable CEPH_PUBLIC_NETWORK is needed in the form of
+# <IP address><CIDR>. We can get the IP address and net mask by some command
+# line tools, but we can't directly get the CIDR, so we provide this function to
+# convert the net mask to CIDR.
 function netmask_to_cidr {
   local netmask=$1
   declare -A convert_table=( \
@@ -35,7 +41,7 @@ function netmask_to_cidr {
     ["224.0.0.0"]="/3" \
     ["192.0.0.0"]="/2" \
     ["128.0.0.0"]="/1" \
-    ["0.0.0.0"]="/0"\
+    ["0.0.0.0"]="/0" \
     )
   echo "${convert_table[$netmask]}"
 }
