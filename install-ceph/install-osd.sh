@@ -7,4 +7,5 @@ docker run -d --pid=host --net=host --privileged=true \
   -v /dev:/dev \
   -e KV_TYPE=etcd \
   -e OSD_FORCE_ZAP=1 \
-  -e OSD_DEVICE=/dev/sdb ceph/daemon osd_ceph_disk
+  -e OSD_DEVICE=/dev/sdb \
+  ceph/daemon osd_ceph_disk
