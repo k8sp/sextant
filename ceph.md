@@ -21,6 +21,18 @@ Scalable Hashing(CRUSH)的伪随机的数据分布算法放入集群节点中。
 3.MDSs: Ceph Metadata Server(MDS)代表Ceph Filesystem存储metadata（注意Ceph Block Devices和Ceph Object Storage不用MDS），Ceph Metadata Servers使得POSIX文件系统用户可以执行基本指令包括ls, find等，而不会给Ceph存储集群造成大的负担。
 Ceph将客户端数据作为对象存储在存储池中，通过CRUSH算法，Ceph计算哪个placement group应该保存对象，进一步计算哪个ceph OSD Daemon可以保存placement group。CRUSH算法使得Ceph存储集群可以做到规模化、再平衡、动态恢复。
 
+用一个Ceph Monitor和两个Ceph OSD Daemons建立一个ceph Storage Cluster，一旦集群达到active+clean状态，通过增加第三个Ceph OSD Daemon、一个Metadata Server和两个Ceph Monitors来扩大集群，为了达到最好的结果，在你的admin node创建一个目录来保存配置文件和ceph-depoy为集群生成的keys。
+
+# 3.1 Block Device Quick Start
+也被称作RBD或RADOS，在此之前先保证Ceph Storage Cluster在active + clean状态
+
+# 3.2 Filesystem Quick Start
+Ceph Filesystem是一个POSIX-compliant文件系统，使用Ceph Storage Cluster来存储数据，它用同样的Ceph Storage Cluster系统作为Ceph Block Devices, Ceph Object Storage，with its S3和Swift APIs或native binding.
+
+# 3.3 Object Storage Quick Start
+Ceph Storage Cluster是所有Ceph deployments的基础，基于RADOS，Ceph Storage Cluster包括两种类型的daemons: 一个Ceph OSD Daemon(OSD)将数据作为对象存储到存储节点，一个Ceph Monitor(MON)维护集群映射的master版本。一个Ceph Storage Cluster可能包括数千个Storage nodes，一个最小系统至少有一个Ceph Monitor和两个Ceph OSD Daemons来实现data replication。
+
+
 ![](http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/figure01.png)
 -
 Ceph Filesystem, Ceph Object Storage和 Ceph Block Devices从Ceph Storage Cluster中读写数据。
