@@ -30,9 +30,13 @@ Ceph将客户端数据作为对象存储在存储池中，通过CRUSH算法，Ce
 Ceph Filesystem是一个POSIX-compliant文件系统，使用Ceph Storage Cluster来存储数据，它用同样的Ceph Storage Cluster系统作为Ceph Block Devices, Ceph Object Storage，with its S3和Swift APIs或native binding.
 
 # 3.3 Object Storage Quick Start
-Ceph Storage Cluster是所有Ceph deployments的基础，基于RADOS，Ceph Storage Cluster包括两种类型的daemons: 一个Ceph OSD Daemon(OSD)将数据作为对象存储到存储节点，一个Ceph Monitor(MON)维护集群映射的master版本。一个Ceph Storage Cluster可能包括数千个Storage nodes，一个最小系统至少有一个Ceph Monitor和两个Ceph OSD Daemons来实现data replication。
+基于RADOS，Ceph Storage Cluster是所有Ceph deployments的基础，对于通过众多客户端或网关（RADOSGW、RBD 或 CephFS）执行的每个操作，数据会进入 RADOS 或者可以从中读取数据，如下图1所示。Ceph Storage Cluster包括两种类型的daemons: 一个Ceph OSD Daemon(OSD)将数据作为对象存储到存储节点，一个Ceph Monitor(MON)维护集群映射的master版本，如下图2所示。一个Ceph Storage Cluster可能包括数千个Storage nodes，一个最小系统至少有一个Ceph Monitor和两个Ceph OSD Daemons来实现data replication。
 
-
+图1
+--
 ![](http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/figure01.png)
+图2
+--
+![](http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/figure02.png)
 -
 Ceph Filesystem, Ceph Object Storage和 Ceph Block Devices从Ceph Storage Cluster中读写数据。
