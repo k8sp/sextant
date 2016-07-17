@@ -58,7 +58,7 @@ if [[ $c -ge 2 ]];then
     rm -f ../worker/*.pem
     rm -f ../kubectl/*.pem
 fi
-
+# 写入 MASTER_HOST IP 到 openssl.cnf
 sed -i "s/IP\.2.*/IP.2 = $MASTER_HOST/" openssl.cnf
 
 openssl genrsa -out ca-key.pem 2048
