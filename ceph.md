@@ -2,7 +2,7 @@
 
 ![](http://www.ibm.com/developerworks/cn/linux/l-ceph/figure1.gif)
 
-参考：http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/
+参考：http://docs.ceph.com/docs/master/, http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/
 Ceph Client 是 Ceph 文件系统的用户。Ceph Metadata Daemon 提供了元数据服务器，而 Ceph Object Storage Daemon 提供了实际存储（对数据和元数据两者）。最后，Ceph Monitor 提供了集群管理。
 
 与任何经典的分布式文件系统中一样，放入集群中的文件是条带化的，依据一种称为Ceph Controlled Replication Under
