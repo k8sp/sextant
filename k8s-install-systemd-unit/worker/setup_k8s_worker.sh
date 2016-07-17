@@ -24,7 +24,7 @@
 cp environment /etc/ -f
 
 export CONTROLLER_ENDPOINT="https://$(awk -F= '/KUBERNETES_MASTER_IPV4/ {print $2}' /etc/environment)"
-export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)'|awk '{print $2}')
+export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)|(172\.17\..*)'|awk '{print $2}')
 export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
 export ENV_FILE=/run/coreos-kubernetes/options.env
 export ETCD_ENDPOINTS="http://127.0.0.1:2379"
@@ -42,7 +42,7 @@ echo "ETCD_ENDPOINTS=$ETCD_ENDPOINTS"
 
 
 function check_kubelet_install {
-  systemctl status kubelet.service | grep 'not-found'
+  systemctl status kubelet.service | grep -q 'not-found'
   if [[ ! $? -eq 0 ]]; then
     echo "kubelet service is installed."
     exit 0

@@ -21,8 +21,8 @@
 
 # 本脚本以及相关配置文件预设：MasterNodeIP=10.10.10.191, WorkerNodeIP=10.10.10.192
 
-
-export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)'|awk '{print $2}')
+# 获取本机网卡 IP
+export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)|(172\.17\..*)'|awk '{print $2}')
 export MASTER_HOST=$COREOS_PUBLIC_IPV4
 export ETCD_ENDPOINTS="http://${MASTER_HOST}:2379"
 echo "ETCD_ENDPOINTS="$ETCD_ENDPOINTS
@@ -35,9 +35,9 @@ export K8S_SERVICE_IP=10.3.0.1
 export DNS_SERVICE_IP=10.3.0.10
 export USE_CALICO=false
 
-
+# 检查是否安装 kubelet
 function check_kubelet_install {
-  systemctl status kubelet.service | grep 'not-found'
+  systemctl status kubelet.service | grep -q 'not-found'
   if [[ ! $? -eq 0 ]]; then
     echo "kubelet service is installed."
     exit 0
@@ -54,6 +54,7 @@ function setup_tls {
 
 function create_namespace {
     curl -H "Content-Type: application/json" -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-system"}}' "http://127.0.0.1:8080/api/v1/namespaces"
+    # 判断创建 namespace 是否成功, 循环执行直到创建成功
     while [[ ! $? -eq 0 ]]; do
       echo "Create kube-system namespace fails, try again sleep 5s!"
       sleep 5
