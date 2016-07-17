@@ -50,24 +50,12 @@ interface=$(ip route | grep default | awk '{print $5}')
 ip_addr=$(ifconfig $interface | grep '\binet\b' | awk '{print $2}')
 net_mask=$(ifconfig $interface | grep '\binet\b' | awk '{print $4}')
 
-# Start the first ceph monitor in the cluster
+# Start the ceph monitor
 sudo docker run -d --net=host \
   -v /etc/ceph:/etc/ceph \
   -v /var/lib/ceph/:/var/lib/ceph \
+  -e KV_TYPE=etcd \
   -e MON_IP=$ip_addr \
   -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
   ceph/daemon mon
 
-# Distribute the keyring and config files via etcd
-for f in \
-  /etc/ceph/ceph.client.admin.keyring \
-  /etc/ceph/ceph.conf \
-  /etc/ceph/ceph.mon.keyring \
-  /etc/ceph/monmap \
-  /var/lib/ceph/bootstrap-mds/ceph.keyring \
-  /var/lib/ceph/bootstrap-osd/ceph.keyring \
-  /var/lib/ceph/bootstrap-rgw/ceph.keyring
-do
-  v=$(sudo base64 $f)
-  etcdctl set /unisound/ceph-dist$f "$v"
-done
