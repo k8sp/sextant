@@ -1,3 +1,11 @@
+
+配置ceph集群的方法：
+
+1. 用etcd写入/etc/ceph/下四个配置文件和/var/lib/ceph/bootstrap-rgw|bootstrap-mds|bootstrap-osd/ceph.keyring（三个）.
+2. 用ceph自带kv
+
+参考https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/README.md
+
 # 1.ceph架构
 
 ![](http://www.ibm.com/developerworks/cn/linux/l-ceph/figure1.gif)
@@ -53,16 +61,16 @@ Ceph Filesystem, Ceph Object Storage和 Ceph Block Devices从Ceph Storage Cluste
 https://github.com/ceph/ceph-docker/tree/master/rbd-volume
 this Docker container will mount the requested RBD image to a volume.
 
-
-1.先执行rbd-mount.service，挂载rbd volume到主机，docker通过volume来管理数据。
+1.systemctl start rbd-mount.service，挂载rbd volume到主机，docker通过volume来管理数据。
 
 2.Dockerfile文件  
 dockerfile是一种被Docker程序解释的脚本，Dockerfile有一条一条的指令组成，指令建议使用大写。
 ENTRYPOINT设定容器启动时执行entrypoint.sh
+
+运行docker build . 
+
 /usr/bin/rbd map：映射rbd volume
 /mountWait  
-运行docker build . 命令
-
 # ceph读取原理及磁盘挂载
 
 
