@@ -11,32 +11,6 @@
 3. 解决Docker跨机器容器之间的通讯问题。
 4. Kubernetes的自我修复机制使得容器集群总是运行在用户期望的状态。
 
-接下来将简单介绍以下几个概念
-
-### kubectl
-
-与Kubernetes集群最简单的交互方式就是通过命令行kubectl命令，可以实现查看集群、服务、Pods状态，创建服务并部署新的应用等功能。
-
-### Pod
-
-Pod是Kubernetes的基本单元，也是由Kubernetes创建和管理的最小可部署单元。一个Pod由相关的一个或多个Container(s)构成，通常Pod里的容器运行相同的应用。Pod共享相同的volumes、*namespaces*、IP地址和port空间。
-
-### Volumes
-
-Volume是一个能够被Container访问的目录，用于解决：
-
-1. 当Container崩溃时，Kubernetes会重启一个新的Container，但之上的的文件却无法被找回的问题；
-2. 在Containers的运行过程中，会存在共享一些必要文件的需求。
-
-### Service
-
-Services也是Kubernetes的基本操作单元，是真实应用服务的抽象。因为Pod虽然拥有自己的IP，但是随着时间可能变化并不稳定。因此需要Service来维护Pod之间的联系，通过Label Selector决定服务请求传递给后端提供服务的Pod。Service对外表现为一个单一访问接口，外部不需要了解后端如何运行，这给扩展或维护后端带来很大的好处。
-
-### Label
-
-Labels是用于区分Pod、Service等对象的key/value键值对，Pod、Service可以有多个label，但是每个label的key只能对应一个value。Labels是Service和Replication Controller运行的基础，为了将访问Service的请求转发给后端提供服务的多个容器，正是通过标识容器的labels来选择正确的容器。同样，Replication Controller也使用labels来管理通过pod 模板创建的一组容器，这样Replication Controller可以更加容易，方便地管理多个容器，无论有多少容器。
-
-
 ## 准备３台CoreOS虚拟机
 ```
 git clone https://github.com/coreos/coreos-vagrant.git
@@ -106,10 +80,9 @@ $ curl http://127.0.0.1:8080/version
 
 ### 配置worker结点
 
-首先进入每个worker结点，为core用户修改密码，才能scp文件
+首先进入每个worker结点
 
-	$ vagrant ssh core-02 -- -A
-	$ sudo passwd core
+	$ vagrant ssh core-02 
 
 配置/etc/hosts在集群之间方便通信
 
