@@ -25,6 +25,10 @@ Ceph将客户端数据作为对象存储在存储池中，通过CRUSH算法，Ce
 
 # 3.1 Block Device Quick Start
 也被称作RBD或RADOS，在此之前先保证Ceph Storage Cluster在active + clean状态
+基于块的存储接口是最常见的用rotating media，如硬盘/CDs/floppy disks，来存储数据的方法。
+Ceph block devices是厚磁盘，大小可调节，在集群的多OSD中存储条带化数据。
+rbd-manage rados block device(RBD)images
+rbd用于操作rados block device(RBD)镜像，被linux rbd driver和rbd storage driver用于QEMU/KVM。
 
 # 3.2 Filesystem Quick Start
 Ceph Filesystem是一个POSIX-compliant文件系统，使用Ceph Storage Cluster来存储数据，它用同样的Ceph Storage Cluster系统作为Ceph Block Devices, Ceph Object Storage，with its S3和Swift APIs或native binding.
@@ -40,3 +44,9 @@ Ceph Filesystem是一个POSIX-compliant文件系统，使用Ceph Storage Cluster
 ![](http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/figure02.png)
 -
 Ceph Filesystem, Ceph Object Storage和 Ceph Block Devices从Ceph Storage Cluster中读写数据。
+
+
+
+
+
+
