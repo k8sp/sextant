@@ -1,6 +1,6 @@
 
-配置ceph集群的方法：
-
+# 0.配置ceph集群
+--
 1. 用etcd写入/etc/ceph/下四个配置文件和/var/lib/ceph/bootstrap-rgw|bootstrap-mds|bootstrap-osd/ceph.keyring（三个）.
 2. 用ceph自带kv
 
@@ -66,10 +66,9 @@ this Docker container will mount the requested RBD image to a volume.
 2.Dockerfile文件  
 dockerfile是一种被Docker程序解释的脚本，Dockerfile有一条一条的指令组成，指令建议使用大写。
 ENTRYPOINT设定容器启动时执行entrypoint.sh
-
 运行docker build . 
-
 /usr/bin/rbd map：映射rbd volume
+
 /mountWait  
 # ceph读取原理及磁盘挂载
 
