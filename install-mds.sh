@@ -18,3 +18,5 @@ done
 docker run -d --net=host -v /etc/ceph:/etc/ceph -v /var/lib/ceph:/var/lib/ceph \
   -e CEPHFS_CREATE=1 ceph/daemon mds
 
+#install MDS daemon after the installation of MON deamon
+#the storage cluster require at least one MDS daemon
