@@ -139,9 +139,5 @@ $ curl http://127.0.0.1:8080/version
 由于被墙的原因，导致无法下载gci.io，qury.io上的镜像，解决方法是：可以通过docker.io上下载所需镜像，然后通过docker tag重命名.详细内容可以参考`kubernetes-master-deploy.sh` 和 `kubernetes-worker-deploy.sh`脚本.
 
 ### 参考：
-
-1. [Kubernetes - Volumes](http://kubernetes.io/docs/user-guide/volumes/)
-2. [GOOGLE KUBERNETES设计文档之VOLUMES](http://www.sel.zju.edu.cn/?p=394&cpage=1)
-3. [Kubernetes - Services](http://kubernetes.io/docs/user-guide/services/)
-4. [CoreOS + Kubernetes Step By Step](https://coreos.com/kubernetes/docs/latest/getting-started.html)
+[CoreOS + Kubernetes Step By Step](https://coreos.com/kubernetes/docs/latest/getting-started.html)
 
