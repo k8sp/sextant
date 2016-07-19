@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# This function converts a net mask to an CIDR.
+# To start a Ceph monitor by running the docker container ceph/daemon, an
+# environment variable CEPH_PUBLIC_NETWORK is needed in the form of
+# <IP address><CIDR>. We can get the IP address and net mask by some command
+# line tools, but we can't directly get the CIDR, so we provide this function to
+# convert the net mask to CIDR.
 function netmask_to_cidr {
   local netmask=$1
   declare -A convert_table=( \
@@ -35,24 +41,10 @@ function netmask_to_cidr {
     ["224.0.0.0"]="/3" \
     ["192.0.0.0"]="/2" \
     ["128.0.0.0"]="/1" \
-    ["0.0.0.0"]="/0"\
+    ["0.0.0.0"]="/0" \
     )
   echo "${convert_table[$netmask]}"
 }
-
-# Get the keyring and config files from etcd
-for f in \
-  /etc/ceph/ceph.client.admin.keyring \
-  /etc/ceph/ceph.conf \
-  /etc/ceph/ceph.mon.keyring \
-  /etc/ceph/monmap \
-  /var/lib/ceph/bootstrap-mds/ceph.keyring \
-  /var/lib/ceph/bootstrap-osd/ceph.keyring \
-  /var/lib/ceph/bootstrap-rgw/ceph.keyring
-do
-  sudo mkdir -p $(dirname $f)
-  etcdctl get /unisound/ceph-dist$f | base64 --decode | sudo tee $f >/dev/null
-done
 
 interface=$(ip route | grep default | awk '{print $5}')
 ip_addr=$(ifconfig $interface | grep '\binet\b' | awk '{print $2}')
@@ -62,6 +54,7 @@ net_mask=$(ifconfig $interface | grep '\binet\b' | awk '{print $4}')
 sudo docker run -d --net=host \
   -v /etc/ceph:/etc/ceph \
   -v /var/lib/ceph/:/var/lib/ceph \
+  -e KV_TYPE=etcd \
   -e MON_IP=$ip_addr \
   -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
   ceph/daemon mon
