@@ -15,7 +15,7 @@ Scalable Hashing(CRUSH)的伪随机的数据分布算法放入集群节点中。
 # 2.Ceph存储集群
 ![](http://www.ibm.com/developerworks/cn/linux/l-ceph/figure1.gif)
 
-在Ceph存储集群中，Ceph Client 是 Ceph 文件系统的用户客户端，Ceph Metadata Daemon 提供了元数据服务器，而 Ceph Object Storage Daemon 提供了实际存储（对数据和元数据两者）。最后，Ceph Monitor 提供了集群管理。
+在Ceph存储集群中，Ceph Client 是 Ceph 文件系统的用户客户端，Ceph Metadata Daemon 提供了元数据服务器，而 Ceph Object Storage Daemon 提供了实际存储（对数据和元数据两者），Ceph Monitor 提供了集群管理。
 
 ## 集群部署
 Ceph Storage Cluster包括两种类型的daemons: 一个Ceph OSD Daemon(Ojbect Storage Device,OSD)将数据作为对象存储到存储节点，一个Ceph Monitor(MON)维护集群映射的master版本。
@@ -83,7 +83,7 @@ Ceph提供了cephx认证系统来认证用户和daemons，
 
 在某台机器上运行mon后，在/etc/ceph/和/var/lib/ceph生成配置文档，需要把配置文件分布到其他机器，在其他机器安装mon，
 1. 在k8s集群中用etcd写入/etc/ceph/下四个配置文件和/var/lib/ceph/bootstrap-rgw|bootstrap-mds|bootstrap-osd/ceph.keyring三个keyring文件，实现集群中配置共享。这种方法的缺点是要指定第一台机器，不能全自动安装。
-2. 用ceph自带kv，参考https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/README.md
+2. 用ceph自带kv，https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/README.md
 
 # rbd-volume
 https://github.com/ceph/ceph-docker/tree/master/rbd-volume
@@ -96,7 +96,6 @@ dockerfile是一种被Docker程序解释的脚本，Dockerfile有一条一条的
 ENTRYPOINT设定容器启动时执行entrypoint.sh
 运行docker build . 
 /usr/bin/rbd map：映射rbd volume
-
 /mountWait  
 # ceph读取原理及磁盘挂载
 
