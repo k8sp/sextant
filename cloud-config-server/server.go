@@ -72,10 +72,19 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         templ, config, err = RetrieveFromEtcd()
         if err != nil {
+            w.WriteHeader(http.StatusInternalServerError)
+//          w.Write([]byte("SERVER ERROR!\n"))
             return
         }
     } else {
         CacheToEtcd(templ, config)
+    }
+
+    if templ == "" || config == "" {
+        w.WriteHeader(http.StatusInternalServerError)
+//      w.Write([]byte("SERVER ERROR!\n"))
+        return
+
     }
     tpl := template.Must(template.New("template").Parse(templ))
     cfg := &tp.Config{}
