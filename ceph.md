@@ -28,9 +28,9 @@ Ceph Storage Cluster包括两种类型的daemons: OSD daemon将数据作为对�
 
 - OSDs: OSD daemon存储数据，处理数据复制、恢复、填充、再平衡，通过检查其他Ceph OSD daemons 的heartbeat来提供监测信息给Ceph monitors。当集群做数据拷贝（默认是做数据的三个拷贝，但可调整）时，一个ceph存储集群需要至少两个ceph OSD daemons来获得一个active+clean的状态。
 
-- Mons: monitor维护集群状态的映射，包括monitor映射，OSD映射，Placement Group(PG)映射和CRUSH映射，Ceph也维护monitors、OSDs 和PGs中每个状态改变的历史（也叫epoch）
+- Mons: monitor维护集群状态的映射，包括monitor映射，OSD映射，Placement Group(PG)映射和CRUSH映射，Ceph也维护Mons、OSDs 和PGs中每个状态改变的历史（也叫epoch）
 
-- MDSs: metadata server代表Ceph Filesystem存储metadata（注意Ceph block devices和Ceph object storage不用MDS），Ceph metadata servers使得POSIX文件系统用户可以执行基本指令包括ls, find等，而不会给Ceph存储集群造成大的负担。
+- MDSs: metadata server代表Filesystem存储metadata（注意Ceph block devices和Ceph object storage不用MDS），Ceph metadata servers使得POSIX文件系统用户可以执行基本指令包括ls, find等，而不会给Ceph存储集群造成大的负担。
 
 一个Ceph存储集群需要至少一个Ceph monitor和至少两个Ceph OSD，当运行Ceph filesystem clients时需要MDS。
 
@@ -52,7 +52,7 @@ Filesystem是一个POSIX-compliant文件系统，使用Ceph storage cluster来�
 ### Object storage
 基于RADOS，Ceph storage cluster是所有Ceph deployments的基础，对于通过众多客户端或网关（RADOSGW、RBD 或 CephFS）执行的每个操作，数据会进入 RADOS 或者可以从中读取数据。Ceph storage cluster包括两种类型的daemons: 一个Ceph OSD 将数据作为对象存储到存储节点，一个Ceph monitor维护集群映射的master版本。一个Ceph storage cluster可能包括数千个Storage nodes，一个最小系统至少有一个Ceph monitor和两个Ceph OSD来实现data replication。
 
-### 数据存储
+
 Ceph storage cluster从Ceph clients接收数据，不管这个数据来自Ceph bloak device, Ceph object storage, Ceph filesystem还是你通过librados创造的指令，它都将数据存储为对象，每个对象对应文件系统中的一个文件，被存储在Object storage device中。OSD在存储磁盘中执行读写操作，图1所示
 #### <a name=f1>图1</a>
 ![](http://docs.ceph.com/docs/master/_images/ditaa-518f1eba573055135eb2f6568f8b69b4bb56b4c8.png)
@@ -75,14 +75,14 @@ Ceph storage cluster从Ceph clients接收数据，不管这个数据来自Ceph b
 Ceph Monitors有一个cluster map的“master copy”，Client仅仅通过链接一个Monitor，获取当前的cluster map就可以确定所有Mon，OSD ,MDS的位置。计算目标位置的能力使得Client可以与OSD daemons直接通信，这是Ceph高扩展性和高性能的一个重要方面。
 Monitor的主要角色式维护cluster map的master copy，它将monitor services的所有变化写到单个Paxos，Paxos再写到key/value存储。
 Monitors可以在同步操作期间查询cluster map的最近版本。
-#### 一致性
+### 一致性
 Clients和其他Ceph daemons通过Ceph配置文件发现monitors，monitors通过monitor map(monmap)来发现彼此，而不是配置文件。对Ceph monitor有更新的操作后，Ceph通过一个被称作Paxos的分布式一致性算法来相应修改monmap。
-#### 数据存储
+### 数据存储
 Monitors默认存储数据的路径为 /var/lib/ceph/mon/$cluster-$id，这个路径不建议修改。为了是的Ceph storage cluster有最好的性能，推荐在分开的hosts上运行Monitors，从OSD daemons中驱动。
 Ceph0.59之前的版本，将数据存储在文件中，可以通过ls和cat查看，但没有强一致性。以后的版本，Monitors将数据存储为键值对，
-#### 集群容量
+### 集群容量
 假设一个集群中，有33个Ceph Nodes, 每台主机有一个OSD Daemon, 每个OSD Daemon从3TB驱动中读写数据，这样集群最大的实际容量是99TB，如果mon osd full ratio为0.95，当剩余容量到5TB时，集群就不会容许Clients继续读写数据，集群的可操作容量为95TB，而非99TB。
-#### 高可用性认证
+### 高可用性认证
 Ceph提供了cephx认证系统来认证用户和daemons，Client和Monitor的key文件分别是/etc/ceph/ceph.client.admin.keyring和ceph.mon.keyring.
 ## Ceph Docker集群配置
 
@@ -90,16 +90,17 @@ Ceph提供了cephx认证系统来认证用户和daemons，Client和Monitor的key
 1. 在k8s集群中用etcd写入/etc/ceph/下四个配置文件和/var/lib/ceph/bootstrap-rgw|bootstrap-mds|bootstrap-osd/ceph.keyring三个keyring文件，其他机器安装mon时从etcd中读取。这种方法的缺点是要指定第一台机器，不能全自动安装。
 2. ceph支持etcd和consul两种KV backends，所有的机器执行相同的脚本，实现全自动化安装。
 
-### Ceph磁盘挂载
+### rbd volume挂载
 根据ceph/ceph-docker项目，通过Docker容器将Ceph RBD volume挂载到主机。
 运行docker build . 
+未完..
 
 
 ## 参考文献
 - ceph官方文档 http://docs.ceph.com/docs/master/
-- Ceph: A Scalable, High-Performance Distributed File System http://ceph.com/papers/weil-ceph-osdi06.pdf
+- Ceph论文: A Scalable, High-Performance Distributed File System http://ceph.com/papers/weil-ceph-osdi06.pdf
 - http://www.ibm.com/developerworks/cn/cloud/library/cl-openstackceph/
 - rados论文 http://ceph.com/papers/weil-rados-pdsw07.pdf
 - CRUCH-Controlled,Scalable,Decentralized Placement of Replicated Data http://ceph.com/papers/weil-crush-sc06.pdf
-- rbd-voluem https://github.com/ceph/ceph-docker/tree/master/rbd-volume
+- rbd-volume https://github.com/ceph/ceph-docker/tree/master/rbd-volume
 - docker https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/README.md
