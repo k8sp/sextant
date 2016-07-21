@@ -87,10 +87,8 @@ coreos:
             [Service]
             {{- with .K8sRole }}
             ExecStart=cd /home/core && /usr/bin/wget -O {{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip && unzip -o {{ . }}.zip && cd {{ . }} && bash setup_k8s_{{ . }}.sh
-#            ExecStart=cd /home/core && /usr/bin/wget http://10.10.10.192/install-k8s/{{ . }}.zip && unzip {{ . }}.zip && cd {{ . }} && bash setup_k8s_{{ . }}.sh     
             {{- else }}
             ExecStart=cd /home/core && /usr/bin/wget -O worker.zip http://10.10.10.192/install-k8s/worker.zip && unzip -o worker.zip && cd worker && bash setup_k8s_worker.sh
-#            ExecStart=cd /home/core && /usr/bin/wget http://10.10.10.192/install-k8s/worker.zip && unzip worker.zip && cd worker && bash setup_k8s_worker.sh
             {{- end }}
             RemainAfterExit=yes
             Type=oneshot
