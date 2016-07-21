@@ -57,6 +57,28 @@ coreos:
             ExecStart=/usr/bin/etcdctl set /skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}' 
             Type=oneshot
 
+        - name: "ceph-osd.service"
+          command: restart
+          content: |
+            [Unit]
+            Description=Install ceph osd service
+            [Service]
+            ExecStart=cd /home/core && /usr/bin/wget -O install-osd.sh http://10.10.10.192/ceph/install-osd.sh && bash install-osd.sh
+            RemainAfterExit=yes
+            Type=oneshot
+
+        {{- with .CephRole }
+        - name: "ceph-mon.service"
+          command: restart
+          content: |
+            [Unit]
+            Description=Install ceph mon services
+            [Service]
+            ExecStart=cd /home/core && /usr/bin/wget -O install-mon.sh http://10.10.10.192/ceph/install-mon.sh && bash install-mon.sh
+            RemainAfterExit=yes
+            Type=oneshot
+        {{- end }}
+
         - name: "install-k8s.service"
           command: restart
           content: |

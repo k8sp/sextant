@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,8 +18,8 @@ import (
 
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
-var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/cloud-config.template"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/liangjiameng/cloud-config-server/template/unisound-ailab/build_config.yml"
+var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/cloud-config-server/cloud-config-server/template/cloud-config.template?token=ABVweRElt8m6CShy2jcwuOxlBtlXOmPKks5XmbRZwA%3D%3D"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/cloud-config-server/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVweT25Wg2ENyDdA3m6ukDjO4slIuz2ks5XmbSuwA%3D%3D"
 
 var kapi client.KeysAPI
 
@@ -44,7 +45,7 @@ func init() {
 				config = ""
 				continue
 			}
-			CacheToEtcd(template, config)
+			WriteToFile(template, config)
 		}
 	}()
 }
@@ -70,19 +71,19 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 
 	templ, config, err := RetriveFromGithub(3 * time.Second)
 	if err != nil {
-		templ, config, err = RetrieveFromEtcd()
+		templ, config, err = ReadFromFile()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 //			w.Write([]byte("SERVER ERROR!\n"))
 			return
 		}
 	} else {
-		CacheToEtcd(templ, config)
+		WriteToFile(templ, config)
 	}
 
 	if templ == "" || config == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-//		w.Write([]byte("SERVER ERROR!\n"))
+		w.Write([]byte("SERVER ERROR!\n"))
 		return
 
 	}
@@ -104,6 +105,32 @@ func RetriveFromGithub(timeout time.Duration) (template string, config string, e
 		return "", "", err
 	}
 	return template, config, nil
+}
+
+func WriteToFile(template string, config string){
+        if template == "" || config == "" {
+                return
+        }
+	tplFile := "cloud-config.template"
+	cfgFile := "./unisound-ailab/build_config.yml"
+	ioutil.WriteFile(tplFile, []byte(template), os.ModeAppend)
+	ioutil.WriteFile(cfgFile, []byte(config), os.ModeAppend)
+}
+
+func ReadFromFile() (template string, config string, err error){
+	tplFile := "./template/cloud-config.template"
+        cfgFile := "./template/unisound-ailab/build_config.yml"
+	temp, err := ioutil.ReadFile(tplFile)
+	if err != nil {
+                log.Printf("%v\n",err)
+                return "", "", err
+        }
+	conf, err := ioutil.ReadFile(cfgFile)
+	if err != nil {
+                log.Printf("%v\n",err)
+                return "", "", err
+        }
+	return string(temp), string(conf), nil
 }
 
 func RetrieveFromEtcd() (template string, config string, err error){
