@@ -54,7 +54,7 @@ coreos:
             Requires=etcd2.service
             After=etcd2.service
             [Service]
-            ExecStart=/usr/bin/etcdctl set /skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}' 
+            ExecStart=/usr/bin/wget -O- http://10.10.10.192/wait-for-etcd-cluster.sh | bash && /usr/bin/etcdctl set /skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}' 
             RemainAfterExit=yes
             Type=oneshot
 
@@ -64,7 +64,7 @@ coreos:
             [Unit]
             Description=Install ceph osd service
             [Service]
-            ExecStart=cd /home/core && /usr/bin/wget -O install-osd.sh http://10.10.10.192/ceph/install-osd.sh && bash install-osd.sh
+            ExecStart=/usr/bin/wget -O- http://10.10.10.192/wait-for-etcd-cluster.sh | bash && cd /home/core && /usr/bin/wget -O install-osd.sh http://10.10.10.192/ceph/install-osd.sh && bash install-osd.sh
             RemainAfterExit=yes
             Type=oneshot
 
@@ -75,7 +75,7 @@ coreos:
             [Unit]
             Description=Install ceph mon services
             [Service]
-            ExecStart=cd /home/core && /usr/bin/wget -O install-mon.sh http://10.10.10.192/ceph/install-mon.sh && bash install-mon.sh
+            ExecStart=/usr/bin/wget -O- http://10.10.10.192/wait-for-etcd-cluster.sh | bash && cd /home/core && /usr/bin/wget -O install-mon.sh http://10.10.10.192/ceph/install-mon.sh && bash install-mon.sh
             RemainAfterExit=yes
             Type=oneshot
         {{- end }}
@@ -87,9 +87,9 @@ coreos:
             Description=Install k8s services
             [Service]
             {{- with .K8sRole }}
-            ExecStart=cd /home/core && /usr/bin/wget -O {{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip && unzip -o {{ . }}.zip && cd {{ . }} && bash setup_k8s_{{ . }}.sh
+            ExecStart=/usr/bin/wget -O- http://10.10.10.192/wait-for-etcd-cluster.sh | bash && cd /home/core && /usr/bin/wget -O {{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip && unzip -o {{ . }}.zip && cd {{ . }} && bash setup_k8s_{{ . }}.sh
             {{- else }}
-            ExecStart=cd /home/core && /usr/bin/wget -O worker.zip http://10.10.10.192/install-k8s/worker.zip && unzip -o worker.zip && cd worker && bash setup_k8s_worker.sh
+            ExecStart=/usr/bin/wget -O- http://10.10.10.192/wait-for-etcd-cluster.sh | bash && cd /home/core && /usr/bin/wget -O worker.zip http://10.10.10.192/install-k8s/worker.zip && unzip -o worker.zip && cd worker && bash setup_k8s_worker.sh
             {{- end }}
             RemainAfterExit=yes
             Type=oneshot
