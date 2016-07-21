@@ -55,6 +55,7 @@ coreos:
             After=etcd2.service
             [Service]
             ExecStart=/usr/bin/etcdctl set /skydns/com/unisound/ailab/%H '{"host":"$public_ipv4"}' 
+            RemainAfterExit=yes
             Type=oneshot
 
         - name: "ceph-osd.service"
