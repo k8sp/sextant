@@ -20,6 +20,9 @@
 
 # 本脚本以及相关配置文件预设：MasterNodeIP=10.10.10.191, WorkerNodeIP=10.10.10.192
 
+# cd to the directory where the script is
+cd `dirname $0`
+
 # environment is a file which contains the IP of the worker
 cp environment /etc/ -f
 

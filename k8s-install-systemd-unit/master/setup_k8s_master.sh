@@ -21,6 +21,9 @@
 
 # 本脚本以及相关配置文件预设：MasterNodeIP=10.10.10.191, WorkerNodeIP=10.10.10.192
 
+# cd to the directory where the script is
+cd `dirname $0`
+
 # 获取本机网卡 IP
 export COREOS_PUBLIC_IPV4=$(LC_ALL=C ifconfig | grep 'inet ' | egrep -v '(127\.0\.0\.1)|(10\.1\..*)|(172\.17\..*)'|awk '{print $2}')
 export MASTER_HOST=$COREOS_PUBLIC_IPV4
