@@ -111,8 +111,8 @@ func WriteToFile(template string, config string){
         if template == "" || config == "" {
                 return
         }
-	tplFile := "cloud-config.template"
-	cfgFile := "./unisound-ailab/build_config.yml"
+	tplFile := "./template/cloud-config.template"
+	cfgFile := "./template/unisound-ailab/build_config.yml"
 	ioutil.WriteFile(tplFile, []byte(template), os.ModeAppend)
 	ioutil.WriteFile(cfgFile, []byte(config), os.ModeAppend)
 }

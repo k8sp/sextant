@@ -67,7 +67,7 @@ coreos:
             RemainAfterExit=yes
             Type=oneshot
 
-        {{- with .CephRole }
+        {{- with .CephRole }}
         - name: "ceph-mon.service"
           command: restart
           content: |
