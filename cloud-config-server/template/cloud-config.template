@@ -100,7 +100,7 @@ coreos:
         {{- end }}
 
         - name: "install-k8s.service"
-          command: restart
+          command: start
           content: |
             [Unit]
             Description=Install k8s services
