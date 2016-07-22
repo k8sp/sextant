@@ -50,12 +50,21 @@ interface=$(ip route | grep default | awk '{print $5}')
 ip_addr=$(ifconfig $interface | grep '\binet\b' | awk '{print $2}')
 net_mask=$(ifconfig $interface | grep '\binet\b' | awk '{print $4}')
 
-# Start the ceph monitor
-sudo docker run -d --net=host \
-  -v /etc/ceph:/etc/ceph \
-  -v /var/lib/ceph/:/var/lib/ceph \
-  -e KV_TYPE=etcd \
-  -e MON_IP=$ip_addr \
-  -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
-  ceph/daemon mon
+CEPH_MON_DOCKER_NAME=ceph_mon
+
+if docker ps -a | grep -q $CEPH_MON_DOCKER_NAME ; then
+  echo "docker container $CEPH_MON_DOCKER_NAME exists, start it now"
+  docker start $CEPH_MON_DOCKER_NAME
+else
+  # Start the ceph monitor
+  echo "docker container $CEPH_MON_DOCKER_NAME doesn't exist, run it now"
+  docker run -d --net=host \
+    --name $CEPH_MON_DOCKER_NAME \
+    -v /etc/ceph:/etc/ceph \
+    -v /var/lib/ceph/:/var/lib/ceph \
+    -e KV_TYPE=etcd \
+    -e MON_IP=$ip_addr \
+    -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
+    ceph/daemon mon
+fi
 
