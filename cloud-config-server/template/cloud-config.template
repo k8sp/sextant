@@ -43,7 +43,7 @@ coreos:
 
             [Service]
             ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
-            RemainAfterExit=yes
+            RemainAfterExit=no
             Type=oneshot
 
         - name: "set-dns-to-etcd.service"
@@ -53,39 +53,49 @@ coreos:
             Description=Send hostname and IP to etcd2
             Requires=etcd2.service
             After=etcd2.service
+            Requires=network.target
+            After=network.target
+
             [Service]
-            ExecStart=/usr/bin/wget -O /home/core/wait-for-etcd-cluster.sh http://10.10.10.192/wait-for-etcd-cluster.sh
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
             ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://10.10.10.192/set-dns-to-etcd.sh
-            ExecStart=/bin/bash /home/core/wait-for-etcd-cluster.sh
             ExecStart=/bin/bash /home/core/set-dns-to-etcd.sh
-            RemainAfterExit=yes
+            RemainAfterExit=no
             Type=oneshot
 
         - name: "ceph-osd.service"
-          command: restart
+          command: start
           content: |
             [Unit]
             Description=Install ceph osd service
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
             [Service]
-            ExecStart=/usr/bin/wget -O /home/core/wait-for-etcd-cluster.sh http://10.10.10.192/wait-for-etcd-cluster.sh
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
             ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://10.10.10.192/ceph/install-osd.sh
-            ExecStart=/bin/bash /home/core/wait-for-etcd-cluster.sh
             ExecStart=/bin/bash /home/core/install-osd.sh
-            RemainAfterExit=yes
+            RemainAfterExit=no
             Type=oneshot
 
         {{- with .CephRole }}
         - name: "ceph-mon.service"
-          command: restart
+          command: start
           content: |
             [Unit]
             Description=Install ceph mon services
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
             [Service]
-            ExecStart=/usr/bin/wget -O /home/core/wait-for-etcd-cluster.sh http://10.10.10.192/wait-for-etcd-cluster.sh
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
             ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://10.10.10.192/ceph/install-mon.sh
-            ExecStart=/bin/bash /home/core/wait-for-etcd-cluster.sh
             ExecStart=/bin/bash /home/core/install-mon.sh
-            RemainAfterExit=yes
+            RemainAfterExit=no
             Type=oneshot
         {{- end }}
 
@@ -94,9 +104,15 @@ coreos:
           content: |
             [Unit]
             Description=Install k8s services
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=flanneld.service
+            After=flanneld.service
+            Requires=network.target
+            After=network.target
+
             [Service]
-            ExecStart=/usr/bin/wget -O /home/core/wait-for-etcd-cluster.sh http://10.10.10.192/wait-for-etcd-cluster.sh
-            ExecStart=/bin/bash /home/core/wait-for-etcd-cluster.sh
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
             {{- with .K8sRole }}
             ExecStart=/usr/bin/wget -O /home/core/{{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip
             ExecStart=/usr/bin/unzip -d /home/core -o /home/core/{{ . }}.zip
@@ -106,7 +122,7 @@ coreos:
             ExecStart=/usr/bin/unzip -d /home/core -o /home/core/worker.zip
             ExecStart=/bin/bash /home/core/worker/setup_k8s_worker.sh
             {{- end }}
-            RemainAfterExit=yes
+            RemainAfterExit=no
             Type=oneshot
 
 hostname: "{{ .Hostname }}"
