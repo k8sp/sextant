@@ -1,0 +1,139 @@
+#cloud-config
+
+coreos:
+    etcd2:
+        name: "%H"
+        listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
+        initial-cluster: "{{ .InitialCluster }}" 
+        {{- with .IP }}
+        initial-cluster-token: "etcd-cluster-1"
+        initial-advertise-peer-urls: "http://{{ . }}:2380"
+        listen-peer-urls: "http://{{ . }}:2380,http://{{ . }}:7001"
+        advertise-client-urls: "http://{{ . }}:2379"
+        initial-cluster-state: new
+        {{- else }}
+        proxy: on
+        {{- end }}
+    update:
+        reboot-strategy: "etcd-lock"
+    locksmith:
+        window_start: "03:00"
+        window_length: "3h"
+#    flannel:
+#        interface: "{{ .IP }}"
+    units:
+        - name: "etcd2.service"
+          command: "start"
+        - name: "fleet.service"
+          command: "start"
+        - name: "docker.socket"
+          command: "start"
+        - name: "flanneld.service"
+          drop-ins:
+            - name: 50-network-config.conf
+              content: |
+                [Service]
+                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+          command: "start"
+        - name: "settimezone.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Set the time zone
+
+            [Service]
+            ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+            RemainAfterExit=no
+            Type=oneshot
+
+        - name: "set-dns-to-etcd.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Send hostname and IP to etcd2
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
+            [Service]
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+            ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://10.10.10.192/set-dns-to-etcd.sh
+            ExecStart=/bin/bash /home/core/set-dns-to-etcd.sh
+            RemainAfterExit=no
+            Type=oneshot
+
+        - name: "ceph-osd.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install ceph osd service
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
+            [Service]
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://10.10.10.192/ceph/install-osd.sh
+            ExecStart=/bin/bash /home/core/install-osd.sh
+            RemainAfterExit=no
+            Type=oneshot
+
+        {{- with .CephRole }}
+        - name: "ceph-mon.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install ceph mon services
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
+            [Service]
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://10.10.10.192/ceph/install-mon.sh
+            ExecStart=/bin/bash /home/core/install-mon.sh
+            RemainAfterExit=no
+            Type=oneshot
+        {{- end }}
+
+        - name: "install-k8s.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install k8s services
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=flanneld.service
+            After=flanneld.service
+            Requires=network.target
+            After=network.target
+
+            [Service]
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+            {{- with .K8sRole }}
+            ExecStart=/usr/bin/wget -O /home/core/{{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip
+            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/{{ . }}.zip
+            ExecStart=/bin/bash /home/core/{{ . }}/setup_k8s_{{ . }}.sh
+            {{- else }}
+            ExecStart=/usr/bin/wget -O /home/core/worker.zip http://10.10.10.192/install-k8s/worker.zip
+            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/worker.zip
+            ExecStart=/bin/bash /home/core/worker/setup_k8s_worker.sh
+            {{- end }}
+            RemainAfterExit=no
+            Type=oneshot
+
+hostname: "{{ .Hostname }}"
+
+ssh_authorized_keys:
+{{ .SSHAuthorizedKeys }}
+
+write_files:
+  - path: "/home/core/.ssh/id_rsa"
+    permissions: "0600"
+    owner: "core"
+    content: |
+{{ .SSHPrivateKey }}
+
