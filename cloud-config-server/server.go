@@ -18,8 +18,8 @@ import (
 
 var etcd_template_key = "/unisound/template_server/template"
 var etcd_config_key = "/unisound/template_server/config"
-var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/cloud-config-server/cloud-config-server/template/cloud-config.template?token=ABVweRElt8m6CShy2jcwuOxlBtlXOmPKks5XmbRZwA%3D%3D"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/cloud-config-server/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVweT25Wg2ENyDdA3m6ukDjO4slIuz2ks5XmbSuwA%3D%3D"
+var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
+var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
 
 var kapi client.KeysAPI
 
