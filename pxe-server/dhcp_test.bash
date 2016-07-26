@@ -19,8 +19,6 @@ function TestConfigDHCP() {
 	["00:25:90:C0:F6:EE"]="192.168.2.12"
     )
 
-    DHCPConf=/tmp/this-time-dhcp-conf
-
     result=$(ConfigDHCP);
     
     read -r -d '' expected << EOF
