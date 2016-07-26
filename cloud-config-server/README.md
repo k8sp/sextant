@@ -91,10 +91,10 @@ git clone git@github.com:k8sp/auto-install.git
 # Golang compile env
 sudo mkdir -p /work/golang
 sudo chown atlas:atlas /work/golang -R
+cd /work/golang
 mkdir src bin pkg
 ln -s /work/github/auto-install/cloud-config-server /work/golang/src/cloud-config-server
 
-cd /work/golang
 export GOPATH=$(pwd)
 export PATH=$PATH:/usr/local/go/bin
 
