@@ -9,33 +9,15 @@ import (
 	"strings"
 	"time"
 	"github.com/gorilla/mux"
-	"golang.org/x/net/context"
-	"github.com/coreos/etcd/client"
 	"text/template"
 	"gopkg.in/yaml.v2"
 	tp "cloud-config-server/template"
 )
 
-var etcd_template_key = "/unisound/template_server/template"
-var etcd_config_key = "/unisound/template_server/config"
 var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
 var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
 
-var kapi client.KeysAPI
-
 func init() {
-	cfg := client.Config{
-		Endpoints: []string{"http://10.10.10.192:2379"},
-		Transport: client.DefaultTransport,
-		// set timeout per request to fail fast when the target endpoint is unavailable
-		HeaderTimeoutPerRequest: time.Second * 2,
-	}
-	c, err := client.New(cfg)
-	if err != nil {
-		log.Printf("%v\n",err)
-	}
-	kapi = client.NewKeysAPI(c)
-
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for _ = range ticker.C {
@@ -74,7 +56,6 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 		templ, config, err = ReadFromFile()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-//			w.Write([]byte("SERVER ERROR!\n"))
 			return
 		}
 	} else {
@@ -131,46 +112,6 @@ func ReadFromFile() (template string, config string, err error){
                 return "", "", err
         }
 	return string(temp), string(conf), nil
-}
-
-func RetrieveFromEtcd() (template string, config string, err error){
-	resp, err := kapi.Get(context.Background(), etcd_template_key, nil)
-	if err != nil {
-		log.Printf("%v\n",err)
-		return "", "", err
-	} else {
-		template = resp.Node.Value
-	}
-	resp, err = kapi.Get(context.Background(), etcd_config_key, nil)
-	if err != nil {
-		log.Printf("%v\n",err)
-		return "", "", err
-	} else {
-		config = resp.Node.Value
-	}
-	return template, config, nil
-}
-
-func CacheToEtcd(template string, config string){
-	if template == "" || config == "" {
-		return
-	}
-	fmt.Printf("%#v\n", etcd_template_key)
-	resp, err := kapi.Set(context.Background(), etcd_template_key, template, nil)
-	if err != nil {
-		log.Printf("%v\n",err)
-	} else {
-		// print common key info
-		log.Printf("Set is done. Metadata is %q\n", resp)
-	}
-	fmt.Printf("%#v\n", etcd_config_key)
-	resp, err = kapi.Set(context.Background(), etcd_config_key, config, nil)
-	if err != nil {
-		log.Printf("%v\n",err)
-	} else {
-		// print common key info
-		log.Printf("Set is done. Metadata is %q\n", resp)
-	}
 }
 
 func httpGet(url string, timeout time.Duration) (string, error) {
