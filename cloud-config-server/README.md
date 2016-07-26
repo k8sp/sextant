@@ -37,8 +37,7 @@ CCTS 每隔一段时间试着访问 Github 看是否有更新，如果有，则�
 替换缓存中的内容。
 
 最简答的缓存机制是 CCTS 在内存中维护，但是如果CCTS 被重启，则缓存信息
-就丢失了。一种更合理的方式是缓存在 etcd 里，目前在CCTS服务器上安装了一
-个单节点的 etcd 来缓存。
+就丢失了。目前的做法是，将这些配置信息写入本地文件。
 
 ## 相关算法
 
@@ -48,9 +47,9 @@ CCTS 每隔一段时间试着访问 Github 看是否有更新，如果有，则�
 func HttpHandler(mac_addr) cloud_config {
   template, config, timeout := RetriveFromGithub(timeout = 1s)
   if !timeout {
-    CacheToEtcd(template, config)
+    WriteToFile(template, config)
   } else {
-    template, config, ok := RetrieveFromEtcd()
+    template, config, ok := ReadFromFile()
     if !ok {
 	  return error
     }
@@ -66,7 +65,7 @@ go func() {
   for {
     Sleep(10m)
     template, config := RetriveFromGithub(timeout = infinite)
-	CacheToEtcd(template, config)
+	WriteToFile(template, config)
   }
 }
 ```
