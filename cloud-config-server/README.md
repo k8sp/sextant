@@ -69,3 +69,66 @@ go func() {
   }
 }
 ```
+
+## Go环境配置
+
+```
+cd ~
+wget https://storage.googleapis.com/golang/go1.6.3.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.6.3.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+```
+
+## 编译Go代码
+
+```
+sudo mkdir -p /work/github
+sudo chown atlas:atlas /work/github -R
+
+# get code from github
+git clone git@github.com:k8sp/auto-install.git
+
+# Golang compile env
+sudo mkdir -p /work/golang
+sudo chown atlas:atlas /work/golang -R
+mkdir src bin pkg
+ln -s /work/github/auto-install/cloud-config-server /work/golang/src/cloud-config-server
+
+cd /work/golang
+export GOPATH=$(pwd)
+export PATH=$PATH:/usr/local/go/bin
+
+go install cloud-config-server
+
+```
+
+## 配置为系统服务(system unit file)
+
+```
+sudo vim /etc/systemd/system/cloud-config.service 
+```
+
+**cloud-config.service 内容如下:**
+
+```
+[Unit]
+Description=Cloud config server
+After=network.target
+Wants=network-online.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/work/golang/bin/cloud-config-server
+RestartSec=5s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+**设置开机启动,并启动服务**
+```
+sudo systemctl enable cloud-config.service; sudo systemctl start cloud-config.service;
+```
+
+(END)
