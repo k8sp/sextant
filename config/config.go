@@ -6,16 +6,16 @@ package config
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
 type Cluster struct {
-	Bootstrapper string // e.g., 192.168.2.10
+	Bootstrapper string
 
-	Subnet        string   // e.g., 192.168.2.0
-	Netmask       string   // e.g., 255.255.255.0
-	IPLow, IPHigh string   // e.g., 192.168.2.11, 192.168.2.249
-	Routers       []string // e.g., [192.168.2.1]
-	Broadcast     string   // e.g., 192.168.2.255
-	Nameservers   []string // e.g., [8.8.8.8, 8.8.4.4]
-	DomainName    string   // e.g., unisound.com
-	Nodes         []Node   // node roles and fixed IPs.
+	Subnet        string
+	Netmask       string
+	IPLow, IPHigh string
+	Routers       []string
+	Broadcast     string
+	Nameservers   []string
+	DomainName    string
+	Nodes         []Node
 
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
 	SSHPrivateKey     string `yaml:"ssh_private_key"`

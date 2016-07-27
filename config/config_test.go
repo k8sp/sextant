@@ -1,7 +1,27 @@
 package config
 
-const (
-	testConfig = `
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/topicai/candy"
+	"gopkg.in/yaml.v2"
+)
+
+func TestDefaultValues(t *testing.T) {
+	c := &Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
+
+	assert.False(t, c.Nodes[1].KubeMaster)
+	assert.False(t, c.Nodes[2].KubeMaster)
+	assert.False(t, c.Nodes[3].KubeMaster)
+	assert.False(t, c.Nodes[3].EtcdMember)
+	assert.False(t, c.Nodes[3].CephMonitor)
+}
+
+// testConfig is a YAML encoded Cluster instance used as an example
+// and for unit testing.
+const testConfig = `
 bootstrapper: 10.10.10.192
 
 subnet: 10.10.10.0
@@ -31,4 +51,3 @@ nodes:
   - mac: "00:25:90:c0:f7:7e"
     ip: "10.10.10.205"
 `
-)
