@@ -1,11 +1,11 @@
 package config
 
 import (
-	"fmt"
 	"html/template"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 
 	"gopkg.in/yaml.v2"
@@ -16,21 +16,22 @@ func TestYARMLEncoding(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
 
 	tmpl := template.Must(template.New("").Parse(tmplDHCPConf))
-	tmpl.Execute(os.Stdout, c)
+	assert.Nil(t, tmpl.Execute(os.Stdout, c))
 
-	fmt.Println(c.InitialEtcdCluster())
+	//	fmt.Println(c.InitialEtcdCluster())
 }
 
-const testConfig = `
-bootstrapper: 192.168.2.10
+const (
+	testConfig = `
+bootstrapper: 10.10.10.192
 
-subnet: 192.168.2.0
+subnet: 10.10.10.0
 netmask: 255.255.255.0
-iplow: 192.168.2.11
-iphigh: 192.168.2.249
-routers: [192.168.2.1, 192.168.2.10]
-broadcast: 192.168.2.255
-nameservers: [192.168.2.10, 8.8.8.8, 8.8.4.4]
+iplow: 10.10.10.100
+iphigh: 10.10.10.199
+routers: [10.10.10.192]
+broadcast: 10.10.10.255
+nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: unisound.com
 
 nodes:
@@ -52,24 +53,23 @@ nodes:
     ip: "10.10.10.205"
 `
 
-const tmplDHCPConf = `
-next-server {{.Bootstrapper}};
+	tmplDHCPConf = `next-server {{.Bootstrapper}};
 filename "pxelinux.0";
  
 subnet {{.Subnet}} netmask {{.Netmask}} {
-     range {{.IPLow}} {{.IPHigh}};
-     option routers {{.Join .Routers}};
-     option broadcast-address {{.Broadcast}};
-     option domain-name-servers {{.Join .Nameservers}}; 
-     option domain-name "{{.DomainName}}";
-
+    range {{.IPLow}} {{.IPHigh}};
+    option routers {{.Join .Routers}};
+    option broadcast-address {{.Broadcast}};
+    option domain-name-servers {{.Join .Nameservers}}; 
+    option domain-name "{{.DomainName}}";
 {{range $key, $value := .Nodes}}
   {{- if $value.IP}}
-     host {{.Hostname $key}}  {
-         hardware ethernet {{$key}};
-         fixed-address {{$value.IP}};
-     }
+    host {{.Hostname $key}} {
+        hardware ethernet {{$key}};
+        fixed-address {{$value.IP}};
+    }
   {{- end -}}
 {{end}}
 }
 `
+)

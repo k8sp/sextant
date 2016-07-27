@@ -26,6 +26,13 @@ type Cluster struct {
 	SSHPrivateKey     string `yaml:"ssh_private_key"`
 }
 
+// Node defines properties of some nodes in the cluster.  For example,
+// for those nodes on which we install etcd members, we prefer that
+// the DHCP server assigns them fixed IPs.  This can be done by
+// specify Node.IP.  Also, some of nodes can also have Kubernetes
+// master or Ceph monitor installed as well.  NOTE: for nodes with IP
+// specified in Node.IP, these IPs should not be in the range of
+// Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
 	IP          string `yaml:"ip"` // if empty, no fixed IP.
 	CephMonitor bool   `yaml:"ceph_monitor"`
@@ -33,16 +40,24 @@ type Node struct {
 	EtcdMember  bool   `yaml:"etcd_member"`
 }
 
+// Join is defined as a method of Cluster, so can be called in
+// templates.
 func (c Cluster) Join(s []string) string {
 	return strings.Join(s, ", ")
 }
 
+// Hostname is defined as a method of Node, so can be call in
+// template.
 func (n Node) Hostname(mac string) string {
-	return strings.Replace(mac, ":", "-", -1)
+	return strings.ToUpper(strings.Replace(mac, ":", "-", -1))
 }
 
+// InitialEtcdCluster derives the value of command line parameter
+// --initial_cluster of etcd from Cluter.Nodes and Node.EtcdMember.
+// NOTE: Every node in the cluster will have a etcd daemon running --
+// either as a member or as a proxy.
 func (c Cluster) InitialEtcdCluster() string {
-	ret := make([]string, 0)
+	var ret []string
 	for k, v := range c.Nodes {
 		if v.EtcdMember {
 			name := v.Hostname(k)
