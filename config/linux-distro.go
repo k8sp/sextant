@@ -7,8 +7,14 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/topicai/candy"
 )
 
+// LinuxDistro returns the Linux distribution name.  Known
+// distributions include "centos", "coreos", and "ubuntu".  If the
+// system is not Linux or its distribution is unknown, LinuxDistro
+// returns an error.
 func LinuxDistro() (string, error) {
 	if runtime.GOOS != "linux" {
 		return "", errors.New("Not Linux")
@@ -18,7 +24,7 @@ func LinuxDistro() (string, error) {
 	if e != nil {
 		return "", e
 	}
-	defer f.Close()
+	defer candy.Must(f.Close())
 
 	line, e := bufio.NewReader(f).ReadString('\n')
 	if e != nil {
@@ -31,7 +37,6 @@ func LinuxDistro() (string, error) {
 		return "ubuntu", nil
 	} else if strings.Contains(strings.ToLower(line), "coreos") {
 		return "coreos", nil
-	} else {
-		return "", fmt.Errorf("Unknown OS: %v", line)
 	}
+	return "", fmt.Errorf("Unknown OS: %v", line)
 }
