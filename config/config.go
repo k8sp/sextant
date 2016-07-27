@@ -13,14 +13,14 @@ import (
 type Cluster struct {
 	Bootstrapper string // e.g., 192.168.2.10
 
-	Subnet        string          // e.g., 192.168.2.0
-	Netmask       string          // e.g., 255.255.255.0
-	IPLow, IPHigh string          // e.g., 192.168.2.11, 192.168.2.249
-	Routers       []string        // e.g., [192.168.2.1]
-	Broadcast     string          // e.g., 192.168.2.255
-	Nameservers   []string        // e.g., [8.8.8.8, 8.8.4.4]
-	DomainName    string          // e.g., unisound.com
-	Nodes         map[string]Node // node roles and fixed IPs.
+	Subnet        string   // e.g., 192.168.2.0
+	Netmask       string   // e.g., 255.255.255.0
+	IPLow, IPHigh string   // e.g., 192.168.2.11, 192.168.2.249
+	Routers       []string // e.g., [192.168.2.1]
+	Broadcast     string   // e.g., 192.168.2.255
+	Nameservers   []string // e.g., [8.8.8.8, 8.8.4.4]
+	DomainName    string   // e.g., unisound.com
+	Nodes         []Node   // node roles and fixed IPs.
 
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
 	SSHPrivateKey     string `yaml:"ssh_private_key"`
@@ -34,7 +34,8 @@ type Cluster struct {
 // specified in Node.IP, these IPs should not be in the range of
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
-	IP          string `yaml:"ip"` // if empty, no fixed IP.
+	MAC         string
+	IP          string // if empty, no fixed IP.
 	CephMonitor bool   `yaml:"ceph_monitor"`
 	KubeMaster  bool   `yaml:"kube_master"`
 	EtcdMember  bool   `yaml:"etcd_member"`
@@ -48,8 +49,13 @@ func (c Cluster) Join(s []string) string {
 
 // Hostname is defined as a method of Node, so can be call in
 // template.
-func (n Node) Hostname(mac string) string {
-	return strings.ToUpper(strings.Replace(mac, ":", "-", -1))
+func (n Node) Hostname() string {
+	return strings.ToUpper(strings.Replace(n.MAC, ":", "-", -1))
+}
+
+// Mac is defined as a method of Node, so can be called in template.
+func (n Node) Mac() string {
+	return strings.ToUpper(n.MAC)
 }
 
 // InitialEtcdCluster derives the value of command line parameter
@@ -58,12 +64,12 @@ func (n Node) Hostname(mac string) string {
 // either as a member or as a proxy.
 func (c Cluster) InitialEtcdCluster() string {
 	var ret []string
-	for k, v := range c.Nodes {
-		if v.EtcdMember {
-			name := v.Hostname(k)
-			addr := v.Hostname(k)
-			if len(v.IP) > 0 {
-				addr = v.IP // No need for DNS then.
+	for _, n := range c.Nodes {
+		if n.EtcdMember {
+			name := n.Hostname()
+			addr := n.Hostname()
+			if len(n.IP) > 0 {
+				addr = n.IP // No need for DNS then.
 			}
 			ret = append(ret, fmt.Sprintf("%s=http://%s:2380", name, addr))
 		}

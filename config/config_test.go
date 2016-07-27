@@ -1,8 +1,8 @@
 package config
 
 import (
+	"bytes"
 	"html/template"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,9 +16,11 @@ func TestYARMLEncoding(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
 
 	tmpl := template.Must(template.New("").Parse(tmplDHCPConf))
-	assert.Nil(t, tmpl.Execute(os.Stdout, c))
 
-	//	fmt.Println(c.InitialEtcdCluster())
+	var buf bytes.Buffer
+	assert.Nil(t, tmpl.Execute(&buf, c))
+
+	assert.Equal(t, buf.String(), dhcpConf)
 }
 
 const (
@@ -35,41 +37,70 @@ nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: unisound.com
 
 nodes:
-  "00:25:90:c0:f7:80":
+  - mac: "00:25:90:c0:f7:80"
     ip: 10.10.10.201
     ceph_monitor: y
     kube_master: y
     etcd_member: y
-  "00:25:90:c0:f6:ee":
+  - mac: "00:25:90:c0:f6:ee"
     ip: 10.10.10.202
     ceph_monitor: y
     etcd_member: y
-  "00:25:90:c0:f6:d6":
+  - mac: "00:25:90:c0:f6:d6"
     ceph_monitor: y
     etcd_member: y
-  "00:25:90:c0:f7:ac":
+  - mac: "00:25:90:c0:f7:ac"
     ip: "10.10.10.204"
-  "00:25:90:c0:f7:7e":
+  - mac: "00:25:90:c0:f7:7e"
     ip: "10.10.10.205"
 `
 
 	tmplDHCPConf = `next-server {{.Bootstrapper}};
 filename "pxelinux.0";
- 
+
 subnet {{.Subnet}} netmask {{.Netmask}} {
     range {{.IPLow}} {{.IPHigh}};
-    option routers {{.Join .Routers}};
     option broadcast-address {{.Broadcast}};
-    option domain-name-servers {{.Join .Nameservers}}; 
+    option routers {{.Join .Routers}};
     option domain-name "{{.DomainName}}";
-{{range $key, $value := .Nodes}}
-  {{- if $value.IP}}
-    host {{.Hostname $key}} {
-        hardware ethernet {{$key}};
-        fixed-address {{$value.IP}};
+    option domain-name-servers {{.Join .Nameservers}};
+{{range .Nodes}}
+  {{- if .IP}}
+    host {{.Hostname}} {
+        hardware ethernet {{.Mac}};
+        fixed-address {{.IP}};
     }
   {{- end -}}
 {{end}}
+}
+`
+
+	dhcpConf = `next-server 10.10.10.192;
+filename "pxelinux.0";
+
+subnet 10.10.10.0 netmask 255.255.255.0 {
+    range 10.10.10.100 10.10.10.199;
+    option broadcast-address 10.10.10.255;
+    option routers 10.10.10.192;
+    option domain-name "unisound.com";
+    option domain-name-servers 10.10.10.192, 8.8.8.8, 8.8.4.4;
+
+    host 00-25-90-C0-F7-80 {
+        hardware ethernet 00:25:90:C0:F7:80;
+        fixed-address 10.10.10.201;
+    }
+    host 00-25-90-C0-F6-EE {
+        hardware ethernet 00:25:90:C0:F6:EE;
+        fixed-address 10.10.10.202;
+    }
+    host 00-25-90-C0-F7-AC {
+        hardware ethernet 00:25:90:C0:F7:AC;
+        fixed-address 10.10.10.204;
+    }
+    host 00-25-90-C0-F7-7E {
+        hardware ethernet 00:25:90:C0:F7:7E;
+        fixed-address 10.10.10.205;
+    }
 }
 `
 )
