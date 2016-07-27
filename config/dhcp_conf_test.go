@@ -25,20 +25,20 @@ subnet 10.10.10.0 netmask 255.255.255.0 {
     option domain-name "unisound.com";
     option domain-name-servers 10.10.10.192, 8.8.8.8, 8.8.4.4;
 
-    host 00-25-90-C0-F7-80 {
-        hardware ethernet 00:25:90:C0:F7:80;
+    host 00-25-90-c0-f7-80 {
+        hardware ethernet 00:25:90:c0:f7:80;
         fixed-address 10.10.10.201;
     }
-    host 00-25-90-C0-F6-EE {
-        hardware ethernet 00:25:90:C0:F6:EE;
+    host 00-25-90-c0-f6-ee {
+        hardware ethernet 00:25:90:c0:f6:ee;
         fixed-address 10.10.10.202;
     }
-    host 00-25-90-C0-F7-AC {
-        hardware ethernet 00:25:90:C0:F7:AC;
+    host 00-25-90-c0-f7-ac {
+        hardware ethernet 00:25:90:c0:f7:ac;
         fixed-address 10.10.10.204;
     }
-    host 00-25-90-C0-F7-7E {
-        hardware ethernet 00:25:90:C0:F7:7E;
+    host 00-25-90-c0-f7-7e {
+        hardware ethernet 00:25:90:c0:f7:7e;
         fixed-address 10.10.10.205;
     }
 }
