@@ -25,7 +25,7 @@ func TestHead(t *testing.T) {
 	assert.Equal(t, 2, Wc(Head(Echo("Hello\nWorld!"), 3)))
 }
 
-func TestEach_ToFile_Cat_Du_Grep_ForEach(t *testing.T) {
+func TestEach_ToFile_Cat_Du_Grep_For(t *testing.T) {
 	dir, e := ioutil.TempDir("", "")
 	candy.Must(e)
 

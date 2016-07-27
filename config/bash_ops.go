@@ -17,7 +17,7 @@ import (
 // Implementations of Filter should create the channel, run a
 // goroutine to fill and then close the channel, and returns the
 // channel immediately.  Therefore we can chain up filters like Bash
-// pipelines using glue operations like ForEach.
+// pipelines using glue operations like For.
 type Filter func(arg string) chan string
 
 // Echo splits arg by "\n" and outputs each line.
