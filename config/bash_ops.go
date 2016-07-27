@@ -127,9 +127,9 @@ func Grep(in chan string, pattern string) chan string {
 	return out
 }
 
-// ForEach runs h for each line from in.  It copies outputs from all h
+// For runs h for each line from in.  It copies outputs from all h
 // invocations to its own output channel.
-func ForEach(in chan string, h Filter) chan string {
+func For(in chan string, h Filter) chan string {
 	out := make(chan string)
 	go func() {
 		for x := range in {

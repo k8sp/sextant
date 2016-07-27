@@ -39,7 +39,7 @@ func TestEach_ToFile_Cat_Du_Grep_ForEach(t *testing.T) {
 	assert.Equal(t, filename, <-Grep(Du(dir), "TestToFile"))
 
 	assert.Equal(t, "Hello",
-		<-ForEach(Du(dir), func(filename string) chan string {
+		<-For(Du(dir), func(filename string) chan string {
 			return Grep(Cat(filename), "Hello")
 		}))
 }
