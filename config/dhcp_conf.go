@@ -10,8 +10,15 @@ import (
 
 // DHCPConf executes a template with a Cluster variable to generate
 // /etc/dhcpd/dhcp.conf.
-func DHCPConf(c *Cluster) string {
-	tmpl := template.Must(template.New("").Parse(tmplDHCPConf))
+func DHCPConf(tf string, c *Cluster) string {
+	tmpl := template.New("")
+
+	if len(tf) > 0 {
+		tmpl = template.Must(tmpl.Parse(tf))
+	} else {
+		tmpl = template.Must(tmpl.Parse(tmplDHCPConf))
+	}
+
 	var buf bytes.Buffer
 	candy.Must(tmpl.Execute(&buf, c))
 	return buf.String()
