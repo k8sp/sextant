@@ -10,8 +10,15 @@ import (
 
 // DHCPConf executes a template with a Cluster variable to generate
 // /etc/dhcpd/dhcp.conf.
-func DHCPConf(c *Cluster) string {
-	tmpl := template.Must(template.New("").Parse(tmplDHCPConf))
+func DHCPConf(tf string, c *Cluster) string {
+	tmpl := template.New("")
+
+	if len(tf) > 0 {
+		tmpl = template.Must(tmpl.Parse(tf))
+	} else {
+		tmpl = template.Must(tmpl.Parse(tmplDHCPConf))
+	}
+
 	var buf bytes.Buffer
 	candy.Must(tmpl.Execute(&buf, c))
 	return buf.String()
@@ -45,14 +52,11 @@ subnet {{.Subnet}} netmask {{.Netmask}} {
     option routers {{.Join .Routers}};
     option domain-name "{{.DomainName}}";
     option domain-name-servers {{.Join .Nameservers}};
-{{range .Nodes}}
-  {{- if .IP}}
+{{range .Nodes}}{{if .IP}}
     host {{.Hostname}} {
         hardware ethernet {{.Mac}};
         fixed-address {{.IP}};
-    }
-  {{- end -}}
-{{end}}
+    }{{end}}{{end}}
 }
 `
 )

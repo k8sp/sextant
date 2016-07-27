@@ -1,26 +1,17 @@
 package config
 
 import (
-	"bytes"
-	"html/template"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
-
 	"gopkg.in/yaml.v2"
 )
 
-func TestYARMLEncoding(t *testing.T) {
+func TestDHCPConf(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
-
-	tmpl := template.Must(template.New("").Parse(tmplDHCPConf))
-
-	var buf bytes.Buffer
-	assert.Nil(t, tmpl.Execute(&buf, c))
-
-	assert.Equal(t, buf.String(), dhcpConf)
+	assert.Equal(t, dhcpConf, DHCPConf("", c))
 }
 
 const (
