@@ -55,26 +55,6 @@ nodes:
     ip: "10.10.10.205"
 `
 
-	tmplDHCPConf = `next-server {{.Bootstrapper}};
-filename "pxelinux.0";
-
-subnet {{.Subnet}} netmask {{.Netmask}} {
-    range {{.IPLow}} {{.IPHigh}};
-    option broadcast-address {{.Broadcast}};
-    option routers {{.Join .Routers}};
-    option domain-name "{{.DomainName}}";
-    option domain-name-servers {{.Join .Nameservers}};
-{{range .Nodes}}
-  {{- if .IP}}
-    host {{.Hostname}} {
-        hardware ethernet {{.Mac}};
-        fixed-address {{.IP}};
-    }
-  {{- end -}}
-{{end}}
-}
-`
-
 	dhcpConf = `next-server 10.10.10.192;
 filename "pxelinux.0";
 
