@@ -5,11 +5,11 @@ coreos:
         name: "%H"
         listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
         initial-cluster: "{{ .InitialCluster }}" 
-        {{- with .IP }}
+        {{- if .EtcdMember }}
         initial-cluster-token: "etcd-cluster-1"
-        initial-advertise-peer-urls: "http://{{ . }}:2380"
-        listen-peer-urls: "http://{{ . }}:2380,http://{{ . }}:7001"
-        advertise-client-urls: "http://{{ . }}:2379"
+        initial-advertise-peer-urls: "http://{{ .IP }}:2380"
+        listen-peer-urls: "http://{{ .IP }}:2380,http://{{ .IP }}:7001"
+        advertise-client-urls: "http://{{ .IP }}:2379"
         initial-cluster-state: new
         {{- else }}
         proxy: on
@@ -78,7 +78,7 @@ coreos:
             RemainAfterExit=no
             Type=oneshot
 
-        {{- with .CephRole }}
+        {{- if .CephMonitor }}
         - name: "ceph-mon.service"
           command: start
           content: |
@@ -111,10 +111,10 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            {{- with .K8sRole }}
-            ExecStart=/usr/bin/wget -O /home/core/{{ . }}.zip http://10.10.10.192/install-k8s/{{ . }}.zip
-            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/{{ . }}.zip
-            ExecStart=/bin/bash /home/core/{{ . }}/setup_k8s_{{ . }}.sh
+            {{- if .KubeMaster }}
+            ExecStart=/usr/bin/wget -O /home/core/master.zip http://10.10.10.192/install-k8s/master.zip
+            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/master.zip
+            ExecStart=/bin/bash /home/core/master/setup_k8s_master.sh
             {{- else }}
             ExecStart=/usr/bin/wget -O /home/core/worker.zip http://10.10.10.192/install-k8s/worker.zip
             ExecStart=/usr/bin/unzip -d /home/core -o /home/core/worker.zip
