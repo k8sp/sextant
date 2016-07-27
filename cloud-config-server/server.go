@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"text/template"
 	"gopkg.in/yaml.v2"
-	tp "cloud-config-server/template"
+	tp "github.com/k8sp/auto-install/cloud-config-server/template"
 )
 
 var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
