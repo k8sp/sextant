@@ -19,8 +19,6 @@ coreos:
     locksmith:
         window_start: "03:00"
         window_length: "3h"
-#    flannel:
-#        interface: "{{ .IP }}"
     units:
         - name: "etcd2.service"
           command: "start"
@@ -129,11 +127,4 @@ hostname: "{{ .Hostname }}"
 
 ssh_authorized_keys:
 {{ .SSHAuthorizedKeys }}
-
-write_files:
-  - path: "/home/core/.ssh/id_rsa"
-    permissions: "0600"
-    owner: "core"
-    content: |
-{{ .SSHPrivateKey }}
 
