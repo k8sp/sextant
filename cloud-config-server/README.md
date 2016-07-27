@@ -37,8 +37,7 @@ CCTS 每隔一段时间试着访问 Github 看是否有更新，如果有，则�
 替换缓存中的内容。
 
 最简答的缓存机制是 CCTS 在内存中维护，但是如果CCTS 被重启，则缓存信息
-就丢失了。一种更合理的方式是缓存在 etcd 里，目前在CCTS服务器上安装了一
-个单节点的 etcd 来缓存。
+就丢失了。目前的做法是，将这些配置信息写入本地文件。
 
 ## 相关算法
 
@@ -48,9 +47,9 @@ CCTS 每隔一段时间试着访问 Github 看是否有更新，如果有，则�
 func HttpHandler(mac_addr) cloud_config {
   template, config, timeout := RetriveFromGithub(timeout = 1s)
   if !timeout {
-    CacheToEtcd(template, config)
+    WriteToFile(template, config)
   } else {
-    template, config, ok := RetrieveFromEtcd()
+    template, config, ok := ReadFromFile()
     if !ok {
 	  return error
     }
@@ -66,7 +65,58 @@ go func() {
   for {
     Sleep(10m)
     template, config := RetriveFromGithub(timeout = infinite)
-	CacheToEtcd(template, config)
+	WriteToFile(template, config)
   }
 }
 ```
+
+## Go环境配置
+
+```
+cd ~
+wget https://storage.googleapis.com/golang/go1.6.3.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.6.3.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=<GoPathDir>
+```
+
+## 获取并编译Go代码
+
+下面的命令中需要使用到[Github personal access token](https://github.com/k8sp/auto-install/issues/29)，请根据[这篇文档](https://github.com/k8sp/auto-install/issues/29)事先生成。
+
+```
+git config --global url."https://<GitHubPersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
+go get github.com/k8sp/auto-install/cloud-config-server
+
+```
+
+## 配置为系统服务(system unit file)
+
+```
+sudo vim /etc/systemd/system/cloud-config.service 
+```
+
+**cloud-config.service 内容如下:**
+
+```
+[Unit]
+Description=Cloud config server
+After=network.target
+Wants=network-online.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/work/golang/bin/cloud-config-server
+RestartSec=5s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+**设置开机启动,并启动服务**
+```
+sudo systemctl enable cloud-config.service; sudo systemctl start cloud-config.service;
+```
+
+(END)

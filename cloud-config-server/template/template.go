@@ -14,7 +14,6 @@ type PerNodeConfig struct {
 type GlobalConfig struct {
 	InitialCluster    string `yaml:"initial_cluster"`
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
-	SSHPrivateKey     string `yaml:"ssh_private_key"`
 }
 
 type ExecutionConfig struct {
