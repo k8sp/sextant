@@ -3,6 +3,7 @@ package template
 import (
 	"io"
 	"text/template"
+	"github.com/k8sp/auto-install/config"
 )
 
 type PerNodeConfig struct {
