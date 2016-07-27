@@ -77,22 +77,16 @@ cd ~
 wget https://storage.googleapis.com/golang/go1.6.3.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.6.3.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
+export GOPATH=<GoPathDir>
 ```
 
 ## 获取并编译Go代码
 
+下面的命令中需要使用到[Github personal access token](https://github.com/k8sp/auto-install/issues/29)，请根据[这篇文档](https://github.com/k8sp/auto-install/issues/29)事先生成。
+
 ```
-sudo mkdir -p /work/golang
-sudo chown atlas:atlas /work/golang -R
-cd /work/golang
-mkdir src bin pkg
-git config --global url."https://<GitHub_PersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
+git config --global url."https://<GitHubPersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
 go get github.com/k8sp/auto-install/cloud-config-server
-
-export GOPATH=$(pwd)
-export PATH=$PATH:/usr/local/go/bin
-
-go install github.com/k8sp/auto-install/cloud-config-server
 
 ```
 
