@@ -79,26 +79,20 @@ sudo tar -C /usr/local -xzf go1.6.3.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 ```
 
-## 编译Go代码
+## 获取并编译Go代码
 
 ```
-sudo mkdir -p /work/github
-sudo chown atlas:atlas /work/github -R
-
-# get code from github
-git clone git@github.com:k8sp/auto-install.git
-
-# Golang compile env
 sudo mkdir -p /work/golang
 sudo chown atlas:atlas /work/golang -R
 cd /work/golang
 mkdir src bin pkg
-ln -s /work/github/auto-install/cloud-config-server /work/golang/src/cloud-config-server
+git config --global url."https://<GitHub_PersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
+go get github.com/k8sp/auto-install/cloud-config-server
 
 export GOPATH=$(pwd)
 export PATH=$PATH:/usr/local/go/bin
 
-go install cloud-config-server
+go install github.com/k8sp/auto-install/cloud-config-server
 
 ```
 
