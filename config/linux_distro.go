@@ -1,37 +1,28 @@
 package config
 
 import (
-	"bufio"
-	"errors"
-	"fmt"
-	"os"
+	"log"
 	"runtime"
 	"strings"
 )
 
-func LinuxDistro() (string, error) {
+// LinuxDistro returns known distribution names, including centos,
+// coreos, and ubuntu, if the current system is Linux, or panics
+// otherwise.
+func LinuxDistro() string {
 	if runtime.GOOS != "linux" {
-		return "", errors.New("Not Linux")
+		log.Panicf("Not Linux, but %s", runtime.GOOS)
 	}
 
-	f, e := os.Open("/etc/os-release")
-	if e != nil {
-		return "", e
-	}
-	defer f.Close()
+	line := strings.ToLower(<-Head(Cat("/etc/os-release"), 1))
 
-	line, e := bufio.NewReader(f).ReadString('\n')
-	if e != nil {
-		return "", e
+	if strings.Contains(line, "centos") {
+		return "centos"
+	} else if strings.Contains(line, "ubuntu") {
+		return "ubuntu"
+	} else if strings.Contains(line, "coreos") {
+		return "coreos"
 	}
-
-	if strings.Contains(strings.ToLower(line), "centos") {
-		return "centos", nil
-	} else if strings.Contains(strings.ToLower(line), "ubuntu") {
-		return "ubuntu", nil
-	} else if strings.Contains(strings.ToLower(line), "coreos") {
-		return "coreos", nil
-	} else {
-		return "", fmt.Errorf("Unknown OS: %v", line)
-	}
+	log.Panicf("Unknown OS %s", line)
+	return "" // dummpy return
 }
