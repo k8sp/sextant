@@ -7,11 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
-
 	"gopkg.in/yaml.v2"
 )
 
-func TestYARMLEncoding(t *testing.T) {
+func TestDHCPConf(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
 

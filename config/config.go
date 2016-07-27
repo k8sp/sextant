@@ -6,18 +6,29 @@ package config
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
 type Cluster struct {
+	// Bootstrapper is the IP of the PXE server (DHCP + TFTP,
+	// https://github.com/k8sp/bare-metal-coreos), which is also
+	// an Ngix server and SkyDNS server
+	// (https://github.com/k8sp/auto-install/tree/master/dns).
 	Bootstrapper string
 
+	// The following are for configuring the DHCP service on the
+	// PXE server.  For any node, if its MAC address and IP
+	// address are enlisted in Node.MAC and Node.IP, the generated
+	// /etc/dhcpd/dhcp.conf will bind the IP address to the MAC
+	// address; otherwise the node will be assigned an IP from
+	// within the range of [IPLow, IPHigh].  In practice, nodes
+	// running etcd members requires fixed IP addresses.
 	Subnet        string
 	Netmask       string
-	IPLow, IPHigh string
 	Routers       []string
 	Broadcast     string
 	Nameservers   []string
 	DomainName    string
+	IPLow, IPHigh string // The IP address range of woker nodes.
+	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 
-	Nodes             []Node
-	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // Maintainers can SSH to cluster nodes.
+	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
