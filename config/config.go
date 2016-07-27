@@ -15,10 +15,9 @@ type Cluster struct {
 	Broadcast     string
 	Nameservers   []string
 	DomainName    string
-	Nodes         []Node
 
-	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
-	SSHPrivateKey     string `yaml:"ssh_private_key"`
+	Nodes             []Node
+	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // Maintainers can SSH to cluster nodes.
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
