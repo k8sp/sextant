@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"gopkg.in/yaml.v2"
 	tp "github.com/k8sp/auto-install/cloud-config-server/template"
+	tpcfg "github.com/k8sp/auto-install/config"
 )
 
 var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
@@ -69,7 +70,7 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 	tpl := template.Must(template.New("template").Parse(templ))
-	cfg := &tp.Config{}
+	cfg := &tpcfg.Cluster{}
 	err = yaml.Unmarshal([]byte(config), &cfg)
 	tp.Execute(tpl, cfg, mac, w)
 }

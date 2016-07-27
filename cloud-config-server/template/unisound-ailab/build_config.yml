@@ -9,31 +9,31 @@ nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
 
 nodes:
-  "00-25-90-c0-f7-80":
+  - mac: "00:25:90:c0:f7:80"
     ip: "10.10.10.201"
-    ceph_monitor: "y"
-    kube_master: "y"
-    etcd_member: "y"
-  "00-25-90-c0-f6-ee":
+    ceph_monitor: y
+    kube_master: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:ee"
     ip: "10.10.10.202"
-    ceph_monitor: "y"
-    kube_master: "n"
-    etcd_member: "y"
-  "00-25-90-c0-f6-d6":
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:d6"
     ip: "10.10.10.203"
-    ceph_monitor: "y"
-    kube_master: "n"
-    etcd_member: "y"
-  "00-25-90-c0-f7-ac":
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:ac"
     ip: "10.10.10.204"
-    ceph_monitor: "n"
-    kube_master: "n"
-    etcd_member: "y"
-  "00-25-90-c0-f7-7e":
+    ceph_monitor: n
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:7e"
     ip: "10.10.10.205"
-    ceph_monitor: "n"
-    kube_master: "n"
-    etcd_member: "y"
+    ceph_monitor: n
+    kube_master: n
+    etcd_member: y
 
 ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"

@@ -2,39 +2,43 @@ package template
 
 import (
 	"io"
+	"strings"
 	"text/template"
-	"github.com/k8sp/auto-install/config"
+	tpcfg "github.com/k8sp/auto-install/config"
 )
-
-type PerNodeConfig struct {
-	IP       string `yaml:"ip"`
-	CephRole string `yaml:"ceph_role"`
-	K8sRole  string `yaml:"k8s_role"`
-}
-
-type GlobalConfig struct {
-	InitialCluster    string `yaml:"initial_cluster"`
-	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"`
-}
 
 type ExecutionConfig struct {
 	Hostname string
-	PerNodeConfig
-	GlobalConfig
-}
-
-type Config struct {
-	Nodes  map[string]PerNodeConfig
-	Global GlobalConfig
+	IP string
+	CephMonitor bool
+	KubeMaster bool
+	EtcdMember bool
+	InitialCluster string
+	SSHAuthorizedKeys string
 }
 
 // Execute returns the executed cloud-config template for a node with
 // given MAC address.
-func Execute(tmpl *template.Template, config *Config, mac string, w io.Writer) error {
+func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Writer) error {
+	node := getNodeByMAC(config, mac)
 	ec := ExecutionConfig{
-		Hostname:      mac,
-		PerNodeConfig: config.Nodes[mac],
-		GlobalConfig:  config.Global,
+		Hostname:	mac,
+		IP:		node.IP,
+		CephMonitor:	node.CephMonitor,
+		KubeMaster:	node.KubeMaster,
+		EtcdMember:	node.EtcdMember,
+		InitialCluster:	config.InitialEtcdCluster(),
+		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
 	}
 	return tmpl.Execute(w, ec)
+}
+
+
+func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
+	for _, n := range c.Nodes {
+		if n.Hostname() == strings.ToUpper(mac) {
+			return n
+		}
+	}
+	return tpcfg.Node{"", "", false, false, false}
 }
