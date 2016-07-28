@@ -38,11 +38,20 @@ http {
     sendfile        on;
 
     server {
+        listen       80;
+        server_name  localhost;
+        autoindex on;
+        autoindex_exact_size off;
+        autoindex_localtime on;
 
+        location / {
+            root   {{.NginxRoot}};
+            index  index.html index.htm;
+        }
 
-
-
-
+        location /{{.CloudconfDir}}/ {
+            proxy_pass   http://{{.Bootstrapper}}:{{.CloudconfPort}};
+        }
 
     }
 }
