@@ -1,29 +1,20 @@
 package config
 
 import (
-	"bytes"
+	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
-	"html/template"
+	"gopkg.in/yaml.v2"
+	"testing"
 )
 
-// NginxConf executes a template with a Cluster variable to generate
-// /etc/nginx/nginx.conf.
-func NginxConf(tf string, c *Cluster) string {
-	tmpl := template.New("")
-
-	if len(tf) > 0 {
-		tmpl = template.Must(tmpl.Parse(tf))
-	} else {
-		tmpl = template.Must(tmpl.Parse(tmplNginxConf))
-	}
-
-	var buf bytes.Buffer
-	candy.Must(tmpl.Execute(&buf, c))
-	return buf.String()
+func TestNginxConf(t *testing.T) {
+	c := &Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
+	assert.Equal(t, nginxConf, NginxConf("", c))
 }
 
 const (
-	tmplNginxConf = `
+	nginxConf = `
 user  nginx;
 
 error_log  /var/log/nginx/error.log warn;
