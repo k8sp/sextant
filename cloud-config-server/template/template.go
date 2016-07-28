@@ -2,7 +2,6 @@ package template
 
 import (
 	"io"
-	"strings"
 	"text/template"
 	tpcfg "github.com/k8sp/auto-install/config"
 )
@@ -36,7 +35,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 
 func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 	for _, n := range c.Nodes {
-		if n.Hostname() == strings.ToUpper(mac) {
+		if n.Hostname() == mac {
 			return n
 		}
 	}
