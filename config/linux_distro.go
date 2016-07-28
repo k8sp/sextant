@@ -4,6 +4,8 @@ import (
 	"log"
 	"runtime"
 	"strings"
+
+	"github.com/wangkuiyi/sh"
 )
 
 // LinuxDistro returns known distribution names, including centos,
@@ -14,7 +16,7 @@ func LinuxDistro() string {
 		log.Panicf("Not Linux, but %s", runtime.GOOS)
 	}
 
-	line := strings.ToLower(<-Head(Cat("/etc/os-release"), 1))
+	line := strings.ToLower(<-sh.Head(sh.Cat("/etc/os-release"), 1))
 
 	if strings.Contains(line, "centos") {
 		return "centos"
