@@ -33,13 +33,13 @@ func (c Cluster) Join(s []string) string {
 // Hostname is defined as a method of Node, so can be call in
 // template.  For more details, refer to const tmplDHCPConf.
 func (n Node) Hostname() string {
-	return strings.ToUpper(strings.Replace(n.MAC, ":", "-", -1))
+	return strings.ToLower(strings.Replace(n.MAC, ":", "-", -1))
 }
 
 // Mac is defined as a method of Node, so can be called in template.
 // For more details, refer to const tmplDHCPConf.
 func (n Node) Mac() string {
-	return strings.ToUpper(n.MAC)
+	return strings.ToLower(n.MAC)
 }
 
 const (
