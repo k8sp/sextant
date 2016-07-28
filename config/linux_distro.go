@@ -18,11 +18,11 @@ func LinuxDistro() string {
 
 	line := strings.ToLower(<-sh.Head(sh.Cat("/etc/os-release"), 1))
 
-	if strings.Contains(line, "CentOS") {
+	if strings.Contains(line, "centos") {
 		return "centos"
-	} else if strings.Contains(line, "Ubuntu") {
+	} else if strings.Contains(line, "ubuntu") {
 		return "ubuntu"
-	} else if strings.Contains(line, "CoreOS") {
+	} else if strings.Contains(line, "coreos") {
 		return "coreos"
 	}
 	log.Panicf("Unknown OS %s", line)
