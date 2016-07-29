@@ -1,15 +1,16 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
-	"testing"
 )
 
 func TestNginxConf(t *testing.T) {
 	c := &Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
+	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
 	assert.Equal(t, nginxConf, NginxConf("", c))
 }
 

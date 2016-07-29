@@ -1,17 +1,18 @@
-package config
+package dhcp
 
 import (
 	"testing"
 
+	"github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
 
-func TestDHCPConf(t *testing.T) {
-	c := &Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
-	assert.Equal(t, dhcpConf, DHCPConf("", c))
+func TestConf(t *testing.T) {
+	c := &config.Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
+	assert.Equal(t, dhcpConf, Conf("", c))
 }
 
 const (

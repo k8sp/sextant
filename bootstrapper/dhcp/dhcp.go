@@ -25,7 +25,7 @@ func DHCP(tmpl string, c *config.Cluster) {
 	}
 
 	candy.WithCreated("/etc/dhcp/dhcpd.conf", func(w io.Writer) {
-		_, e := fmt.Fprint(w, config.DHCPConf(tmpl, c))
+		_, e := fmt.Fprint(w, Conf(tmpl, c))
 		candy.Must(e)
 	})
 }

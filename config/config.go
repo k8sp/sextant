@@ -3,6 +3,8 @@
 // file, which is used by config-bootstrapper and cloud-config-server.
 package config
 
+import "strings"
+
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
 type Cluster struct {
@@ -47,3 +49,56 @@ type Node struct {
 	KubeMaster  bool   `yaml:"kube_master"`
 	EtcdMember  bool   `yaml:"etcd_member"`
 }
+
+// Join is defined as a method of Cluster, so can be called in
+// templates.  For more details, refer to const tmplDHCPConf.
+func (c Cluster) Join(s []string) string {
+	return strings.Join(s, ", ")
+}
+
+// Hostname is defined as a method of Node, so can be call in
+// template.  For more details, refer to const tmplDHCPConf.
+func (n Node) Hostname() string {
+	return strings.ToLower(strings.Replace(n.MAC, ":", "-", -1))
+}
+
+// Mac is defined as a method of Node, so can be called in template.
+// For more details, refer to const tmplDHCPConf.
+func (n Node) Mac() string {
+	return strings.ToLower(n.MAC)
+}
+
+// ExampleYAML shows an example of YAML-encoded Cluster description.
+// It is also used for unit testing.
+const ExampleYAML = `
+bootstrapper: 10.10.10.192
+
+subnet: 10.10.10.0
+netmask: 255.255.255.0
+iplow: 10.10.10.100
+iphigh: 10.10.10.199
+routers: [10.10.10.192]
+broadcast: 10.10.10.255
+nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
+domainname: unisound.com
+
+nginx_root_dir: /usr/share/nginx/html
+
+nodes:
+  - mac: "00:25:90:c0:f7:80"
+    ip: 10.10.10.201
+    ceph_monitor: y
+    kube_master: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:ee"
+    ip: 10.10.10.202
+    ceph_monitor: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:d6"
+    ceph_monitor: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:ac"
+    ip: "10.10.10.204"
+  - mac: "00:25:90:c0:f7:7e"
+    ip: "10.10.10.205"
+`
