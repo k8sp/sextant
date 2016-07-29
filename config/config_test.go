@@ -33,6 +33,8 @@ broadcast: 10.10.10.255
 nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: unisound.com
 
+nginx_root_dir: /usr/share/nginx/html
+
 nodes:
   - mac: "00:25:90:c0:f7:80"
     ip: 10.10.10.201

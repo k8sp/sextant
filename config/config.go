@@ -28,6 +28,8 @@ type Cluster struct {
 	IPLow, IPHigh string // The IP address range of woker nodes.
 	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 
+	NginxRootDir string `yaml:"nginx_root_dir"`
+
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
 }
 
