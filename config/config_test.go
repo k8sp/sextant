@@ -33,9 +33,7 @@ broadcast: 10.10.10.255
 nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: unisound.com
 
-nginxroot: '/usr/share/nginx/html'
-cloudconfdir: 'cloud-config'
-cloudconfport: 8080
+nginx_root_dir: /usr/share/nginx/html
 
 nodes:
   - mac: "00:25:90:c0:f7:80"

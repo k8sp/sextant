@@ -45,12 +45,12 @@ http {
         autoindex_localtime on;
 
         location / {
-            root   {{.NginxRoot}};
+            root   {{.NginxRootDir}};
             index  index.html index.htm;
         }
 
-        location /{{.CloudconfDir}}/ {
-            proxy_pass   http://{{.Bootstrapper}}:{{.CloudconfPort}};
+        location /cloud-config/ {
+            proxy_pass   http://{{.Bootstrapper}}:8080;
         }
 
     }
