@@ -20,6 +20,7 @@ func Install(tmpl string, c *config.Cluster) {
 	case "centos":
 		config.Cmd("yum", "-y", "install", "dhcp")
 	case "ubuntu":
+		config.Cmd("apt-get", "update")
 		config.Cmd("apt-get", "-y", "install", "isc-dhcp-server")
 	default:
 		log.Panicf("Unsupported OS: %s", dist)
