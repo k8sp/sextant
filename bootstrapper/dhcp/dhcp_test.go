@@ -7,8 +7,9 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"log"
+
 	"github.com/k8sp/auto-install/config"
-	"github.com/prometheus/common/log"
 	"github.com/topicai/candy"
 )
 
@@ -25,7 +26,7 @@ func TestInstall(t *testing.T) {
 		Install("", c)
 
 		if _, err := os.Stat("/etc/dhcp/dhcpd.conf"); os.IsNotExist(err) {
-			log.Errorf("Failed to install/configure DHCP, /etc/dhcp/dhcpd.conf doesn't exist")
+			log.Printf("Failed to install/configure DHCP, /etc/dhcp/dhcpd.conf doesn't exist")
 		}
 	}
 }
