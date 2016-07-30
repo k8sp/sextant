@@ -12,7 +12,7 @@ function DockerBuildAndRun() {
     docker build -t $BASE$PKG -f $BASE.dockerfile .
     docker run -it $BASE$PKG
 
-#    rm $BASE.dockerfile
+    rm $BASE.dockerfile
 }
 
 (

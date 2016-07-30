@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 )
@@ -23,10 +24,10 @@ func Install(tmpl string, c *config.Cluster) {
 
 	switch dist {
 	case "centos":
-		config.Cmd("yum", "-y", "install", "dhcp")
+		cmd.Run("yum", "-y", "install", "dhcp")
 	case "ubuntu":
-		config.Cmd("apt-get", "update")
-		config.Cmd("apt-get", "-y", "install", "isc-dhcp-server")
+		cmd.Run("apt-get", "update")
+		cmd.Run("apt-get", "-y", "install", "isc-dhcp-server")
 	}
 
 	// Note that the installation of DHCP packages should have
@@ -38,9 +39,9 @@ func Install(tmpl string, c *config.Cluster) {
 
 	switch dist {
 	case "centos":
-		config.Cmd("systemctl", "enable", "dhcpd")
-		config.Cmd("systemctl", "restart", "dhcpd")
+		cmd.Run("systemctl", "enable", "dhcpd")
+		cmd.Run("systemctl", "restart", "dhcpd")
 	case "ubuntu":
-		config.Cmd("service", "isc-dhcp-server", "restart")
+		cmd.Run("service", "isc-dhcp-server", "restart")
 	}
 }
