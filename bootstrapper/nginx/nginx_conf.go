@@ -1,14 +1,15 @@
-package config
+package nginx
 
 import (
 	"bytes"
+	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 	"html/template"
 )
 
 // NginxConf executes a template with a Cluster variable to generate
 // /etc/nginx/nginx.conf.
-func NginxConf(tf string, c *Cluster) string {
+func Conf(tf string, c *config.Cluster) string {
 	tmpl := template.New("")
 
 	if len(tf) > 0 {
@@ -24,7 +25,9 @@ func NginxConf(tf string, c *Cluster) string {
 
 const (
 	tmplNginxConf = `
-user  nginx;
+events {
+
+}
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
