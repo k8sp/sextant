@@ -1,19 +1,10 @@
 package dhcp
 
-import (
-	"testing"
-
-	"github.com/k8sp/auto-install/config"
-	"github.com/stretchr/testify/assert"
-	"github.com/topicai/candy"
-	"gopkg.in/yaml.v2"
-)
-
-func TestConf(t *testing.T) {
-	c := &config.Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
-	assert.Equal(t, dhcpConf, Conf("", c))
-}
+// func TestConf(t *testing.T) {
+// 	c := &config.Cluster{}
+// 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
+// 	assert.Equal(t, dhcpConf, Conf("", c))
+// }
 
 const (
 	dhcpConf = `next-server 10.10.10.192;

@@ -9,5 +9,6 @@ import (
 func TestRun(t *testing.T) {
 	*Silent = true
 	assert.NotPanics(t, func() { Run("ls", "/") })
-	assert.Panics(t, func() { Run("something-not-exists", "/") })
+	assert.Panics(t, func() { Run("something-not-exists") })
+	assert.NotPanics(t, func() { Try("something-not-exists") })
 }
