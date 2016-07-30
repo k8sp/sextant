@@ -31,7 +31,7 @@ func TestInstall(t *testing.T) {
 			// prevents us from starting nginx service in a CentOS docker container.
 		case "ubuntu":
 			l := <-sh.Head(sh.Run("service", "nginx", "status"), 1)
-			if !strings.Contains(l, "running") {
+			if strings.Contains(l, "not running") || !strings.Contains(l, "running") {
 				t.Errorf("nginx service is not running: %s", l)
 			}
 		}
