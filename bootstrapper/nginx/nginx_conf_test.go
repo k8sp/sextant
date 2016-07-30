@@ -1,22 +1,10 @@
-package config
-
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/topicai/candy"
-	"gopkg.in/yaml.v2"
-)
-
-func TestNginxConf(t *testing.T) {
-	c := &Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
-	assert.Equal(t, nginxConf, NginxConf("", c))
-}
+package nginx
 
 const (
 	nginxConf = `
-user  nginx;
+events {
+
+}
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
