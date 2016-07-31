@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"path"
+	"log"
+	"runtime"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/k8sp/auto-install/config"
@@ -44,16 +45,28 @@ WantedBy=multi-user.target
 `
 )
 
-// Download SkyDNS bianary file from github.
-// requires that curl have been installed.
-func DownloadSkyDNSBinary(outDir string) {
+// Build checks out and build SkyDNS.
+func Download(outDir string) {
+	InstallGo()
 
-	// Download image files.
-	cmd.Run("curl", "-o",
-		path.Join(outDir, "skydns"),
-		"https://raw.githubusercontent.com/pineking/skydns-binary/master/skydns")
-	cmd.Run("chmod", "755", path.Join(outDir, "skydns"))
+	// TODO(y): Set environment variable.
+	cmd.Run("go", "get")
+}
 
+// Requires curl.
+func InstallGo(version string) {
+	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" {
+		log.Panicf("InstallGo must work with linux/amd64, but not %s/%s", runtime.GOOS, runtime.GOARCH)
+	}
+
+	if len(version) == 0 {
+		version = "1.6.3"
+	}
+	cmd.Run("curl", "-s", "-o", "/tmp/go.tar.gz",
+		fmt.Sprintf("https://storage.googleapis.com/golang/go%s.linux-amd64.tar.gz", version))
+
+	cmd.Run("tar", "-C", "/usr/local", "-xzf", "/tmp/go.tar.gz")
+	cmd.Run("ln", "-s", "/usr/local/go/bin/go", "/usr/local/bin/go")
 }
 
 // Install and configure SkyDNS service on CentOS

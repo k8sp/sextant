@@ -41,6 +41,9 @@ func TestService(t *testing.T) {
 
 }
 
+func TestDownload(t *testing.T) {
+}
+
 func TestSkyDNS(t *testing.T) {
 	if *indocker {
 		const (
