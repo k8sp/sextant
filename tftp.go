@@ -1,4 +1,4 @@
-package config
+package tftp
 
 import (
         "os/exec"
