@@ -21,6 +21,7 @@ func Tftp_install(){
 	else if linuxdis == centos 
 	{
 		cmd.Run("yum", "-y", "install", "tftp-server")
+		//cmd.Run("yum", "-y", "install", "xinetd")
 	}
 	else
 	{
@@ -31,8 +32,9 @@ func Tftp_install(){
 	case ubuntu:
 		cmd.Run("service","tftpd-hpa","restart")
 	case centos:
-		cmd.Run("service","tftp","restart")
-	}
+		cmd.Run("chkconfig","tftp","xinetd","on")
+		cmd.Run("service","xinetd","restart")
+		}
 
 }
 
