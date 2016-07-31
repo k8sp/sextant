@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	indocker = flag.Bool("indocker", false,
-		"Tells that the test is running in a Docker container by dhcp_test.bash.")
+	indocker = flag.Bool("indocker", false, "Tells that the test is running in a Docker container.")
 )
 
 func TestGetVersion(t *testing.T) {
