@@ -5,6 +5,7 @@ import (
         "log"
       	"github.com/k8sp/auto-install/config"
       	"github.com/k8sp/auto-install/bootstrapper/cmd"
+      	"github.com/topicai/candy"
 )
 func Tftp_install(){
 	const (
@@ -12,29 +13,33 @@ func Tftp_install(){
 		ubuntu = "ubuntu"
 	)
 	
-	linuxdis := config.LinuxDistro()   
-	if linuxdis == ubuntu 
-	{
+	dist := config.LinuxDistro()   
+	if dist != centos && dist != ubuntu {
+		log.Panicf("Unsupported OS: %s", dist)
+	}
+
+	switch dist {
+	case centos:
+		cmd.Run("yum", "-y", "install", "tftp-server")
+	case ubuntu:
 		cmd.Run("apt-get","update")
 		cmd.Run("apt-get", "-y", "install", "tftp-hpa")
 	}
-	else if linuxdis == centos 
-	{
-		cmd.Run("yum", "-y", "install", "tftp-server")
-		//cmd.Run("yum", "-y", "install", "xinetd")
-	}
-	else
-	{
-		log.Panicf("Unsupported OS: %s", linuxdis)
-	}
-	
-	switch linuxdis{
+
+	// Note that the installation of nginx packages should have
+	// created directory /etc/nginx.
+	candy.WithCreated("/etc/nginx/nginx.conf", func(w io.Writer) {
+		_, e := fmt.Fprint(w, Conf(tmpl, c))
+		candy.Must(e)
+	})
+
+	switch dist{
 	case ubuntu:
 		cmd.Run("service","tftpd-hpa","restart")
 	case centos:
 		cmd.Run("chkconfig","tftp","xinetd","on")
 		cmd.Run("service","xinetd","restart")
-		}
+	}
 
 }
 
