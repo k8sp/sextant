@@ -13,14 +13,17 @@ func Tftp_install(){
 	)
 	
 	linuxdis := config.LinuxDistro()   
-	if linuxdis == ubuntu {
+	if linuxdis == ubuntu 
+	{
 		cmd.Run("apt-get","update")
 		cmd.Run("apt-get", "-y", "install", "tftp-hpa")
 	}
-	else if linuxdis == centos {
+	else if linuxdis == centos 
+	{
 		cmd.Run("yum", "-y", "install", "tftp-server")
 	}
-	else{
+	else
+	{
 		log.Panicf("Unsupported OS: %s", linuxdis)
 	}
 	
