@@ -20,10 +20,18 @@ func TestRunWithEnv(t *testing.T) {
 	tmpdir, _ := ioutil.TempDir("", "")
 	tmpfile := path.Join(tmpdir, "TestRunWithEnv")
 
-	RunWithEnv([]string{"GOPATH=/tmp"},
+	RunWithEnv(map[string]string{"GOPATH": "/tmp"},
 		"awk",
 		fmt.Sprintf("BEGIN{print ENVIRON[\"GOPATH\"] > \"%s\";}", tmpfile))
 
 	b, _ := ioutil.ReadFile(tmpfile)
 	assert.Equal(t, "/tmp\n", string(b))
+}
+
+func ExampleRunWithEnv() {
+	RunWithEnv(map[string]string{
+		"GOPATH": "/tmp",
+		"GOOS":   "linux",
+		"GOARCH": "amd64"},
+		"go", "get", "-u", "github.com/skynetservices/skydns")
 }
