@@ -7,9 +7,10 @@ import (
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/k8sp/auto-install/config"
+	"github.com/topicai/candy"
 )
 
-func Pxelinux_install(){
+func Pxelinux_install(tmpl string, c *config.Cluster){
 	const (
 		centos = "centos"
 		ubuntu = "ubuntu"
