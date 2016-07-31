@@ -1,21 +1,10 @@
-package config
-
-import (
-	"github.com/stretchr/testify/assert"
-	"github.com/topicai/candy"
-	"gopkg.in/yaml.v2"
-	"testing"
-)
-
-func TestNginxConf(t *testing.T) {
-	c := &Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(testConfig), c))
-	assert.Equal(t, nginxConf, NginxConf("", c))
-}
+package nginx
 
 const (
 	nginxConf = `
-user  nginx;
+events {
+
+}
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -41,7 +30,7 @@ http {
         }
 
         location /cloud-config/ {
-            proxy_pass   http://10.10.10.192:8080;
+            proxy_pass   http://172.17.0.2:8080;
         }
 
     }
