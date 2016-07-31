@@ -21,7 +21,7 @@ func Tftp_install(){
 		cmd.Run("yum", "-y", "install", "tftp-server")
 	}
 	else{
-		log.Panicf("Unsupported OS: %s", dist)
+		log.Panicf("Unsupported OS: %s", linuxdis)
 	}
 	
 	switch linuxdis{
