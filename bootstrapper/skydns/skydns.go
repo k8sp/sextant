@@ -13,24 +13,22 @@ import (
 	"github.com/topicai/candy"
 )
 
-// skydnsService executes a template with a Cluster variable to generate
-// /etc/systemd/system/skydns.service
-func MakeService(tf string, c *config.Cluster) string {
-	tmpl := template.New("")
+func serviceUnit(tmpl string, c *config.Cluster) string {
+	t := template.New("")
 
-	if len(tf) > 0 {
-		tmpl = template.Must(tmpl.Parse(tf))
+	if len(tmpl) > 0 {
+		t = template.Must(t.Parse(tmpl))
 	} else {
-		tmpl = template.Must(tmpl.Parse(tmplServiceContent))
+		t = template.Must(t.Parse(defaultTemplate))
 	}
 
 	var buf bytes.Buffer
-	candy.Must(tmpl.Execute(&buf, c))
+	candy.Must(t.Execute(&buf, c))
 	return buf.String()
 }
 
 const (
-	tmplServiceContent = `
+	defaultTemplate = `
 [Unit]
 Description=SkyDNS
 After=network.target
@@ -45,16 +43,16 @@ WantedBy=multi-user.target
 `
 )
 
-// Build checks out and build SkyDNS.
-func Download(outDir string) {
-	InstallGo()
+func build() {
+	installGo("")
 
-	// TODO(y): Set environment variable.
-	cmd.Run("go", "get")
+	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp"},
+		"go", "get", "-u", "github.com/skynetservices/skydns")
+
+	cmd.Run("cp", "/tmp/bin/skydns", "/usr/bin/")
 }
 
-// Requires curl.
-func InstallGo(version string) {
+func installGo(version string) {
 	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" {
 		log.Panicf("InstallGo must work with linux/amd64, but not %s/%s", runtime.GOOS, runtime.GOARCH)
 	}
@@ -69,32 +67,26 @@ func InstallGo(version string) {
 	cmd.Run("ln", "-s", "/usr/local/go/bin/go", "/usr/local/bin/go")
 }
 
-// Install and configure SkyDNS service on CentOS
-func InstallonCentOS(tmpl string, c *config.Cluster) {
+// Install downloads and builds SkyDNS into /usr/bin/skydns.  It then
+// creates a systemd service unit for CentOS.
+func Install(tmpl string, c *config.Cluster) {
+	build()
 
-	DownloadSkyDNSBinary("/usr/bin")
+	if config.LinuxDistro() == "centos" {
+		candy.WithCreated("/etc/systemd/system/skydns.service", func(w io.Writer) {
+			_, e := fmt.Fprint(w, serviceUnit(tmpl, c))
+			candy.Must(e)
+		})
 
-	//create /etc/systemd/system/skydns.service
-	candy.WithCreated("/etc/systemd/system/skydns.service", func(w io.Writer) {
-		_, e := fmt.Fprint(w, MakeService(tmpl, c))
-		candy.Must(e)
-	})
-
-	cmd.Run("systemctl", "enable", "skydns")
-	// Due to a bug of CentOS, systemctl cannot run in
-	// Docker containers.  Discussions and the explanation
-	// of this bug is at
-	// https://github.com/docker/docker/issues/7459.  The
-	// current fix
-	// https://github.com/docker-library/docs/tree/master/centos#systemd-integration
-	// is too complex that I don't want to implement.  So
-	// I call Try here.
-	cmd.Try("systemctl", "restart", "skydns")
-}
-
-// Install and configure SkyDNS service on Ubuntu
-func InstallonUbuntu(tmpl string, c *config.Cluster) {
-
-	DownloadSkyDNSBinary("/usr/bin")
-
+		cmd.Run("systemctl", "enable", "skydns")
+		// Due to a bug of CentOS, systemctl cannot run in
+		// Docker containers.  Discussions and the explanation
+		// of this bug is at
+		// https://github.com/docker/docker/issues/7459.  The
+		// current fix
+		// https://github.com/docker-library/docs/tree/master/centos#systemd-integration
+		// is too complex that I don't want to implement.  So
+		// I call Try here.
+		cmd.Try("systemctl", "restart", "skydns")
+	}
 }
