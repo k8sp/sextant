@@ -1,10 +1,41 @@
 package tftp
 
 import (
-        "os/exec"
+        //"os/exec"
+        "log"
       	"github.com/k8sp/auto-install/config"
+      	"github.com/k8sp/auto-install/bootstrapper/cmd"
 )
+func Tftp_install(){
+	const (
+		centos = "centos"
+		ubuntu = "ubuntu"
+	)
+	
+	linuxdis := config.LinuxDistro()   
+	if linuxdis == ubuntu {
+		cmd.Run("apt-get","update")
+		cmd.Run("apt-get", "-y", "install", "tftp-hpa")
+	}
+	else if linuxdis == centos {
+		cmd.Run("yum", "-y", "install", "tftp-server")
+	}
+	else{
+		log.Panicf("Unsupported OS: %s", dist)
+	}
+	
+	switch linuxdis{
+	case ubuntu:
+		cmd.Run("service","tftpd-hpa","restart")
+	case centos:
+		cmd.Run("service","tftp","restart")
+	}
 
+}
+
+
+
+/*
 linuxdis := config.LinuxDistro()   
 if _,e := exec.Command("/bin/sh","-c",`systemctl status tftpd-hpa | grep "not-found"`).StdoutPipe(); e == nil; linuxdis == "ubuntu"
 {
@@ -27,3 +58,4 @@ else if _,e := exec.Command("/bin/sh","-c",`systemctl status tftp | grep "inacti
 {
 	config.Cmd("service","tftp","restart")
 }
+*/
