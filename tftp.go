@@ -3,9 +3,10 @@ package tftp
 import (
         //"os/exec"
         "log"
+
       	"github.com/k8sp/auto-install/config"
       	"github.com/k8sp/auto-install/bootstrapper/cmd"
-      	"github.com/topicai/candy"
+      	//"github.com/topicai/candy"
 )
 func Tftp_install(){
 	const (
@@ -27,11 +28,11 @@ func Tftp_install(){
 	}
 
 	// Note that the installation of nginx packages should have
-	// created directory /etc/nginx.
-	candy.WithCreated("/etc/nginx/nginx.conf", func(w io.Writer) {
+	// created directory /etc/tftp.
+	/*candy.WithCreated("/etc/tftp/tftp.conf", func(w io.Writer) {
 		_, e := fmt.Fprint(w, Conf(tmpl, c))
 		candy.Must(e)
-	})
+	})*/
 
 	switch dist{
 	case ubuntu:
