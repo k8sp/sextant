@@ -7,10 +7,10 @@ import (
 	"testing"
 	"text/template"
 
+	tpcfg "github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
-	tpcfg "github.com/k8sp/auto-install/config"
 )
 
 func TestExecute(t *testing.T) {

@@ -1,22 +1,22 @@
 package main
 
 import (
-	"os"
 	"fmt"
-	"log"
-	"net/http"
-	"io/ioutil"
-	"strings"
-	"time"
 	"github.com/gorilla/mux"
-	"text/template"
-	"gopkg.in/yaml.v2"
 	tp "github.com/k8sp/auto-install/cloud-config-server/template"
 	tpcfg "github.com/k8sp/auto-install/config"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"text/template"
+	"time"
 )
 
 var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
-var config_url   = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
+var config_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
 
 func init() {
 	ticker := time.NewTicker(time.Minute * 10)
@@ -75,43 +75,43 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 	tp.Execute(tpl, cfg, mac, w)
 }
 
-func RetriveFromGithub(timeout time.Duration) (template string, config string, err error){
+func RetriveFromGithub(timeout time.Duration) (template string, config string, err error) {
 	template, err = httpGet(template_url, timeout)
 	if err != nil {
-		log.Printf("%v\n",err)
+		log.Printf("%v\n", err)
 		return "", "", err
 	}
 	config, err = httpGet(config_url, timeout)
 	if err != nil {
-		log.Printf("%v\n",err)
+		log.Printf("%v\n", err)
 		return "", "", err
 	}
 	return template, config, nil
 }
 
-func WriteToFile(template string, config string){
-        if template == "" || config == "" {
-                return
-        }
+func WriteToFile(template string, config string) {
+	if template == "" || config == "" {
+		return
+	}
 	tplFile := "./template/cloud-config.template"
 	cfgFile := "./template/unisound-ailab/build_config.yml"
 	ioutil.WriteFile(tplFile, []byte(template), os.ModeAppend)
 	ioutil.WriteFile(cfgFile, []byte(config), os.ModeAppend)
 }
 
-func ReadFromFile() (template string, config string, err error){
+func ReadFromFile() (template string, config string, err error) {
 	tplFile := "./template/cloud-config.template"
-        cfgFile := "./template/unisound-ailab/build_config.yml"
+	cfgFile := "./template/unisound-ailab/build_config.yml"
 	temp, err := ioutil.ReadFile(tplFile)
 	if err != nil {
-                log.Printf("%v\n",err)
-                return "", "", err
-        }
+		log.Printf("%v\n", err)
+		return "", "", err
+	}
 	conf, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
-                log.Printf("%v\n",err)
-                return "", "", err
-        }
+		log.Printf("%v\n", err)
+		return "", "", err
+	}
 	return string(temp), string(conf), nil
 }
 
@@ -121,15 +121,14 @@ func httpGet(url string, timeout time.Duration) (string, error) {
 	}
 	resp, err := client.Get(url)
 	if err != nil || resp.StatusCode != 200 {
-		log.Printf("%v\n",err)
+		log.Printf("%v\n", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("%v\n",err)
+		log.Printf("%v\n", err)
 		return "", err
 	}
 	return string(body), nil
 }
-
