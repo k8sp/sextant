@@ -8,7 +8,7 @@ import (
 	"github.com/k8sp/auto-install/config"
 )
 
-func Pxelinux_install(){
+func Install(){
 	const (
 		centos = "centos"
 		ubuntu = "ubuntu"
