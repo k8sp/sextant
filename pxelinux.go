@@ -30,15 +30,6 @@ func Pxelinux_install(){
 		io.Copy("/srv/tftp/", "/usr/lib/syslinux/modules/bios/ldlinux.c32")
 	}
 
-	switch dist {
-	case ubuntu:
-		cmd.Run("service", "tftpd-hpa", "restart")
-	case centos:
-		cmd.Run("chkconfig", "tftp", "on")
-		cmd.Run("chkconfig", "xinetd", "on")
-		cmd.Run("service", "xinetd", "restart")
-	}
-	
 }
 
 //add the Copy function to cmd Package
