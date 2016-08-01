@@ -6,6 +6,7 @@ import (
 	"text/template"
 )
 
+// ExecutionConfig struct config a Coreos's cloud config file which use for installing Coreos in k8s cluster.
 type ExecutionConfig struct {
 	Hostname          string
 	IP                string
@@ -38,5 +39,5 @@ func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 			return n
 		}
 	}
-	return tpcfg.Node{"", "", false, false, false}
+	return tpcfg.Node{MAC: "", IP: "", CephMonitor: false, KubeMaster: false, EtcdMember: false}
 }
