@@ -21,7 +21,7 @@ func Install() {
 
 	switch dist {
 	case centos:
-                cmd.Run("yum", "-y", "install", "xinetd")
+		cmd.Run("yum", "-y", "install", "xinetd")
 		cmd.Run("yum", "-y", "install", "tftp-server")
 	case ubuntu:
 		cmd.Run("apt-get", "update")
@@ -32,7 +32,7 @@ func Install() {
 	case ubuntu:
 		cmd.Run("service", "tftpd-hpa", "restart")
 	case centos:
-                cmd.Run("chkconfig", "tftp", "on")
+		cmd.Run("chkconfig", "tftp", "on")
 		cmd.Run("chkconfig", "xinetd", "on")
 		cmd.Run("service", "xinetd", "restart")
 	}
