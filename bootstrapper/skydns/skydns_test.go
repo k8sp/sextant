@@ -11,7 +11,6 @@ import (
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/k8sp/auto-install/config"
-	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -54,13 +53,6 @@ pre-stop script
 end script
 `
 )
-
-func TestServiceUnit(t *testing.T) {
-	c := &config.Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
-	assert.Equal(t, systemdContent, serviceUnit("centos", "", c))
-	assert.Equal(t, upstartContent, serviceUnit("ubuntu", "", c))
-}
 
 func TestInstall(t *testing.T) {
 	if *indocker {

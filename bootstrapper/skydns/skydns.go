@@ -41,7 +41,7 @@ Requires=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+ExecStart=/usr/bin/skydns -machines={{.GetEtcdMachines}} -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain={{.DomainName}}.
 
 [Install]
 WantedBy=multi-user.target
@@ -57,7 +57,7 @@ respawn limit 20 3
 
 script
 echo $$ > /var/run/skydns.pid
-exec /usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+exec /usr/bin/skydns -machines={{.GetEtcdMachines}} -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain={{.DomainName}}.
 end script
 
 pre-start script
