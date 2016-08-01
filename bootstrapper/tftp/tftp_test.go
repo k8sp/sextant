@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	indocker = flag.Bool("indocker", false,
-		"Tells that the test is running in a Docker container by dhcp_test.bash.")
+	indocker = flag.Bool("indocker", false,	"Tells that the test is running in a Docker container")
 )
 
 func TestInstall(t *testing.T) {
@@ -35,7 +34,6 @@ func TestInstall(t *testing.T) {
 		case "centos":
 			// A bug
 			// https://github.com/docker/docker/issues/7459
-			// prevents us from starting DHCP service in a CentOS docker container.
 		case "ubuntu":
 			l := <-sh.Head(sh.Run("service", "tftpd-hpa", "status"), 1)
 			if strings.Contains(l, "not running") || !strings.Contains(l, "running") {
