@@ -19,8 +19,8 @@ type ExecutionConfig struct {
 	InitialCluster    string
 	SSHAuthorizedKeys string
 	CertCA            string
-	CertApiServer     string
-	CertApiServerKey  string
+	CertAPIServer     string
+	CertAPIServerKey  string
 	CertWorker        string
 	CertWorkerKey     string
 }
@@ -39,8 +39,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
 		CertCA:            config.CertCA(),
-		CertApiServer:     config.CertApiServer(node.IP),
-		CertApiServerKey:  config.CertApiServerKey(node.IP),
+		CertAPIServer:     config.CertAPIServer(node.IP),
+		CertAPIServerKey:  config.CertAPIServerKey(node.IP),
 		CertWorker:        config.CertWorker(node.IP),
 		CertWorkerKey:     config.CertWorkerKey(node.IP),
 	}

@@ -12,13 +12,13 @@ write_files:
 	  owner: core
 		permissions: 0600
 		content: |
-		  {{ .CertApiServer }}
+		  {{ .CertAPIServer }}
   
 	- path: /etc/kubernetes/ssl/apiserver-key.pem
 	  owner: core
 		permissions: 0600
 		content: |
-		  {{ .CertApiServerKey }}
+		  {{ .CertAPIServerKey }}
 
   {{- else }}
 	- path: /etc/kubernetes/ssl/worker.pem
