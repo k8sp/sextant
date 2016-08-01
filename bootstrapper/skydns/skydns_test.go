@@ -19,7 +19,7 @@ var (
 )
 
 const (
-	serviceContent = `
+	systemdContent = `
 [Unit]
 Description=SkyDNS
 After=network.target
@@ -32,12 +32,34 @@ ExecStart=/usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -n
 [Install]
 WantedBy=multi-user.target
 `
+	upstartContent = `
+description "SkyDNS service"
+
+start on runlevel [2345]
+stop on runlevel [^2345]
+
+respawn
+respawn limit 20 3
+
+script
+echo $$ > /var/run/skydns.pid
+exec /usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+end script
+
+pre-start script
+end script
+
+pre-stop script
+    rm /var/run/skydns.pid
+end script
+`
 )
 
 func TestServiceUnit(t *testing.T) {
 	c := &config.Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
-	assert.Equal(t, serviceContent, serviceUnit("", c))
+	assert.Equal(t, systemdContent, serviceUnit("centos", "", c))
+	assert.Equal(t, upstartContent, serviceUnit("ubuntu", "", c))
 }
 
 func TestInstall(t *testing.T) {
