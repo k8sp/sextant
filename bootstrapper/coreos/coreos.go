@@ -25,24 +25,19 @@ func DownloadBootImage(channel, outDir string) {
 	pkey := "CoreOS_Image_Signing_Key.asc"
 
 	// Download image files.
-	cmd.Run("curl", "-o",
-		path.Join(outDir, img),
+	cmd.Run("curl", "-s", "-o", path.Join(outDir, img),
 		fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, img))
-	cmd.Run("curl", "-o",
-		path.Join(outDir, cpio),
+	cmd.Run("curl", "-s", "-o", path.Join(outDir, cpio),
 		fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, cpio))
 
 	// Download signatures.
-	cmd.Run("curl", "-o",
-		path.Join(outDir, img+".sig"),
+	cmd.Run("curl", "-s", "-o", path.Join(outDir, img+".sig"),
 		fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, img))
-	cmd.Run("curl", "-o",
-		path.Join(outDir, cpio+".sig"),
+	cmd.Run("curl", "-s", "-o", path.Join(outDir, cpio+".sig"),
 		fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, cpio))
 
 	// Download the public key.
-	cmd.Run("curl", "-o",
-		path.Join(outDir, pkey),
+	cmd.Run("curl", "-s", "-o", path.Join(outDir, pkey),
 		fmt.Sprintf("https://coreos.com/security/image-signing-key/%s", pkey))
 
 	// Import the public key.
