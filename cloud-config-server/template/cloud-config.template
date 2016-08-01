@@ -1,5 +1,39 @@
 #cloud-config
 
+write_files:
+  {{- if .KubeMaster }}
+	- path: /etc/kubernetes/ssl/ca.pem
+		owner: core
+		permissions: 0600
+		content: |
+			{{ .CertCA }}
+	
+	- path: /etc/kubernetes/ssl/apiserver.pem
+	  owner: core
+		permissions: 0600
+		content: |
+		  {{ .CertApiServer }}
+  
+	- path: /etc/kubernetes/ssl/apiserver-key.pem
+	  owner: core
+		permissions: 0600
+		content: |
+		  {{ .CertApiServerKey }}
+
+  {{- else }}
+	- path: /etc/kubernetes/ssl/worker.pem
+	  owner: core
+		permissions: 0600
+		content: |
+		  {{ .CertWorker }}
+	
+	- path: /etc/kubernetes/ssl/worker-key.pem
+	  owner: core
+		permissions: 0600
+		content: |
+		  {{ .CertWorkerKey }}
+
+  {{- end}}
 coreos:
     etcd2:
         name: "%H"

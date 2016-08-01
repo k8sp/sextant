@@ -7,10 +7,10 @@ import (
 	"testing"
 	"text/template"
 
+	tpcfg "github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
-	tpcfg "github.com/k8sp/auto-install/config"
 )
 
 func TestExecute(t *testing.T) {
@@ -27,6 +27,8 @@ func TestExecute(t *testing.T) {
 	tmpl, e := template.ParseFiles("cloud-config.template")
 	candy.Must(e)
 
-	Execute(tmpl, config, "00-25-90-c0-f7-80", os.Stdout)
-	Execute(tmpl, config, "00-25-90-c0-f7-62", os.Stdout)
+	//Execute(tmpl, config, "00-25-90-c0-f7-80", os.Stdout)
+	Execute(tmpl, config, "00-25-90-c0-f6-ee", os.Stdout)
+	//Execute(tmpl, config, "00-25-90-c0-f7-62", os.Stdout)
+
 }

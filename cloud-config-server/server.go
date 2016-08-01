@@ -6,24 +6,24 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 	"text/template"
 	"time"
 
 	"github.com/gorilla/mux"
 	tp "github.com/k8sp/auto-install/cloud-config-server/template"
+	tptls "github.com/k8sp/auto-install/cloud-config-server/tls"
 	tpcfg "github.com/k8sp/auto-install/config"
 	"gopkg.in/yaml.v2"
 )
 
-var template_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
-var config_url = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
+var templateURL = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
+var configURL = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
 
 func init() {
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
-		for _ = range ticker.C {
+		for range ticker.C {
 			template, config, err := RetriveFromGithub(5 * time.Second)
 			if err != nil {
 				template = ""
@@ -35,52 +35,15 @@ func init() {
 	}()
 }
 
-func fileExist(filename string) bool {
-	_, err := os.Stat(filename)
-	return err == nil
-}
-
-func initRootCert() bool {
-	// Generate root cert files, located ./tls/data
-	if fileExist("./tls/data/ca.pem") || fileExist("./tls/data/ca-key.pem") {
-		log.Printf("Root CA file has already exists.")
-		return false
-	}
-	out, err := exec.Command("/bin/bash", "./tls/bin/generate_cert.sh", "./tls", "root").Output()
-	if err != nil {
-		log.Printf("Generate root ac files failed: %s", out)
-		return false
-	}
-	return true
-}
-func generateMasterCert(ip string) bool {
-	// Generate master cert files, located ./tls/data/master-${ip}/
-	out, err := exec.Command("/bin/bash", "./tls/bin/generate_cert.sh", "./tls", "master", ip).Output()
-	if err != nil {
-		log.Printf("Gernate master node cert file failed: %s", out)
-		return false
-	}
-	return true
-}
-
-func generateWorkerCert(ip string) bool {
-	// Generate worker cert files, located ./tls/data/worker-${ip}/
-	out, err := exec.Command("/bin/bash", "./tls/bin/generate_cert.sh", "./tls", "worker", ip).Output()
-	if err != nil {
-		log.Printf("Gernate worker node cert file failed: %s", out)
-		return false
-	}
-	return true
-}
-
 func main() {
-	initRootCert()
+	tptls.InitRootCert()
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/cloud-config/{mac}", HttpHandler)
+	router.HandleFunc("/cloud-config/{mac}", HTTPHandler)
 	log.Printf("%v\n", http.ListenAndServe(":8080", router))
 }
 
-func HttpHandler(w http.ResponseWriter, r *http.Request) {
+// HTTPHandler process http request.
+func HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
@@ -112,17 +75,18 @@ func HttpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tpl := template.Must(template.New("template").Parse(templ))
 	cfg := &tpcfg.Cluster{}
-	err = yaml.Unmarshal([]byte(config), &cfg)
+	yaml.Unmarshal([]byte(config), &cfg)
 	tp.Execute(tpl, cfg, mac, w)
 }
 
+// RetriveFromGithub fetch template and config from github.
 func RetriveFromGithub(timeout time.Duration) (template string, config string, err error) {
-	template, err = httpGet(template_url, timeout)
+	template, err = httpGet(templateURL, timeout)
 	if err != nil {
 		log.Printf("%v\n", err)
 		return "", "", err
 	}
-	config, err = httpGet(config_url, timeout)
+	config, err = httpGet(configURL, timeout)
 	if err != nil {
 		log.Printf("%v\n", err)
 		return "", "", err
@@ -130,6 +94,7 @@ func RetriveFromGithub(timeout time.Duration) (template string, config string, e
 	return template, config, nil
 }
 
+// WriteToFile cache template and config in file. We can read template and config from local files while failed to fetch from github.
 func WriteToFile(template string, config string) {
 	if template == "" || config == "" {
 		return
@@ -140,6 +105,7 @@ func WriteToFile(template string, config string) {
 	ioutil.WriteFile(cfgFile, []byte(config), os.ModeAppend)
 }
 
+// ReadFromFile read config and template from files.
 func ReadFromFile() (template string, config string, err error) {
 	tplFile := "./template/cloud-config.template"
 	cfgFile := "./template/unisound-ailab/build_config.yml"
