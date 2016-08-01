@@ -26,8 +26,8 @@ func Install(){
 	case ubuntu:
 		cmd.Run("apt-get","update")
 		cmd.Run("apt-get", "-y", "install", "pxelinux", "syslinux-common")
-		io.Copy("/srv/tftp/", "/usr/lib/PXELINUX/pxelinux.0")
-		io.Copy("/srv/tftp/", "/usr/lib/syslinux/modules/bios/ldlinux.c32")
+		io.Copy("/var/lib/tftpboot/", "/usr/lib/PXELINUX/pxelinux.0")
+		io.Copy("/var/lib/tftpboot/", "/usr/lib/syslinux/modules/bios/ldlinux.c32")
 	}
 
 }
