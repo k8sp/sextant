@@ -2,10 +2,11 @@ package skydns
 
 import (
 	"flag"
-	"log"
+	"strings"
 	"testing"
 
 	"github.com/topicai/candy"
+	"github.com/wangkuiyi/sh"
 	"gopkg.in/yaml.v2"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
@@ -14,8 +15,7 @@ import (
 )
 
 var (
-	indocker = flag.Bool("indocker", false,
-		"Tells that the test is running in a Docker container.")
+	indocker = flag.Bool("indocker", false, "Tells that the test is running in a Docker container.")
 )
 
 const (
@@ -34,34 +34,32 @@ WantedBy=multi-user.target
 `
 )
 
-func TestService(t *testing.T) {
+func TestServiceUnit(t *testing.T) {
 	c := &config.Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
-	assert.Equal(t, serviceContent, MakeService("", c))
-
+	assert.Equal(t, serviceContent, serviceUnit("", c))
 }
 
-func TestSkyDNS(t *testing.T) {
+func TestInstall(t *testing.T) {
 	if *indocker {
-		const (
-			centos = "centos"
-			ubuntu = "ubuntu"
-		)
-
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
 		switch dist := config.LinuxDistro(); dist {
-		case centos:
-			cmd.Run("yum", "-y", "install", "curl")
-			InstallonCentOS("", c)
-		case ubuntu:
+		case "centos":
+			cmd.Run("yum", "-y", "install", "curl", "git", "file")
+		case "ubuntu":
 			cmd.Run("apt-get", "update")
-			cmd.Run("apt-get", "-y", "install", "curl")
-			InstallonUbuntu("", c)
+			cmd.Run("apt-get", "-y", "install", "curl", "git", "file")
 		default:
-			log.Panicf("Unsupported OS: %s", dist)
+			t.Errorf("Unsupported OS: %s", dist)
 		}
 
+		Install("", c)
+
+		file := <-sh.Run("file", "/usr/bin/skydns")
+		if !strings.Contains(file, "ELF 64-bit LSB") {
+			t.Errorf("Command file cannot stat /usr/bin/skydns, got %v", file)
+		}
 	}
 }
