@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	indocker = flag.Bool("indocker", false,
-		"Tells that the test is running in a Docker container by nginx.bash.")
+	indocker = flag.Bool("indocker", false, "Tells that the test is running in a Docker container.")
 )
 
 func TestInstall(t *testing.T) {
