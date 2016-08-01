@@ -4,7 +4,7 @@ coreos:
     etcd2:
         name: "%H"
         listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
-        initial-cluster: "{{ .InitialCluster }}" 
+        initial-cluster: "{{ .InitialCluster }}"
         {{- if .EtcdMember }}
         initial-cluster-token: "etcd-cluster-1"
         initial-advertise-peer-urls: "http://{{ .IP }}:2380"
@@ -27,11 +27,13 @@ coreos:
         - name: "docker.socket"
           command: "start"
         - name: "flanneld.service"
+          {{- if .KubeMaster }}
           drop-ins:
             - name: 50-network-config.conf
               content: |
                 [Service]
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+          {{- end}}
           command: "start"
         - name: "settimezone.service"
           command: start
@@ -127,4 +129,3 @@ hostname: "{{ .Hostname }}"
 
 ssh_authorized_keys:
 {{ .SSHAuthorizedKeys }}
-

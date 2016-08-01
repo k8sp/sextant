@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"log"
+	"flag"
 	"net/http"
 	"io/ioutil"
 	"strings"
@@ -34,6 +35,10 @@ func init() {
 }
 
 func main() {
+	flag.StringVar(&config_url, "config_url", "config url", "cluster config yaml file url")
+	flag.StringVar(&template_url, "template_url", "template url", "cloud-config template url")
+	flag.Parse()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}", HttpHandler)
 	log.Printf("%v\n", http.ListenAndServe(":8080", router))
@@ -132,4 +137,3 @@ func httpGet(url string, timeout time.Duration) (string, error) {
 	}
 	return string(body), nil
 }
-
