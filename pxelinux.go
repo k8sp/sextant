@@ -14,22 +14,29 @@ func Pxelinux_install(){
 		ubuntu = "ubuntu"
 	)
 	
-	linuxdis := config.LinuxDistro()   
-	if linuxdis == ubuntu 
-	{
+	dist := config.LinuxDistro()
+	if dist != centos && dist != ubuntu {
+		log.Panicf("Unsupported OS: %s", dist)
+	}
+
+	switch dist {
+	case centos:
+		cmd.Run("yum", "-y", "install", "syslinux")
+		io.Copy("/var/lib/tftpboot/", "/usr/share/syslinux/pxelinux.0")
+	case ubuntu:
 		cmd.Run("apt-get","update")
 		cmd.Run("apt-get", "-y", "install", "pxelinux", "syslinux-common")
 		io.Copy("/srv/tftp/", "/usr/lib/PXELINUX/pxelinux.0")
 		io.Copy("/srv/tftp/", "/usr/lib/syslinux/modules/bios/ldlinux.c32")
 	}
-	else if linuxdis == centos 
-	{
-		cmd.Run("yum", "-y", "install", "syslinux")
-		io.Copy("/var/lib/tftpboot/", "/usr/share/syslinux/pxelinux.0")
-	}
-	else
-	{
-		log.Panicf("Unsupported OS: %s", linuxdis)
+
+	switch dist {
+	case ubuntu:
+		cmd.Run("service", "tftpd-hpa", "restart")
+	case centos:
+		cmd.Run("chkconfig", "tftp", "on")
+		cmd.Run("chkconfig", "xinetd", "on")
+		cmd.Run("service", "xinetd", "restart")
 	}
 	
 }
