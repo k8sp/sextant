@@ -4,14 +4,14 @@ function TestInVM() {
     PKG=$1
     VMBOX=$2
     
-    if [[ -d in_vm_test ]]; then
-	( cd in_vm_test && vagrant destroy)
+    if [[ -d vm ]]; then
+	( cd vm && vagrant destroy)
     fi
 
-    rm -rf in_vm_test
-    mkdir in_vm_test
+    rm -rf vm
+    mkdir vm
     (
-	cd in_vm_test
+	cd vm
 	vagrant init $VMBOX
 	vagrant up
 	vagrant scp ../$PKG.test /home/vagrant/
