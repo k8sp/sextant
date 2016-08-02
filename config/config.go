@@ -26,10 +26,12 @@ type Cluster struct {
 	Routers       []string
 	Broadcast     string
 	Nameservers   []string
-	DomainName    string
+	DomainName    string `yaml:"domain_name"`
 	IPLow, IPHigh string // The IP address range of woker nodes.
 	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 
+	HTTPProxy     string `yaml:"http_proxy"`
+	HTTPSProxy    string `yaml:"https_proxy"`
 	CoreOSChannel string `yaml:"coreos_channel"`
 
 	NginxRootDir string `yaml:"nginx_root_dir"`
@@ -86,9 +88,12 @@ iphigh: 172.17.0.100
 routers: [172.17.0.2]
 broadcast: 172.17.255.255
 nameservers: [172.17.0.2, 8.8.8.8, 8.8.4.4]
-domainname: unisound.com
+domain_name: unisound.com
 
 nginx_root_dir: /usr/share/nginx/html
+
+http_proxy: 10.200.19.203:8118
+https_proxy: 10.200.19.203:8118
 
 nodes:
   - mac: "00:25:90:c0:f7:80"

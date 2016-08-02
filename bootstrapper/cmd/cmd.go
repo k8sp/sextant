@@ -58,6 +58,9 @@ func run(panic bool, env map[string]string, name string, arg []string) {
 	for k, v := range env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
+	if env != nil {
+		log.Printf("ENV: %s", strings.Join(cmd.Env, " "))
+	}
 
 	p := log.Printf
 	if panic {
