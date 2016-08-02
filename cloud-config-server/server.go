@@ -59,15 +59,10 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	mac = strings.Replace(mac, ".yml", "", -1)
 	mac = strings.Replace(mac, ":", "-", -1)
 
-	templ, config, err := Retrive(3 * time.Second)
+	templ, config, err := GetConfig()
 	if err != nil {
-		templ, config, err = ReadFromFile()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	} else {
-		WriteToFile(templ, config)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if templ == "" || config == "" {
@@ -80,6 +75,24 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	cfg := &tpcfg.Cluster{}
 	yaml.Unmarshal([]byte(config), &cfg)
 	tp.Execute(tpl, cfg, mac, w)
+}
+
+// GetConfig reads from file, or else Retrive if need.
+func GetConfig() (template string, config string, err error) {
+	_, err1 := os.Stat("./template/cloud-config.template")
+	_, err2 := os.Stat("./template/unisound-ailab/build_config.yml")
+
+	if os.IsNotExist(err1) || os.IsNotExist(err2) {
+		template, config, err = Retrive(3 * time.Second)
+		if err != nil {
+			return "", "", err
+		}
+		log.Printf("Write template and config to file...\n")
+		WriteToFile(template, config)
+	} else {
+		template, config, err = ReadFromFile()
+	}
+	return template, config, err
 }
 
 // Retrive fetch template and config from github.
@@ -100,12 +113,16 @@ func Retrive(timeout time.Duration) (template string, config string, err error) 
 // WriteToFile cache template and config in file. We can read template and config from local files while failed to fetch from github.
 func WriteToFile(template string, config string) {
 	if template == "" || config == "" {
+		fmt.Printf("return for empty")
+		return
+	}
+	if err := os.MkdirAll("./template/unisound-ailab", 0755); err != nil {
 		return
 	}
 	tplFile := "./template/cloud-config.template"
 	cfgFile := "./template/unisound-ailab/build_config.yml"
-	ioutil.WriteFile(tplFile, []byte(template), os.ModeAppend)
-	ioutil.WriteFile(cfgFile, []byte(config), os.ModeAppend)
+	ioutil.WriteFile(tplFile, []byte(template), 0644)
+	ioutil.WriteFile(cfgFile, []byte(config), 0644)
 }
 
 // ReadFromFile read config and template from files.
