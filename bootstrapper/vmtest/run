@@ -15,7 +15,7 @@ function TestInVM() {
 	vagrant init $VMBOX
 	vagrant up
 	vagrant scp ../$PKG.test /home/vagrant/
-	vagrant ssh -c "sudo /home/vagrant/$PKG.test -invm"
+	vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
     )
 }
 

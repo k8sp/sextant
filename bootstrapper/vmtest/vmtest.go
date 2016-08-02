@@ -3,5 +3,5 @@ package vmtest
 import "flag"
 
 var (
-	InVM = flag.Bool("invm", false, "The test is running in a VM.")
+	InVM = flag.Bool("test.invm", false, "The test is running in a VM.")
 )
