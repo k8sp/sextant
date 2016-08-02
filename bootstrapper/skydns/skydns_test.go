@@ -59,21 +59,31 @@ func TestInstall(t *testing.T) {
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
-		switch dist := config.LinuxDistro(); dist {
+		dist := config.LinuxDistro()
+		switch dist {
 		case "centos":
-			cmd.Run("yum", "-y", "install", "curl", "git", "file")
+			cmd.Run("yum", "-y", "install", "curl", "git")
 		case "ubuntu":
 			cmd.Run("apt-get", "update")
-			cmd.Run("apt-get", "-y", "install", "curl", "git", "file")
+			cmd.Run("apt-get", "-y", "install", "curl", "git")
 		default:
 			t.Errorf("Unsupported OS: %s", dist)
 		}
 
 		Install("", c)
 
-		file := <-sh.Run("file", "/usr/bin/skydns")
-		if !strings.Contains(file, "ELF 64-bit LSB") {
-			t.Errorf("Command file cannot stat /usr/bin/skydns, got %v", file)
+		switch dist {
+		case "centos":
+			status := <-sh.Run("systemctl", "is-active", "skydns")
+			if !strings.Contains(status, "active") {
+				t.Errorf("Can not start skydns service, %s", status)
+			}
+		case "ubuntu":
+			status := <-sh.Run("service", "skydns", "status")
+			if !strings.Contains(status, "running") {
+				t.Errorf("Can not start skydns service, %s", status)
+			}
 		}
+
 	}
 }
