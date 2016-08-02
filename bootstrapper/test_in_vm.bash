@@ -5,7 +5,7 @@ function TestInVM() {
     VMBOX=$2
     
     if [[ -d vm ]]; then
-	( cd vm && vagrant destroy)
+	( cd vm && vagrant destroy -f)
     fi
 
     rm -rf vm
@@ -27,4 +27,5 @@ fi
 
 PKG=$(basename $(go list .))
 
-TestInVM $PKG "ubuntu/trusty64"	
+TestInVM $PKG "ubuntu/trusty64"
+TestInVM $PKG "centos/7"
