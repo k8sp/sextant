@@ -5,6 +5,7 @@ import (
 )
 
 func TestGenerateMasterCert(t *testing.T) {
+	InitRootCert()
 	GenerateMasterCert("192.168.2.3")
 	if fileExist(CertBaseDIR+"/data/master-192.168.2.3/apiserver.pem") &&
 		fileExist(CertBaseDIR+"/data/master-192.168.2.3/apiserver-key.pem") &&
@@ -25,6 +26,7 @@ func TestGenerateRootCert(t *testing.T) {
 }
 
 func TestGenerateWorkerCert(t *testing.T) {
+	InitRootCert()
 	GenerateWorkerCert("192.168.2.3")
 	if fileExist(CertBaseDIR+"/data/worker-192.168.2.3/worker.pem") &&
 		fileExist(CertBaseDIR+"/data/worker-192.168.2.3/worker-key.pem") {
