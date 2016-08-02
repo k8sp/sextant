@@ -30,8 +30,6 @@ type Cluster struct {
 	IPLow, IPHigh string // The IP address range of woker nodes.
 	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 
-	HTTPProxy     string `yaml:"http_proxy"`
-	HTTPSProxy    string `yaml:"https_proxy"`
 	CoreOSChannel string `yaml:"coreos_channel"`
 
 	NginxRootDir string `yaml:"nginx_root_dir"`
@@ -91,9 +89,6 @@ nameservers: [172.17.0.2, 8.8.8.8, 8.8.4.4]
 domain_name: unisound.com
 
 nginx_root_dir: /usr/share/nginx/html
-
-http_proxy: 10.200.19.203:8118
-https_proxy: 10.200.19.203:8118
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
