@@ -72,7 +72,7 @@ end script
 func build() {
 	installGo("")
 
-	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp"},
+	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp", "https_proxy": "10.200.19.203:8118", "http_proxy": "10.200.19.203:8118"},
 		"go", "get", "-u", "github.com/skynetservices/skydns")
 
 	cmd.Run("cp", "/tmp/bin/skydns", "/usr/bin/")
@@ -104,7 +104,7 @@ func getSkyDNSFile() {
 // Install downloads and builds SkyDNS into /usr/bin/skydns.  It then
 // creates a systemd service unit for CentOS.
 func Install(tmpl string, c *config.Cluster) {
-	getSkyDNSFile()
+	build()
 
 	switch dist := config.LinuxDistro(); dist {
 	case "centos":
