@@ -114,6 +114,7 @@ func Install(tmpl string, c *config.Cluster) {
 		})
 
 		cmd.Run("systemctl", "enable", "skydns")
+		cmd.Run("systemctl", "daemon-reload")
 		// Due to a bug of CentOS, systemctl cannot run in
 		// Docker containers.  Discussions and the explanation
 		// of this bug is at
