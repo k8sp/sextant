@@ -1,7 +1,6 @@
 package skydns
 
 import (
-	"flag"
 	"strings"
 	"testing"
 
@@ -10,11 +9,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
+	"github.com/k8sp/auto-install/bootstrapper/vmtest"
 	"github.com/k8sp/auto-install/config"
-)
-
-var (
-	indocker = flag.Bool("indocker", false, "Tells that the test is running in a Docker container.")
 )
 
 const (
@@ -55,7 +51,7 @@ end script
 )
 
 func TestInstall(t *testing.T) {
-	if *indocker {
+	if *vmtest.InVM {
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
