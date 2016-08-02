@@ -73,7 +73,7 @@ func build(c *config.Cluster) {
 	installGo("")
 
 	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp", "https_proxy": c.HTTPSProxy, "http_proxy": c.HTTPProxy},
-		"go", "get", "-u", "github.com/skynetservices/skydns")
+		"/usr/local/go/bin/go", "get", "-u", "github.com/skynetservices/skydns")
 
 	cmd.Run("/bin/cp", "-f", "/tmp/bin/skydns", "/usr/bin/")
 }
@@ -90,7 +90,6 @@ func installGo(version string) {
 		fmt.Sprintf("https://storage.googleapis.com/golang/go%s.linux-amd64.tar.gz", version))
 
 	cmd.Run("tar", "-C", "/usr/local", "-xzf", "/tmp/go.tar.gz")
-	cmd.Run("ln", "-sf", "/usr/local/go/bin/go", "/usr/local/bin/go")
 }
 
 // Download SkyDNS bianary file from github.
