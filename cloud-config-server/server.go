@@ -24,7 +24,7 @@ func init() {
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for range ticker.C {
-			template, config, err := RetriveFromGithub(5 * time.Second)
+			template, config, err := Retrive(5 * time.Second)
 			if err != nil {
 				template = ""
 				config = ""
@@ -59,7 +59,7 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	mac = strings.Replace(mac, ".yml", "", -1)
 	mac = strings.Replace(mac, ":", "-", -1)
 
-	templ, config, err := RetriveFromGithub(3 * time.Second)
+	templ, config, err := Retrive(3 * time.Second)
 	if err != nil {
 		templ, config, err = ReadFromFile()
 		if err != nil {
@@ -82,8 +82,8 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	tp.Execute(tpl, cfg, mac, w)
 }
 
-// RetriveFromGithub fetch template and config from github.
-func RetriveFromGithub(timeout time.Duration) (template string, config string, err error) {
+// Retrive fetch template and config from github.
+func Retrive(timeout time.Duration) (template string, config string, err error) {
 	template, err = httpGet(templateURL, timeout)
 	if err != nil {
 		log.Printf("%v\n", err)
