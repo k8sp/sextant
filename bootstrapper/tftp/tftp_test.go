@@ -24,7 +24,7 @@ func TestInstall(t *testing.T) {
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
-		//		Install("", c)
+		Install()
 
 		if _, err := os.Stat("/etc/init/tftpd-hpa.conf"); os.IsNotExist(err) {
 			log.Printf("Failed to install/configure TFTP, /etc/init/tftpd-hpa.conf doesn't exist")

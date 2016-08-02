@@ -25,7 +25,7 @@ func Install() {
 		cmd.Run("yum", "-y", "install", "tftp-server")
 	case ubuntu:
 		cmd.Run("apt-get", "update")
-		cmd.Run("apt-get", "-y", "install", "tftp-hpa")
+		cmd.Run("apt-get", "-y", "install", "tftpd-hpa")
 	}
 
 	switch dist {
