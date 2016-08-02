@@ -69,11 +69,12 @@ end script
 `
 )
 
-func build(c *config.Cluster) {
+func build() {
 	installGo("")
 
-	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp", "https_proxy": c.HTTPSProxy, "http_proxy": c.HTTPProxy},
-		"go", "get", "-u", "github.com/skynetservices/skydns")
+	// Be careful, need antiGFW to download
+	cmd.RunWithEnv(map[string]string{"GOPATH": "/tmp"},
+		"/usr/local/go/bin/go", "get", "-u", "github.com/skynetservices/skydns")
 
 	cmd.Run("/bin/cp", "-f", "/tmp/bin/skydns", "/usr/bin/")
 }
@@ -90,7 +91,6 @@ func installGo(version string) {
 		fmt.Sprintf("https://storage.googleapis.com/golang/go%s.linux-amd64.tar.gz", version))
 
 	cmd.Run("tar", "-C", "/usr/local", "-xzf", "/tmp/go.tar.gz")
-	cmd.Run("ln", "-sf", "/usr/local/go/bin/go", "/usr/local/bin/go")
 }
 
 // Download SkyDNS bianary file from github.
@@ -104,7 +104,7 @@ func getSkyDNSFile() {
 // Install downloads and builds SkyDNS into /usr/bin/skydns.  It then
 // creates a systemd service unit for CentOS.
 func Install(tmpl string, c *config.Cluster) {
-	build(c)
+	build()
 
 	switch dist := config.LinuxDistro(); dist {
 	case "centos":
@@ -114,6 +114,7 @@ func Install(tmpl string, c *config.Cluster) {
 		})
 
 		cmd.Run("systemctl", "enable", "skydns")
+		cmd.Run("systemctl", "daemon-reload")
 		// Due to a bug of CentOS, systemctl cannot run in
 		// Docker containers.  Discussions and the explanation
 		// of this bug is at
