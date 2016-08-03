@@ -19,6 +19,16 @@ func TestSomething(t *testing.T) {
 }
 ```
 
+## Prerequisite
+
+`vmtest/run` requires
+[Vagrant scp plugin](https://github.com/invernizzi/vagrant-scp).  To
+install it, type
+
+```
+vagrant plugin install vagrant-scp
+```
+
 ## Usage
 
 An example is in `bootstrapper/dhcp`.  To run the tests in a Ubuntu VM
