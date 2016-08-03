@@ -17,3 +17,10 @@ func TestInitialEtcdCluster(t *testing.T) {
 			"00-25-90-c0-f6-ee=http://10.0.2.22:2380,"+
 			"00-25-90-c0-f6-d6=http://00-25-90-c0-f6-d6:2380")
 }
+
+func TestGetEtcdMachines(t *testing.T) {
+	c := &Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
+	assert.Equal(t, c.GetEtcdMachines(),
+		"http://172.17.0.10:2379,http://172.17.0.11:2379")
+}

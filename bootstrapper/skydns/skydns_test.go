@@ -11,6 +11,7 @@ import (
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/k8sp/auto-install/bootstrapper/vmtest"
 	"github.com/k8sp/auto-install/config"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -22,7 +23,7 @@ Requires=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+ExecStart=/usr/bin/skydns -machines=http://172.17.0.10:2379,http://172.17.0.11:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
 
 [Install]
 WantedBy=multi-user.target
@@ -38,7 +39,7 @@ respawn limit 20 3
 
 script
 echo $$ > /var/run/skydns.pid
-exec /usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+exec /usr/bin/skydns -machines=http://172.17.0.10:2379,http://172.17.0.11:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
 end script
 
 pre-start script
@@ -49,6 +50,13 @@ pre-stop script
 end script
 `
 )
+
+func TestServiceUnit(t *testing.T) {
+	c := &config.Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
+	assert.Equal(t, systemdContent, serviceUnit("centos", "", c))
+	assert.Equal(t, upstartContent, serviceUnit("ubuntu", "", c))
+}
 
 func TestInstall(t *testing.T) {
 	if *vmtest.InVM {
