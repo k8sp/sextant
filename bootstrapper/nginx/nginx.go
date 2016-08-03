@@ -46,6 +46,7 @@ func Install(tmpl string, c *config.Cluster) {
 	switch dist {
 	case centos:
 		cmd.Run("systemctl", "enable", "nginx")
+		cmd.Run("systemctl", "daemon-reload")
 		// Due to a bug of CentOS, systemctl cannot run in
 		// Docker containers.  Discussions and the explanation
 		// of this bug is at

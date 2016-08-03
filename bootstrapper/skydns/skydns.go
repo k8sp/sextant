@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io"
 	"log"
-	"path"
 	"runtime"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
@@ -91,14 +90,6 @@ func installGo(version string) {
 		fmt.Sprintf("https://storage.googleapis.com/golang/go%s.linux-amd64.tar.gz", version))
 
 	cmd.Run("tar", "-C", "/usr/local", "-xzf", "/tmp/go.tar.gz")
-}
-
-// Download SkyDNS bianary file from github.
-// requires that curl have been installed.
-func getSkyDNSFile() {
-	skydnsfile := path.Join("/usr/bin", "skydns")
-	cmd.Run("curl", "-o", skydnsfile, "https://raw.githubusercontent.com/pineking/skydns-binary/master/skydns")
-	cmd.Run("chmod", "755", skydnsfile)
 }
 
 // Install downloads and builds SkyDNS into /usr/bin/skydns.  It then
