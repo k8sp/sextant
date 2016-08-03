@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -95,8 +96,7 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 	}
 	resp, err := client.Get(url)
 	if err != nil || resp.StatusCode != 200 {
-		log.Printf("%v", err)
-		return nil, err
+		return nil, fmt.Errorf("%s, StatusCode=%d", err, resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
