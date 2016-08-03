@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,8 +32,11 @@ func TestCacheWithUpdate(t *testing.T) {
 	tmpdir, _ := ioutil.TempDir("", "")
 	cache := New(url, path.Join(tmpdir, "cachefile"))
 
+	v := string(cache.Get())
 	for i := 0; i < 10; i++ {
-		assert.Equal(t, fmt.Sprintf("%05d", i), string(cache.Get()))
+		nv := string(cache.Get())
+		assert.True(t, strings.Compare(v, nv) <= 0, fmt.Sprintf("%v should be <= %s", v, nv))
+		v = nv
 		time.Sleep(50 * time.Millisecond)
 	}
 }
