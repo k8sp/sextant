@@ -3,6 +3,8 @@
 // file, which is used by config-bootstrapper and cloud-config-server.
 package config
 
+import "strings"
+
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
 type Cluster struct {
@@ -24,9 +26,11 @@ type Cluster struct {
 	Routers       []string
 	Broadcast     string
 	Nameservers   []string
-	DomainName    string
+	DomainName    string `yaml:"domain_name"`
 	IPLow, IPHigh string // The IP address range of woker nodes.
 	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
+
+	CoreOSChannel string `yaml:"coreos_channel"`
 
 	NginxRootDir string `yaml:"nginx_root_dir"`
 
@@ -47,3 +51,60 @@ type Node struct {
 	KubeMaster  bool   `yaml:"kube_master"`
 	EtcdMember  bool   `yaml:"etcd_member"`
 }
+
+// Join is defined as a method of Cluster, so can be called in
+// templates.  For more details, refer to const tmplDHCPConf.
+func (c Cluster) Join(s []string) string {
+	return strings.Join(s, ", ")
+}
+
+// Hostname is defined as a method of Node, so can be call in
+// template.  For more details, refer to const tmplDHCPConf.
+func (n Node) Hostname() string {
+	return strings.ToLower(strings.Replace(n.MAC, ":", "-", -1))
+}
+
+// Mac is defined as a method of Node, so can be called in template.
+// For more details, refer to const tmplDHCPConf.
+func (n Node) Mac() string {
+	return strings.ToLower(n.MAC)
+}
+
+// ExampleYAML shows an example of YAML-encoded Cluster description.
+// It is also used for unit testing.  The IP addresses and subnet used
+// in this example are in accordance with Docker's default subnet:
+// https://docs.docker.com/v1.7/articles/networking/.  So unit tests
+// running in Docker get passed
+// (c.f. https://github.com/k8sp/auto-install/issues/52).
+const ExampleYAML = `
+bootstrapper: 172.17.0.2
+
+subnet: 172.17.0.0
+netmask: 255.255.0.0
+iplow: 172.17.0.10
+iphigh: 172.17.0.100
+routers: [172.17.0.2]
+broadcast: 172.17.255.255
+nameservers: [172.17.0.2, 8.8.8.8, 8.8.4.4]
+domain_name: unisound.com
+
+nginx_root_dir: /usr/share/nginx/html
+
+nodes:
+  - mac: "00:25:90:c0:f7:80"
+    ip: 172.17.0.10
+    ceph_monitor: y
+    kube_master: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:ee"
+    ip: 172.17.0.11
+    ceph_monitor: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:d6"
+    ceph_monitor: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:ac"
+    ip: 172.17.0.12
+  - mac: "00:25:90:c0:f7:7e"
+    ip: 172.17.0.13
+`
