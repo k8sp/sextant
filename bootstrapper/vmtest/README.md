@@ -39,3 +39,16 @@ cd bootstrapper/dhcp
 ../vmtest/run
 ```
 
+## Fuck the GFW
+
+Change the following the line in `vmtest/sh`
+
+```
+vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
+```
+
+into
+
+```
+vagrant ssh -c "http_proxy=xxxx https_proxy=yyyy sudo /home/vagrant/$PKG.test -test.invm"
+```
