@@ -26,6 +26,6 @@ and then in a CentOS VM:
 
 ```
 cd bootstrapper/dhcp
-../vmtest.run
+../vmtest/run
 ```
 
