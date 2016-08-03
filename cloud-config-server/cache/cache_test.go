@@ -32,8 +32,7 @@ func TestCacheWithUpdate(t *testing.T) {
 	cache := New(url, path.Join(tmpdir, "cachefile"))
 
 	for i := 0; i < 10; i++ {
-		assert.Equal(t, fmt.Sprintf("%05d", i), string(cache.Get()))
-		time.Sleep(550 * time.Millisecond)
+		assert.Equal(t, fmt.Sprintf("%05d", srv-1), string(cache.Get()))
 	}
 }
 
