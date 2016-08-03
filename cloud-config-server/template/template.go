@@ -5,7 +5,7 @@ import (
 	"io"
 	"text/template"
 
-	tptls "github.com/k8sp/auto-install/cloud-config-server/tls"
+	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	tpcfg "github.com/k8sp/auto-install/config"
 )
 
@@ -50,9 +50,9 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 func generateCertFiles(node tpcfg.Node) {
 	fmt.Printf(node.IP + "\n")
 	if node.KubeMaster == true {
-		tptls.GenerateMasterCert(node.IP)
+		tls.GenerateMasterCert(node.IP)
 	} else {
-		tptls.GenerateWorkerCert(node.IP)
+		tls.GenerateWorkerCert(node.IP)
 	}
 }
 
