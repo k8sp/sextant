@@ -22,5 +22,5 @@ func TestGetEtcdMachines(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
 	assert.Equal(t, c.GetEtcdMachines(),
-		"http://172.17.0.10:2379,http://172.17.0.11:2379")
+		"http://10.0.2.21:2379,http://10.0.2.22:2379")
 }
