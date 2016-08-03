@@ -22,12 +22,12 @@ func Install() {
 	switch dist {
 	case centos:
 		cmd.Run("yum", "-y", "install", "syslinux")
-		cmd.Run("cp", "/var/lib/tftpboot/", "/usr/share/syslinux/pxelinux.0")
+		cmd.Run("cp", "/usr/share/syslinux/pxelinux.0", "/var/lib/tftpboot/")
 	case ubuntu:
 		cmd.Run("apt-get", "update")
 		cmd.Run("apt-get", "-y", "install", "pxelinux", "syslinux-common")
-		cmd.Run("cp", "/var/lib/tftpboot/", "/usr/lib/PXELINUX/pxelinux.0")
-		cmd.Run("cp", "/var/lib/tftpboot/", "/usr/lib/syslinux/modules/bios/ldlinux.c32")
+		cmd.Run("cp", "/usr/lib/PXELINUX/pxelinux.0", "/var/lib/tftpboot/")
+		cmd.Run("cp", "/usr/lib/syslinux/modules/bios/ldlinux.c32", "/var/lib/tftpboot/")
 	}
 
 }
