@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
@@ -60,6 +59,5 @@ func TestCacheWithConstantServer(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		assert.Equal(t, "00000", string(cache.Get()))
-		time.Sleep(50 * time.Millisecond)
 	}
 }
