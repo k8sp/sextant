@@ -72,39 +72,37 @@ func (n Node) Mac() string {
 
 // ExampleYAML shows an example of YAML-encoded Cluster description.
 // It is also used for unit testing.  The IP addresses and subnet used
-// in this example are in accordance with Docker's default subnet:
-// https://docs.docker.com/v1.7/articles/networking/.  So unit tests
-// running in Docker get passed
+// in this example are in accordance with Vagrant VM's default subnet,
+// so unit tests on DHCP can starts DHCP services correctly
 // (c.f. https://github.com/k8sp/auto-install/issues/52).
 const ExampleYAML = `
-bootstrapper: 172.17.0.2
+bootstrapper: 10.0.2.15
 
-subnet: 172.17.0.0
-netmask: 255.255.0.0
-iplow: 172.17.0.10
-iphigh: 172.17.0.100
-routers: [172.17.0.2]
-broadcast: 172.17.255.255
-nameservers: [172.17.0.2, 8.8.8.8, 8.8.4.4]
-domain_name: unisound.com
+subnet: 10.0.2.0
+netmask: 255.255.255.0
+iplow: 10.0.2.100
+iphigh: 10.0.2.200
+routers: [10.0.2.15]
+broadcast: 10.0.2.255
+nameservers: [10.0.2.15, 8.8.8.8, 8.8.4.4]
+domain_name: company.com
 
 nginx_root_dir: /usr/share/nginx/html
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
-    ip: 172.17.0.10
+    ip: 10.0.2.21
     ceph_monitor: y
     kube_master: y
     etcd_member: y
   - mac: "00:25:90:c0:f6:ee"
-    ip: 172.17.0.11
+    ip: 10.0.2.22
     ceph_monitor: y
     etcd_member: y
   - mac: "00:25:90:c0:f6:d6"
     ceph_monitor: y
     etcd_member: y
   - mac: "00:25:90:c0:f7:ac"
-    ip: 172.17.0.12
+    ip: 10.0.2.23
   - mac: "00:25:90:c0:f7:7e"
-    ip: 172.17.0.13
 `
