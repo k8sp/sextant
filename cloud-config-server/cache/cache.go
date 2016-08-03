@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/topicai/candy"
 )
 
 // Cache manages a local in-memory copy of a remote file as well as a
@@ -98,7 +100,9 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 	if err != nil || resp.StatusCode != 200 {
 		return nil, fmt.Errorf("%s, StatusCode=%d", err, resp.StatusCode)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		candy.Must(resp.Body.Close())
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -108,6 +112,7 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 	return body, nil
 }
 
+// Get returns content in memory, and triggers an update without waiting.
 func (c *Cache) Get() []byte {
 	b := c.content
 	select {
@@ -117,6 +122,7 @@ func (c *Cache) Get() []byte {
 	return b
 }
 
+// Close closes the cache and release all resources.
 func (c *Cache) Close() {
 	c.close <- 1
 }

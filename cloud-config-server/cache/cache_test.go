@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/topicai/candy"
 )
 
 func TestCacheWithUpdate(t *testing.T) {
@@ -22,7 +23,9 @@ func TestCacheWithUpdate(t *testing.T) {
 
 	ln, e := net.Listen("tcp", ":0")
 	assert.Nil(t, e)
-	go http.Serve(ln, mux)
+	go func() {
+		candy.Must(http.Serve(ln, mux))
+	}()
 
 	url := fmt.Sprintf("http://%s/", ln.Addr())
 	tmpdir, _ := ioutil.TempDir("", "")
@@ -48,7 +51,9 @@ func TestCacheWithConstantServer(t *testing.T) {
 
 	ln, e := net.Listen("tcp", ":0")
 	assert.Nil(t, e)
-	go http.Serve(ln, mux)
+	go func() {
+		candy.Must(http.Serve(ln, mux))
+	}()
 
 	url := fmt.Sprintf("http://%s/", ln.Addr())
 	tmpdir, _ := ioutil.TempDir("", "")
