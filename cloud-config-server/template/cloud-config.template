@@ -1,4 +1,220 @@
 #cloud-config
+write_files:
+  - path: /etc/kubernetes/ssl/ca.pem
+    owner: core
+    permissions: 0644
+    content: |
+      -----BEGIN CERTIFICATE-----
+      MIIC9zCCAd+gAwIBAgIJANZJnKweloX5MA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNV
+      BAMMB2t1YmUtY2EwHhcNMTYwNzI3MTcxMzUwWhcNNDMxMjEzMTcxMzUwWjASMRAw
+      DgYDVQQDDAdrdWJlLWNhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+      w2ErQHRMveCHeB1vDefo/8fW3T1OFm0jD6H/UOzU1h43WbVE3S6RfbpS3kW9fFma
+      Aiv2A3QibsJGvNzQh8o9Ksdoys4NQslShlTdwTmqDR8XQRoB9p7Z5CZGpSbhSBvP
+      TwWkflZlUgbhYqryCKDTlcQMBM2qo1PF4TorwMHYgwaF5oHYN4lPX4FsyXaQ8Nqu
+      Z3IVoieekEVFuVGacsETs711ZGv1pFoEK6TNvJ5dDnYfA2NTZn9CMmNJDCkP1gzq
+      pF/ZAq3eJT0f0tBx6zGd/oo8kHS0QiTX+WzJX5ZYk9r2gnqKjz+EBmS6oDYoNkvm
+      xgSZnpm90q+65FDTa/rGpwIDAQABo1AwTjAdBgNVHQ4EFgQUg7Zu30wlHGzbM+Jk
+      TfXDWvDQau8wHwYDVR0jBBgwFoAUg7Zu30wlHGzbM+JkTfXDWvDQau8wDAYDVR0T
+      BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAmYxwQhJemqmq8Ccc+kuDt9HDd3RC
+      U1AhCB9tKDC5Dnp7b/LS0yJuVX3Ixl+E4OvxCtYi4kJnIZfK1D34XndXwKbVDfb8
+      i+SXBqf5DnqtCPqZIYX7z4gTA4Ja7+jy02kq2Ejdh8pjH1LWO6J6PoqIWAnvOTzj
+      Jnm0iV4yrGOBsqvCxYY63JWw2HYfzMj91TNLOmn5Pi5flNO/+s6LPL/yOTq/7pTH
+      b9q4JQp5VjMnoI404Zl73GqzNhPTpAFDaMGwYI733dSKQghsg6RekEM1qy1/Hcgm
+      5r++XlVrabHwyM2DAXioZGDWrkJzl1s3sIhWMnDwNNWvsXX1woNcSrx+Qg==
+      -----END CERTIFICATE-----
+  - path: /etc/kubernetes/ssl/ca-key.pem
+    owner: core
+    permissions: 0644
+    content: |
+      -----BEGIN RSA PRIVATE KEY-----
+      MIIEowIBAAKCAQEAw2ErQHRMveCHeB1vDefo/8fW3T1OFm0jD6H/UOzU1h43WbVE
+      3S6RfbpS3kW9fFmaAiv2A3QibsJGvNzQh8o9Ksdoys4NQslShlTdwTmqDR8XQRoB
+      9p7Z5CZGpSbhSBvPTwWkflZlUgbhYqryCKDTlcQMBM2qo1PF4TorwMHYgwaF5oHY
+      N4lPX4FsyXaQ8NquZ3IVoieekEVFuVGacsETs711ZGv1pFoEK6TNvJ5dDnYfA2NT
+      Zn9CMmNJDCkP1gzqpF/ZAq3eJT0f0tBx6zGd/oo8kHS0QiTX+WzJX5ZYk9r2gnqK
+      jz+EBmS6oDYoNkvmxgSZnpm90q+65FDTa/rGpwIDAQABAoIBAC1MqzWPgXeIxoAP
+      +v6zZW9giy3Sl/dVKIroWYUO1C4s5VJ0V9ocgPkwqSQF8XASakXUoX6df5pEixgg
+      7mx9dH8lquNSsPpqKSsiJCQ31XijW8XpXMksfYKLaVfDUvpgEEnXGhN8vpMtKzaw
+      QdvERip0QQEgGk8yDjAxR5GyoBuIkO+09UAyPczxV5mN1desU2Gj/mBQJTByWsp5
+      8hcbkmw/6zEKwRW9wPMBFwSaCpHeSOy1GoCtjwb2rlHPmAphHb8VFdVFsWuLu3pV
+      AEgnOcZfnyoyF6YkfA86akfWwKq0mxSwBmfV5+mnIuiX22LuoqbT1qLnWonwBPVF
+      fEMC8VECgYEA4L66InilfD+7gYvi637KKmWkCze3JUX1Hbxn/WVRLQA0GoRjNIxV
+      J2rWCceHxDFZuVSN+P3mQ2bwt9AaQDqpBcxdK83DWjYse7Wxk2HI90lZSXMazCWT
+      bwmVbBtHAqkNhG2o4aXaZXaJla0H4GtltCw7+avZGcAAHRf7ZZpvXG8CgYEA3oz8
+      V7uyi56d3Oepy1PNpXvgZ4K94Vklj7R0i+aTRbVMvx6KNZ7jGtc/gnErkc5a1ouj
+      YSa9OQLqNuxE07fgfzt3ByIn4TLKO/6EZlOBLr4QMFNCY9Y1wVuxIOFuNXX+QcHg
+      UNFU0Kp1J/QPkUkaxPLMZA8oZerIB8gl5I1oxUkCgYB+d/VoVnnRHFAYiy5LlNKQ
+      3xdb1KN0DxTrAc2G00/FwfqP/XWR6XI1tzHw2N42cgrqdoFZ3w6HWVMWLL3I7PmW
+      MLUxZB2NEzUe/FSL+hfLx/O9mE85F+AKONtjtUnVXmoj3k2NhPYL6JNtravkBqt5
+      ovaw/Zoymk+2D3vBZhFKcwKBgDNXVROsUnlRQ1vl+c7Va3jExjU6/TESjs7DM6ve
+      qpUHSUhB9GKAYCYeCCHAl+uQLnaWSj+sXzTazkuTYCFzpw/TGReFMqwKOotyoPq2
+      QvQUlsl/O66qiUYtMATE3NbqfJiQ8H3UfPuSh2qLLFg5BDrxRGPE923jpvfcnZlH
+      Yic5AoGBAJlbq1LCNzzHSGI/RgvMlCeFPDx0yYzlQjSxnQ7l+pNaZRcwVOhqPcaS
+      s1I+g1IH03IyzxUlMNCu/kC96MpNefddsOtErZqmudYnoGWox3s+UCYya4AQuYpV
+      gwJfTWgosqDp5pD02I+eZiMsf7uEWQYE3rKm/Xx0LR5kOs94Vz2x
+      -----END RSA PRIVATE KEY-----
+
+  {{- if .KubeMaster }｝
+  - path: /etc/kubernetes/ssl/openssl.cnf
+    owner: root
+    permissions: 0755
+    content: |
+      [req]
+      req_extensions = v3_req
+      distinguished_name = req_distinguished_name
+      [req_distinguished_name]
+      [ v3_req ]
+      basicConstraints = CA:FALSE
+      keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+      subjectAltName = @alt_names
+      [alt_names]
+      IP.1 = $ENV::MASTER_IP
+  - path: /etc/flannel/options.env
+    owner: root
+    permissions: 0644
+    content: |
+      FLANNELD_IFACE={{ .IP }}
+      FLANNELD_ETCD_ENDPOINTS={{ .ETCDENDPOINTS }}
+
+  - path: /opt/bin/install-manifests.sh
+    owner: root
+    permissions: 0755
+    content: |
+      #! /usr/bin/bash
+
+      # Ensure directories exists.
+      sudo mkdir -p /etc/kubernetes/manifests/
+      sudo mkdir -p /etc/kubernetes/ssl/
+      sudo mkdir -p /etc/kubernetes/addons/
+
+      if [ ! -f /etc/kubernetes/manifests/kubernetes-master.manifest ]; then
+        echo "Manifests not installed - installing."
+
+        # Download config.
+        sudo wget -N -P /etc/kubernetes/manifests/ https://raw.githubusercontent.com/typhoonzero/kubernetes_binaries/master/cloud-config/kubernetes_master.manifest
+      fi
+
+      # Insert the master's IP address into the manifest.
+      echo "DEFAULT_IPV4: $DEFAULT_IPV4"
+      sudo sed -i -e "s/<ETCD_ENDPOINTS>/http:\/\/{{ .ETCDENDPOINTS }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
+      sudo sed -i -e "s/<MASTER_IP>/{{ .MASTER_IP }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
+  - path: /etc/kubernetes/ssl/generate-tls-keys.sh
+    owner: root
+    permissions: 0755
+    content: |
+      #! /usr/bin/bash
+      # Generates a set of TLS keys for this node to access the API server.
+      set -e
+
+      if [ ! -f /etc/kubernetes/ssl/apiserver.pem ]; then
+        echo "Generating TLS keys."
+        cd /etc/kubernetes/ssl
+        openssl genrsa -out apiserver-key.pem 2048
+        MASTER_IP=${1} openssl req -new -key apiserver-key.pem -out apiserver.csr -subj "/CN=kube-apiserver" -config openssl.cnf
+        MASTER_IP=${1} openssl x509 -req -in apiserver.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out apiserver.pem -days 365 -extensions v3_req -extfile openssl.cnf
+      fi
+
+      # Set permissions.
+      sudo chmod 600 /etc/kubernetes/ssl/apiserver-key.pem
+      sudo chown root:root /etc/kubernetes/ssl/apiserver-key.pem
+  {{- else }}
+  - path: /etc/kubernetes/ssl/openssl.cnf
+    owner: root
+    permissions: 0755
+    content: |
+      [req]
+      req_extensions = v3_req
+      distinguished_name = req_distinguished_name
+      [req_distinguished_name]
+      [ v3_req ]
+      basicConstraints = CA:FALSE
+      keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+      subjectAltName = @alt_names
+      [alt_names]
+      IP.1 = $ENV::WORKER_IP
+  - path: /etc/kubernetes/ssl/generate-tls-keys.sh
+    owner: root
+    permissions: 0755
+    content: |
+      #! /usr/bin/bash
+      # Generates a set of TLS keys for this node to access the API server.
+      set -e
+
+      if [ ! -f /etc/kubernetes/ssl/worker.pem ]; then
+        echo "Generating TLS keys."
+        cd /etc/kubernetes/ssl
+        openssl genrsa -out worker-key.pem 2048
+        WORKER_IP=${1} openssl req -new -key worker-key.pem -out worker.csr -subj "/CN=worker" -config openssl.cnf
+        WORKER_IP=${1} openssl x509 -req -in worker.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out worker.pem -days 365 -extensions v3_req -extfile openssl.cnf
+      fi
+
+      # Set permissions.
+      sudo chmod 600 /etc/kubernetes/ssl/worker-key.pem
+      sudo chown root:root /etc/kubernetes/ssl/worker-key.pem
+  - path: /etc/kubernetes/worker-kubeconfig.yaml
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: local
+        cluster:
+          certificate-authority: /etc/kubernetes/ssl/ca.pem
+      users:
+      - name: kubelet
+        user:
+          client-certificate: /etc/kubernetes/ssl/worker.pem
+          client-key: /etc/kubernetes/ssl/worker-key.pem
+      contexts:
+      - context:
+          cluster: local
+          user: kubelet
+        name: kubelet-context
+      current-context: kubelet-context
+
+  - path: /etc/kubernetes/manifests/kube-proxy.manifest
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+       name: kube-proxy
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-proxy
+          image: typhoon1986/hyperkube-amd64:v1.2.0
+          command:
+          - /hyperkube
+          - proxy
+          - --master=https://{{ .MASTERIP }}:443
+          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+          - --proxy-mode=iptables
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: "ssl-certs"
+            - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+              name: "kubeconfig"
+              readOnly: true
+            - mountPath: /etc/kubernetes/ssl
+              name: "etc-kube-ssl"
+              readOnly: true
+        volumes:
+          - name: "ssl-certs"
+            hostPath:
+              path: "/usr/share/ca-certificates"
+          - name: "kubeconfig"
+            hostPath:
+              path: "/etc/kubernetes/worker-kubeconfig.yaml"
+          - name: "etc-kube-ssl"
+            hostPath:
+              path: "/etc/kubernetes/ssl"
+
+  {{- end }}
 
 coreos:
     etcd2:
@@ -14,6 +230,8 @@ coreos:
         {{- else }}
         proxy: on
         {{- end }}
+    flannel:
+      etcd_endpoints: "{{ .ETCD_ENDPOINTS }}"
     update:
         reboot-strategy: "etcd-lock"
     locksmith:
@@ -24,17 +242,35 @@ coreos:
           command: "start"
         - name: "fleet.service"
           command: "start"
-        - name: "docker.socket"
-          command: "start"
-        - name: "flanneld.service"
           {{- if .KubeMaster }}
+        - name: "flanneld.service"
           drop-ins:
             - name: 50-network-config.conf
               content: |
                 [Service]
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-          {{- end}}
           command: "start"
+          {{- else }}
+        - name: flanneld.service
+          command: start
+          {{- end }}
+        - name: setup-network-environment.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Setup Network Environment
+            Documentation=https://github.com/kelseyhightower/setup-network-environment
+            Requires=network-online.target
+            After=network-online.target
+            [Service]
+            ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+            ExecStartPre=-/usr/bin/wget -N -P /opt/bin https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
+            ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
+            ExecStart=/opt/bin/setup-network-environment
+            RemainAfterExit=yes
+            Type=oneshot
+
         - name: "settimezone.service"
           command: start
           content: |
@@ -98,32 +334,100 @@ coreos:
             RemainAfterExit=no
             Type=oneshot
         {{- end }}
+        - name: docker.service
+          runtime: true
+          command: start
+          drop-ins:
+          - name: 40-docker-flannel.conf
+            content: |
+              [Unit]
+              After=docker.socket early-docker.target network.target flanneld.service
+              Requires=docker.socket early-docker.target flanneld.service
+        {{- if .KubeMaster }}
+        - name: "flanneld.service"
+          drop-ins:
+            - name: 50-network-config.conf
+              content: |
+                [Service]
+                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+          command: "start"
 
-        - name: "install-k8s.service"
+        - name: kubernetes-install.service
+          runtime: true
           command: start
           content: |
             [Unit]
-            Description=Install k8s services
-            Requires=etcd2.service
-            After=etcd2.service
-            Requires=flanneld.service
-            After=flanneld.service
-            Requires=network.target
-            After=network.target
-
+            Description=Installs Kubernetes tools
+            After=manifest-install.service
+            Requires=manifest-install.service
             [Service]
-            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            {{- if .KubeMaster }}
-            ExecStart=/usr/bin/wget -O /home/core/master.zip http://10.10.10.192/install-k8s/master.zip
-            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/master.zip
-            ExecStart=/bin/bash /home/core/master/setup_k8s_master.sh
-            {{- else }}
-            ExecStart=/usr/bin/wget -O /home/core/worker.zip http://10.10.10.192/install-k8s/worker.zip
-            ExecStart=/usr/bin/unzip -d /home/core -o /home/core/worker.zip
-            ExecStart=/bin/bash /home/core/worker/setup_k8s_worker.sh
-            {{- end }}
-            RemainAfterExit=no
+            ExecStart=/opt/bin/kubernetes-install.sh
+            RemainAfterExit=yes
             Type=oneshot
+        - name: kubelet.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/kubernetes/kubernetes
+            Requires=docker.service kubernetes-install.service
+            After=kubernetes-install.service docker.service
+            [Service]
+            Environment=KUBELET_VERSION=v1.2.4_coreos.1
+            EnvironmentFile=/etc/network-environment
+            ExecStart=/usr/lib/coreos/kubelet-wrapper \
+            --pod_infra_container_image=typhoon1986/pause:2.0 \
+            --register-node=true \
+            --api-servers=http://<MASTER_IP>:8080 \
+            --network-plugin-dir=/etc/kubernetes/cni/net.d \
+            --network-plugin=${NETWORK_PLUGIN} \
+            --register-schedulable=false \
+            --allow-privileged=true \
+            --config=/etc/kubernetes/manifests \
+            --hostname-override=<MASTER_IP> \
+            --cluster-dns=10.100.0.10 \
+            --cluster-domain=cluster.local
+            --logtostderr=true
+            Restart=always
+            RestartSec=10
+            [Install]
+            WantedBy=multi-user.target
+        {{- else }}
+        - name: kubelet.service
+            runtime: true
+            command: start
+            content: |
+              [Unit]
+              Description=Kubernetes Kubelet
+              Documentation=https://github.com/kubernetes/kubernetes
+              After=generate-tls-keys.service docker.service
+              Requires=generate-tls-keys.service docker.service
+              [Service]
+              EnvironmentFile=/etc/network-environment
+              Environment=KUBELET_VERSION=v1.2.4_coreos.1
+              ExecStart=/usr/lib/coreos/kubelet-wrapper \
+              --pod_infra_container_image=typhoon1986/pause:2.0 \
+              --address=0.0.0.0 \
+              --allow-privileged=true \
+              --cluster-dns=10.100.0.10 \
+              --cluster-domain=cluster.local \
+              --config=/etc/kubernetes/manifests \
+              --hostname-override=${DEFAULT_IPV4} \
+              --api-servers=https://{{ . MASTERIP }}:443 \
+              --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+              --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
+              --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+              --logtostderr=true \
+              --network-plugin= \
+              --network-plugin-dir=/etc/cni/net.d
+              Restart=always
+              RestartSec=10
+              [Install]
+              WantedBy=multi-user.target
+        {{- end}}
+
+
 
 hostname: "{{ .Hostname }}"
 
