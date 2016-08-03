@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/etix/stoppableListener"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +22,7 @@ func TestCacheWithUpdate(t *testing.T) {
 
 	ln, e := net.Listen("tcp", ":0")
 	assert.Nil(t, e)
-	stoppable := stoppableListener.Handle(ln)
-	go http.Serve(stoppable, mux)
+	go http.Serve(ln, mux)
 
 	url := fmt.Sprintf("http://%s/", ln.Addr())
 	tmpdir, _ := ioutil.TempDir("", "")
@@ -34,8 +32,6 @@ func TestCacheWithUpdate(t *testing.T) {
 		assert.Equal(t, fmt.Sprintf("%05d", i), string(cache.Get()))
 		time.Sleep(50 * time.Millisecond)
 	}
-
-	stoppable.Stop <- true
 }
 
 func TestCacheWithConstantServer(t *testing.T) {
