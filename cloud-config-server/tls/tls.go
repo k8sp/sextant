@@ -11,16 +11,16 @@ import (
 // CertBaseDIR The base fold of saving cert files
 var CertBaseDIR = os.Getenv("GOPATH") + "/src/github.com/k8sp/auto-install/cloud-config-server/tls"
 
-// CertDataBaseDIR is
+// CertDataBaseDIR is data fold
 var CertDataBaseDIR = CertBaseDIR + "/data"
 
-// CaPem is
+// CAPem file
 var CAPem = CertBaseDIR + "/data/ca.pem"
 
-// CAKeyPath is
+// CAKeyPem file
 var CAKeyPem = CertBaseDIR + "/data/ca-key.pem"
 
-// CertEtcDIR is
+// CertEtcDIR file
 var CertEtcDIR = CertBaseDIR + "/etc"
 
 func fileExist(filename string) bool {

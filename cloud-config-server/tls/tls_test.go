@@ -16,7 +16,6 @@ func TestGenerateMasterCert(t *testing.T) {
 	}
 }
 
-/**
 func TestGenerateRootCert(t *testing.T) {
 	InitRootCert()
 	if fileExist(CertBaseDIR+"/data/ca.pem") &&
@@ -26,7 +25,6 @@ func TestGenerateRootCert(t *testing.T) {
 		t.Error("ca.pem, ca-key.pem successing generate failed.")
 	}
 }
-**/
 func TestGenerateWorkerCert(t *testing.T) {
 	InitRootCert()
 	GenerateWorkerCert("192.168.2.3")
