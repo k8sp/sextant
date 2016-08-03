@@ -39,9 +39,17 @@ cd bootstrapper/dhcp
 ../vmtest/run
 ```
 
-## Fuck the GFW
+## Troubleshooting
 
-Change the following the line in `vmtest/sh`
+### Out-Of-Memory
+
+Some unit tests might need more memory than created by `vagrant init`;
+or they will cause out-of-memory error.  For that case
+
+### Anti-GFW
+
+In order to use an HTTP proxy, we can change the following the line in
+`vmtest/sh`
 
 ```
 vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
@@ -50,5 +58,5 @@ vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
 into
 
 ```
-vagrant ssh -c "http_proxy=xxxx https_proxy=yyyy sudo /home/vagrant/$PKG.test -test.invm"
+vagrant ssh -c "sudo http_proxy=xxxx https_proxy=yyyy /home/vagrant/$PKG.test -test.invm"
 ```
