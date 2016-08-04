@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"path"
 	"strings"
@@ -36,25 +37,27 @@ func main() {
 	addr := flag.String("addr", ":8080", "Listening address")
 	flag.Parse()
 
-	run(*clusterDesc, *ccTemplate, *addr)
+	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
+	l, e := net.Listen("tcp", *addr)
+	candy.Must(e)
+	run(c, t, l)
 }
 
-func run(clusterDesc, ccTemplate, listenAddr string) {
-	dir, e := ioutil.TempDir("", "")
-	candy.Must(e)
-	clusterCache := cache.New(clusterDesc, path.Join(dir, "cluster-desc.yml"))
-	templCache := cache.New(ccTemplate, path.Join(dir, "cloud-config.template"))
-
+// By making the first two parameters closures, we get the flexibility
+// to create closures reading from the cache for production serving,
+// and from constant values for testing.  Please refer to func main()
+// for the former case, and server_test.go for the latter case.
+func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			mac := strings.ToLower(mux.Vars(r)["mac"])
-			tmpl := template.Must(template.New("template").Parse(string(templCache.Get())))
+			tmpl := template.Must(template.New("template").Parse(ccTemplate()))
 			c := &config.Cluster{}
-			candy.Must(yaml.Unmarshal([]byte(string(clusterCache.Get())), c))
+			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
 		}))
-	log.Printf("%v", http.ListenAndServe(listenAddr, router))
+	log.Printf("%v", http.Serve(ln, router))
 }
 
 func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
@@ -66,4 +69,15 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 		}()
 		h(w, r)
 	}
+}
+
+func makeCacheGetter(clusterDesc, ccTemplate string) (func() []byte, func() string) {
+	dir, e := ioutil.TempDir("", "")
+	candy.Must(e)
+	clusterCache := cache.New(clusterDesc, path.Join(dir, "cluster-desc.yml"))
+	templCache := cache.New(ccTemplate, path.Join(dir, "cloud-config.template"))
+
+	c := func() []byte { return clusterCache.Get() }
+	t := func() string { return string(templCache.Get()) }
+	return c, t
 }
