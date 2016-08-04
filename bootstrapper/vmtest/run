@@ -31,7 +31,7 @@ fi
 PKG=$(basename $(go list .))
 
 TestInVM $PKG "ubuntu/trusty64"
-#TestInVM $PKG "centos/7"
+TestInVM $PKG "centos/7"
 
-#rm -rf vm
+rm -rf vm
  
