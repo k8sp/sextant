@@ -24,7 +24,7 @@ func (c Cluster) InitialEtcdCluster() string {
 	return strings.Join(ret, ",")
 }
 
-// Get Etcd machines list
+// GetEtcdMachines return the etcd members
 func (c Cluster) GetEtcdMachines() string {
 	var ret []string
 	for _, n := range c.Nodes {
