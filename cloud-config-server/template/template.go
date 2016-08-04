@@ -15,6 +15,8 @@ type ExecutionConfig struct {
 	EtcdMember        bool
 	InitialCluster    string
 	SSHAuthorizedKeys string
+	EtcdEndpoints	  string
+	MasterIP	  string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -29,6 +31,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 		EtcdMember:        node.EtcdMember,
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
+		MasterIP:	   			 "10.10.10.201",
+    EtcdEndpoints:      "http://10.10.10.201:4001",
 	}
 	return tmpl.Execute(w, ec)
 }

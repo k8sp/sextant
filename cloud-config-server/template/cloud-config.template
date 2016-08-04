@@ -54,7 +54,7 @@ write_files:
       gwJfTWgosqDp5pD02I+eZiMsf7uEWQYE3rKm/Xx0LR5kOs94Vz2x
       -----END RSA PRIVATE KEY-----
 
-  {{- if .KubeMaster }｝
+  {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/openssl.cnf
     owner: root
     permissions: 0755
@@ -74,7 +74,7 @@ write_files:
     permissions: 0644
     content: |
       FLANNELD_IFACE={{ .IP }}
-      FLANNELD_ETCD_ENDPOINTS={{ .ETCDENDPOINTS }}
+      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
 
   - path: /opt/bin/install-manifests.sh
     owner: root
@@ -96,8 +96,8 @@ write_files:
 
       # Insert the master's IP address into the manifest.
       echo "DEFAULT_IPV4: $DEFAULT_IPV4"
-      sudo sed -i -e "s/<ETCD_ENDPOINTS>/http:\/\/{{ .ETCDENDPOINTS }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
-      sudo sed -i -e "s/<MASTER_IP>/{{ .MASTER_IP }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
+      sudo sed -i -e "s/<ETCD_ENDPOINTS>/http:\/\/{{ .EtcdEndpoints }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
+      sudo sed -i -e "s/<MASTER_IP>/{{ .MasterIP }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
   - path: /etc/kubernetes/ssl/generate-tls-keys.sh
     owner: root
     permissions: 0755
@@ -189,7 +189,7 @@ write_files:
           command:
           - /hyperkube
           - proxy
-          - --master=https://{{ .MASTERIP }}:443
+          - --master=https://{{ .MasterIP }}:443
           - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
           - --proxy-mode=iptables
           securityContext:
@@ -231,7 +231,7 @@ coreos:
         proxy: on
         {{- end }}
     flannel:
-      etcd_endpoints: "{{ .ETCD_ENDPOINTS }}"
+      etcd_endpoints: "{{ .EtcdEndpoints }}"
     update:
         reboot-strategy: "etcd-lock"
     locksmith:
@@ -414,7 +414,7 @@ coreos:
               --cluster-domain=cluster.local \
               --config=/etc/kubernetes/manifests \
               --hostname-override=${DEFAULT_IPV4} \
-              --api-servers=https://{{ . MASTERIP }}:443 \
+              --api-servers=https://{{ .MasterIP }}:443 \
               --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
               --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
               --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
