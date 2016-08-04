@@ -17,6 +17,8 @@ function TestInVM() {
 	vagrant up
 	vagrant scp ../$PKG.test /home/vagrant/
 	vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
+	vagrant halt -f
+	vagrant destroy -f
     )
 }
 
@@ -31,9 +33,5 @@ PKG=$(basename $(go list .))
 TestInVM $PKG "ubuntu/trusty64"
 TestInVM $PKG "centos/7"
 
-(
-    cd vm
-    vagrant destroy -f
-)
 rm -rf vm
  
