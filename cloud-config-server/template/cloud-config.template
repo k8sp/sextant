@@ -392,13 +392,13 @@ coreos:
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
             --pod_infra_container_image=typhoon1986/pause:2.0 \
             --register-node=true \
-            --api-servers=http://<MASTER_IP>:8080 \
+            --api-servers=http://{{ .MasterIP }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin=${NETWORK_PLUGIN} \
             --register-schedulable=false \
             --allow-privileged=true \
             --config=/etc/kubernetes/manifests \
-            --hostname-override=<MASTER_IP> \
+            --hostname-override={{ .MasterIP }} \
             --cluster-dns=10.100.0.10 \
             --cluster-domain=cluster.local
             --logtostderr=true
