@@ -9,6 +9,7 @@ import (
 
 	"log"
 
+	"github.com/k8sp/auto-install/bootstrapper/vmtest"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 )
@@ -19,7 +20,7 @@ var (
 )
 
 func TestInstall(t *testing.T) {
-	if *indocker {
+	if *vmtest.InVM {
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
