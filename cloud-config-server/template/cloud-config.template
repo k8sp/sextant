@@ -242,7 +242,7 @@ coreos:
           command: "start"
         - name: "fleet.service"
           command: "start"
-        - name: "early-docker"
+        - name: "early-docker.service"
           command: "start"
 
          {{- if .KubeMaster }}
@@ -367,19 +367,19 @@ coreos:
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
           command: "start"
 
-       - name: manifest-install.service
-         runtime: true
-         command: start
-         content: |
-           [Unit]
-           Description=Installs Manifests
-           After=setup-network-environment.service
-           Requires=setup-network-environment.service
-           [Service]
-           EnvironmentFile=/etc/network-environment
-           ExecStart=/opt/bin/install-manifests.sh
-           RemainAfterExit=yes
-           Type=oneshot
+        - name: manifest-install.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Installs Manifests
+            After=setup-network-environment.service
+            Requires=setup-network-environment.service
+            [Service]
+            EnvironmentFile=/etc/network-environment
+            ExecStart=/opt/bin/install-manifests.sh
+            RemainAfterExit=yes
+            Type=oneshot
 
         - name: kubelet.service
           runtime: true
