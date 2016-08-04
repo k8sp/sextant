@@ -96,7 +96,7 @@ write_files:
 
       # Insert the master's IP address into the manifest.
       echo "DEFAULT_IPV4: $DEFAULT_IPV4"
-      sudo sed -i -e "s/<ETCD_ENDPOINTS>/http:\/\/{{ .EtcdEndpoints }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
+      sudo sed -i -e "s/<ETCD_ENDPOINTS>/http:\/\/{{ .MasterIP }}:4001/g" /etc/kubernetes/manifests/kubernetes_master.manifest
       sudo sed -i -e "s/<MASTER_IP>/{{ .MasterIP }}/g" /etc/kubernetes/manifests/kubernetes_master.manifest
   - path: /etc/kubernetes/ssl/generate-tls-keys.sh
     owner: root
@@ -242,19 +242,9 @@ coreos:
           command: "start"
         - name: "fleet.service"
           command: "start"
-        - name: generate-tls-keys.service
-          runtime: true
-          command: start
-          content: |
-            [Unit]
-            Description=Generates TLS keys for this node
-            After=setup-network-environment.service
-            Requires=setup-network-environment.service
-            [Service]
-            EnvironmentFile=/etc/network-environment
-            ExecStart=/etc/kubernetes/ssl/generate-tls-keys.sh ${DEFAULT_IPV4}
-            RemainAfterExit=yes
-            Type=oneshot
+        - name: "early-docker"
+          command: "start"
+
          {{- if .KubeMaster }}
         - name: "flanneld.service"
           drop-ins:
@@ -283,7 +273,19 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
-
+        - name: generate-tls-keys.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Generates TLS keys for this node
+            After=setup-network-environment.service
+            Requires=setup-network-environment.service
+            [Service]
+            EnvironmentFile=/etc/network-environment
+            ExecStart=/etc/kubernetes/ssl/generate-tls-keys.sh ${DEFAULT_IPV4}
+            RemainAfterExit=yes
+            Type=oneshot
         - name: "settimezone.service"
           command: start
           content: |
@@ -365,18 +367,20 @@ coreos:
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
           command: "start"
 
-        - name: kubernetes-install.service
-          runtime: true
-          command: start
-          content: |
-            [Unit]
-            Description=Installs Kubernetes tools
-            After=manifest-install.service
-            Requires=manifest-install.service
-            [Service]
-            ExecStart=/opt/bin/kubernetes-install.sh
-            RemainAfterExit=yes
-            Type=oneshot
+       - name: manifest-install.service
+         runtime: true
+         command: start
+         content: |
+           [Unit]
+           Description=Installs Manifests
+           After=setup-network-environment.service
+           Requires=setup-network-environment.service
+           [Service]
+           EnvironmentFile=/etc/network-environment
+           ExecStart=/opt/bin/install-manifests.sh
+           RemainAfterExit=yes
+           Type=oneshot
+
         - name: kubelet.service
           runtime: true
           command: start
@@ -384,8 +388,8 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            Requires=docker.service kubernetes-install.service
-            After=kubernetes-install.service docker.service
+            Requires=docker.service
+            After=docker.service
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
