@@ -412,36 +412,36 @@ coreos:
             WantedBy=multi-user.target
         {{- else }}
         - name: kubelet.service
-            runtime: true
-            command: start
-            content: |
-              [Unit]
-              Description=Kubernetes Kubelet
-              Documentation=https://github.com/kubernetes/kubernetes
-              After=generate-tls-keys.service docker.service
-              Requires=generate-tls-keys.service docker.service
-              [Service]
-              EnvironmentFile=/etc/network-environment
-              Environment=KUBELET_VERSION=v1.2.4_coreos.1
-              ExecStart=/usr/lib/coreos/kubelet-wrapper \
-              --pod_infra_container_image=typhoon1986/pause:2.0 \
-              --address=0.0.0.0 \
-              --allow-privileged=true \
-              --cluster-dns=10.100.0.10 \
-              --cluster-domain=cluster.local \
-              --config=/etc/kubernetes/manifests \
-              --hostname-override=${DEFAULT_IPV4} \
-              --api-servers=https://{{ .MasterIP }}:443 \
-              --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
-              --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
-              --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
-              --logtostderr=true \
-              --network-plugin= \
-              --network-plugin-dir=/etc/cni/net.d
-              Restart=always
-              RestartSec=10
-              [Install]
-              WantedBy=multi-user.target
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/kubernetes/kubernetes
+            After=generate-tls-keys.service docker.service
+            Requires=generate-tls-keys.service docker.service
+            [Service]
+            EnvironmentFile=/etc/network-environment
+            Environment=KUBELET_VERSION=v1.2.4_coreos.1
+            ExecStart=/usr/lib/coreos/kubelet-wrapper \
+            --pod_infra_container_image=typhoon1986/pause:2.0 \
+            --address=0.0.0.0 \
+            --allow-privileged=true \
+            --cluster-dns=10.100.0.10 \
+            --cluster-domain=cluster.local \
+            --config=/etc/kubernetes/manifests \
+            --hostname-override=${DEFAULT_IPV4} \
+            --api-servers=https://{{ .MasterIP }}:443 \
+            --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+            --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
+            --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+            --logtostderr=true \
+            --network-plugin= \
+            --network-plugin-dir=/etc/cni/net.d
+            Restart=always
+            RestartSec=10
+            [Install]
+            WantedBy=multi-user.target
         {{- end}}
 
 
