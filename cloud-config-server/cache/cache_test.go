@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/topicai/candy"
 )
 
 func TestCacheWithUpdate(t *testing.T) {
@@ -22,15 +22,16 @@ func TestCacheWithUpdate(t *testing.T) {
 
 	ln, e := net.Listen("tcp", ":0")
 	assert.Nil(t, e)
-	go http.Serve(ln, mux)
+	go func() {
+		candy.Must(http.Serve(ln, mux))
+	}()
 
 	url := fmt.Sprintf("http://%s/", ln.Addr())
 	tmpdir, _ := ioutil.TempDir("", "")
 	cache := New(url, path.Join(tmpdir, "cachefile"))
 
 	for i := 0; i < 10; i++ {
-		assert.Equal(t, fmt.Sprintf("%05d", i), string(cache.Get()))
-		time.Sleep(50 * time.Millisecond)
+		assert.Equal(t, fmt.Sprintf("%05d", srv-1), string(cache.Get()))
 	}
 }
 
@@ -48,7 +49,9 @@ func TestCacheWithConstantServer(t *testing.T) {
 
 	ln, e := net.Listen("tcp", ":0")
 	assert.Nil(t, e)
-	go http.Serve(ln, mux)
+	go func() {
+		candy.Must(http.Serve(ln, mux))
+	}()
 
 	url := fmt.Sprintf("http://%s/", ln.Addr())
 	tmpdir, _ := ioutil.TempDir("", "")
@@ -56,6 +59,5 @@ func TestCacheWithConstantServer(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		assert.Equal(t, "00000", string(cache.Get()))
-		time.Sleep(50 * time.Millisecond)
 	}
 }
