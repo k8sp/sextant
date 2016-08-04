@@ -23,3 +23,16 @@ func (c Cluster) InitialEtcdCluster() string {
 	}
 	return strings.Join(ret, ",")
 }
+
+// GetEtcdMachines return the etcd members
+func (c Cluster) GetEtcdMachines() string {
+	var ret []string
+	for _, n := range c.Nodes {
+		if n.EtcdMember {
+			if len(n.IP) > 0 {
+				ret = append(ret, fmt.Sprintf("http://%s:2379", n.IP))
+			}
+		}
+	}
+	return strings.Join(ret, ",")
+}

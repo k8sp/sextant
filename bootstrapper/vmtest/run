@@ -13,6 +13,7 @@ function TestInVM() {
     (
 	cd vm
 	vagrant init $VMBOX
+	sed -i.bak 's/# config.vm.provider "virtualbox" do |vb|/config.vm.provider "virtualbox" do |vb| vb.memory = "1024" end/g' Vagrantfile
 	vagrant up
 	vagrant scp ../$PKG.test /home/vagrant/
 	vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
@@ -35,3 +36,4 @@ TestInVM $PKG "centos/7"
     vagrant destroy -f
 )
 rm -rf vm
+
