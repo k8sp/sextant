@@ -242,7 +242,20 @@ coreos:
           command: "start"
         - name: "fleet.service"
           command: "start"
-          {{- if .KubeMaster }}
+        - name: generate-tls-keys.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Generates TLS keys for this node
+            After=setup-network-environment.service
+            Requires=setup-network-environment.service
+            [Service]
+            EnvironmentFile=/etc/network-environment
+            ExecStart=/etc/kubernetes/ssl/generate-tls-keys.sh ${DEFAULT_IPV4}
+            RemainAfterExit=yes
+            Type=oneshot
+         {{- if .KubeMaster }}
         - name: "flanneld.service"
           drop-ins:
             - name: 50-network-config.conf

@@ -31,8 +31,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 		EtcdMember:        node.EtcdMember,
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
-		MasterIP:	   			 "10.10.10.201",
-    EtcdEndpoints:      "http://10.10.10.201:4001",
+		MasterIP:	   "10.10.10.201",
+    		EtcdEndpoints:     "http://10.10.10.201:4001",
 	}
 	return tmpl.Execute(w, ec)
 }
