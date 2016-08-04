@@ -40,7 +40,7 @@ http {
         }
 
         location /cloud-config/ {
-            proxy_pass   http://172.17.0.2:8080;
+            proxy_pass   http://10.0.2.15:8080;
         }
 
     }

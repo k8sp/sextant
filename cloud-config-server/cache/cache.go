@@ -5,7 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/topicai/candy"
 )
 
 // Cache manages a local in-memory copy of a remote file as well as a
@@ -27,7 +30,8 @@ func handler(...) {
 type Cache struct {
 	filename string
 	url      string
-	content  []byte // Don't write into content.
+	content  []byte
+	mu       sync.Mutex // protects RW of content.
 
 	update chan int // Writing into this channel tiggers an update.
 	close  chan int // Writing into this channel closes the cache.
@@ -59,7 +63,10 @@ func New(url, filename string) *Cache {
 			}
 
 			if b, e := httpGet(c.url, loadTimeout); e == nil {
+				c.mu.Lock()
 				c.content = b
+				c.mu.Unlock()
+
 				if e := ioutil.WriteFile(c.filename, b, 0644); e != nil {
 					log.Printf("Cannot write to local file %s: %v", c.filename, e)
 				}
@@ -98,7 +105,9 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 	if err != nil || resp.StatusCode != 200 {
 		return nil, fmt.Errorf("%s, StatusCode=%d", err, resp.StatusCode)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		candy.Must(resp.Body.Close())
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -108,15 +117,22 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 	return body, nil
 }
 
+// Get returns content in memory, and triggers an update without waiting.
 func (c *Cache) Get() []byte {
-	b := c.content
+	b := make([]byte, len(c.content))
+	c.mu.Lock()
+	copy(b, c.content)
+	c.mu.Unlock()
+
 	select {
 	case c.update <- 1:
 	default:
 	}
+
 	return b
 }
 
+// Close closes the cache and release all resources.
 func (c *Cache) Close() {
 	c.close <- 1
 }
