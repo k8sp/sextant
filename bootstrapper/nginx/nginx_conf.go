@@ -2,12 +2,13 @@ package nginx
 
 import (
 	"bytes"
+	"html/template"
+
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
-	"html/template"
 )
 
-// NginxConf executes a template with a Cluster variable to generate
+// Conf executes a template with a Cluster variable to generate
 // /etc/nginx/nginx.conf.
 func Conf(tf string, c *config.Cluster) string {
 	tmpl := template.New("")
