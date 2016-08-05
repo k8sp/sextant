@@ -12,7 +12,6 @@ import (
 	"github.com/wangkuiyi/sh"
 )
 
-
 func TestInstall(t *testing.T) {
 	if *vmtest.InVM {
 		c := &config.Cluster{}
@@ -22,8 +21,8 @@ func TestInstall(t *testing.T) {
 
 		switch config.LinuxDistro() {
 		case "centos":
-			l := <-sh.Head(sh.Run("service", "tftp", "status"), 1)
-			if strings.Contains(l, "not running") || !strings.Contains(l, "running") {
+			l := <-sh.Run("systemctl", "is-active", "tftp")
+			if !strings.Contains(l, "active") {
 				t.Errorf("TFTP service is not running: %s", l)
 			}
 		case "ubuntu":

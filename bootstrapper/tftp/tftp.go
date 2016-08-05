@@ -24,7 +24,7 @@ func Install() {
 		cmd.Run("yum", "-y", "install", "xinetd")
 		cmd.Run("yum", "-y", "install", "tftp-server")
 	case ubuntu:
-//		cmd.Run("apt-get", "update")
+		cmd.Run("apt-get", "update")
 		cmd.Run("apt-get", "-y", "install", "tftpd-hpa")
 	}
 
@@ -32,9 +32,8 @@ func Install() {
 	case ubuntu:
 		cmd.Run("service", "tftpd-hpa", "restart")
 	case centos:
-		cmd.Run("chkconfig", "tftp", "on")
-		cmd.Run("service", "xinetd", "restart")
-	//	cmd.Run("systemctl", "enable", "tftp")
+		cmd.Run("systemctl", "restart", "xinetd")
+		cmd.Run("systemctl", "restart", "tftp")
 	}
 
 }
