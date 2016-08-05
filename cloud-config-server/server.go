@@ -70,12 +70,11 @@ func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			role := strings.ToLower(mux.Vars(r)["role"])
 			ip := mux.Vars(r)["ip"]
-            log.Printf(role + ip)
             data, err := tls.GenerateCerts(role, ip)
             if err != nil {
-                w.Write([]byte(data))
+                w.Write([]byte("Error"))
             } else {
-                w.Write([]byte(err.Error()))
+                w.Write([]byte(data))
             }
 		}))
 

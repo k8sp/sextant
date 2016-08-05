@@ -3,10 +3,13 @@ package tls
 import (
 	"bytes"
 	"errors"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/topicai/candy"
 )
 
 type Tls struct {
@@ -31,9 +34,8 @@ func fileExist(filename string) bool {
 	return err == nil
 }
 
-func (t Tls) GenerateCerts(role string, ip string) (string, error) {
+func (t Tls) GenerateCerts(role string, ip string) (data string, err error) {
 	if role == "master" {
-        log.Printf(role + ip)
 		return t.GenerateMasterCert(ip), nil
 	} else if role == "worker" {
 		return t.GenerateWorkerCert(ip), nil
@@ -45,27 +47,39 @@ func (t Tls) GenerateCerts(role string, ip string) (string, error) {
 func (t Tls) GenerateWorkerCert(ip string) string {
 	var dataDir = CertDataBaseDIR + "/worker-" + ip
 	var workerConfPath = dataDir + "/worker-openssl.cnf"
-	var workerPath = dataDir + "/worker.pem"
-	var workerKeyPath = dataDir + "/worker-key.pem"
+	var workerPem = dataDir + "/worker.pem"
+	var workerKeyPem = dataDir + "/worker-key.pem"
 	var workerCSRPath = dataDir + "/worker.csr"
 	os.Mkdir(dataDir, os.ModePerm)
 
 	cmd := exec.Command("bash", "-s")
 	cmdString := `
 	  sed "s/<WORKER_HOST>/` + ip + `/g" ` + CertEtcDIR + `/worker-openssl.cnf > ` + workerConfPath + `
-		openssl genrsa -out ` + workerKeyPath + ` 2048
-		openssl req -new -key ` + workerKeyPath + ` -out ` + workerCSRPath + ` -subj "/CN=worker" -config ` + workerConfPath + `
+		openssl genrsa -out ` + workerKeyPem + ` 2048
+		openssl req -new -key ` + workerKeyPem + ` -out ` + workerCSRPath + ` -subj "/CN=worker" -config ` + workerConfPath + `
 		openssl x509 -req -in ` + workerCSRPath + ` -CA ` + t.CAPem + ` -CAkey ` + t.CAKeyPem +
-		` -CAcreateserial -out ` + workerPath + ` -days 365 -extensions v3_req -extfile ` + workerConfPath
+		` -CAcreateserial -out ` + workerPem + ` -days 365 -extensions v3_req -extfile ` + workerConfPath
 	cmd.Stdin = strings.NewReader(cmdString)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("%v\n", err)
+		log.Printf("Generate worker cert fail: %v\n", err)
 		return ""
 	}
-	return ""
+	dataWorker, e := ioutil.ReadFile(workerPem)
+	candy.Must(e)
+	dataWorkerKey, e := ioutil.ReadFile(workerKeyPem)
+	candy.Must(e)
+	dataCA, e := ioutil.ReadFile(t.CAPem)
+	candy.Must(e)
+	data := bytes.Buffer{}
+	data.Write(dataWorker)
+	data.WriteString("<>\n")
+	data.Write(dataWorkerKey)
+	data.WriteString("<>\n")
+	data.Write(dataCA)
+	return data.String()
 }
 
 // GenerateMasterCert generate worker cert files, located ./tls/data/worker-${ip}/
@@ -88,9 +102,22 @@ func (t Tls) GenerateMasterCert(ip string) string {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
+	log.Printf("Output:" + out.String())
 	if err != nil {
-		log.Printf("%v\n", err)
+		log.Printf("Generate master cert fail: %v\n", err)
 		return ""
 	}
-	return ""
+	dataAPIServer, e := ioutil.ReadFile(apiserverPem)
+	candy.Must(e)
+	dataAPIServerKey, e := ioutil.ReadFile(apiserverKeyPem)
+	candy.Must(e)
+	dataCA, e := ioutil.ReadFile(t.CAPem)
+	candy.Must(e)
+	data := bytes.Buffer{}
+	data.Write(dataAPIServer)
+	data.WriteString("<>\n")
+	data.Write(dataAPIServerKey)
+	data.WriteString("<>\n")
+	data.Write(dataCA)
+	return data.String()
 }

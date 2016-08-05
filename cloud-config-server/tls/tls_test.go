@@ -5,7 +5,7 @@ import (
 )
 
 func TestGenerateMasterCert(t *testing.T) {
-    tls := &Tls{
+	tls := &Tls{
 		CAPem:    "./data/ca.pem",
 		CAKeyPem: "./data/ca-key.pem",
 	}
