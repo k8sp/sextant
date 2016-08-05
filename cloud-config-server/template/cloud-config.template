@@ -61,13 +61,11 @@ coreos:
         - name: "docker.socket"
           command: "start"
         - name: "flanneld.service"
-          {{- if .KubeMaster }}
           drop-ins:
             - name: 50-network-config.conf
               content: |
                 [Service]
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-          {{- end}}
           command: "start"
         - name: "settimezone.service"
           command: start

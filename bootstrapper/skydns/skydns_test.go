@@ -1,7 +1,6 @@
 package skydns
 
 import (
-	"flag"
 	"strings"
 	"testing"
 
@@ -10,11 +9,9 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
+	"github.com/k8sp/auto-install/bootstrapper/vmtest"
 	"github.com/k8sp/auto-install/config"
-)
-
-var (
-	indocker = flag.Bool("indocker", false, "Tells that the test is running in a Docker container.")
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -26,7 +23,7 @@ Requires=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+ExecStart=/usr/bin/skydns -machines=http://10.0.2.21:2379,http://10.0.2.22:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
 
 [Install]
 WantedBy=multi-user.target
@@ -42,7 +39,7 @@ respawn limit 20 3
 
 script
 echo $$ > /var/run/skydns.pid
-exec /usr/bin/skydns -machines=http://10.10.10.201:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=unisound.com.
+exec /usr/bin/skydns -machines=http://10.0.2.21:2379,http://10.0.2.22:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
 end script
 
 pre-start script
@@ -54,8 +51,15 @@ end script
 `
 )
 
+func TestServiceUnit(t *testing.T) {
+	c := &config.Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
+	assert.Equal(t, systemdContent, serviceUnit("centos", "", c))
+	assert.Equal(t, upstartContent, serviceUnit("ubuntu", "", c))
+}
+
 func TestInstall(t *testing.T) {
-	if *indocker {
+	if *vmtest.InVM {
 		c := &config.Cluster{}
 		candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
