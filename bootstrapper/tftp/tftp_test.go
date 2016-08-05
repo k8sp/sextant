@@ -22,7 +22,7 @@ func TestInstall(t *testing.T) {
 
 		switch config.LinuxDistro() {
 		case "centos":
-			l := <-sh.Head(sh.Run("service", "xinetd", "status"), 1)
+			l := <-sh.Head(sh.Run("service", "tftp", "status"), 1)
 			if strings.Contains(l, "not running") || !strings.Contains(l, "running") {
 				t.Errorf("TFTP service is not running: %s", l)
 			}

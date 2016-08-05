@@ -32,8 +32,9 @@ func Install() {
 	case ubuntu:
 		cmd.Run("service", "tftpd-hpa", "restart")
 	case centos:
-		cmd.Run("systemctl", "enable", "xinetd")
-		cmd.Run("systemctl", "enable", "tftp")
+		cmd.Run("chkconfig", "tftp", "on")
+		cmd.Run("service", "xinetd", "restart")
+	//	cmd.Run("systemctl", "enable", "tftp")
 	}
 
 }
