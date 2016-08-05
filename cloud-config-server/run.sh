@@ -1,0 +1,1 @@
+go run server.go -ca ./tls/data/ca.pem -ca-key ./tls/data/ca-key.pem -cc-template https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template -cluster-desc https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml

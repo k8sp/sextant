@@ -1,11 +1,9 @@
 package template
 
 import (
-	"fmt"
 	"io"
 	"text/template"
 
-	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	tpcfg "github.com/k8sp/auto-install/config"
 )
 
@@ -29,7 +27,6 @@ type ExecutionConfig struct {
 // given MAC address.
 func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Writer) error {
 	node := getNodeByMAC(config, mac)
-	generateCertFiles(node)
 	ec := ExecutionConfig{
 		Hostname:          mac,
 		IP:                node.IP,
@@ -47,14 +44,6 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 	return tmpl.Execute(w, ec)
 }
 
-func generateCertFiles(node tpcfg.Node) {
-	fmt.Printf(node.IP + "\n")
-	if node.KubeMaster == true {
-		tls.GenerateMasterCert(node.IP)
-	} else {
-		tls.GenerateWorkerCert(node.IP)
-	}
-}
 
 func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 	for _, n := range c.Nodes {

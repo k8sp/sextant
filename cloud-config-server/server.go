@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/k8sp/auto-install/cloud-config-server/cache"
 	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
+	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
@@ -34,20 +35,27 @@ func main() {
 	ccTemplate := flag.String("cc-template",
 		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
 		"URL to cloud-config file template.")
+	caPem := flag.String("ca", "/etc/ssl/ca.pem", "Root CA Cert, such as ca.pem")
+	caKeyPem := flag.String("ca-key", "/etc/ssl/ca-key.pem", "Root CA Key, such as ca-key.pem")
 	addr := flag.String("addr", ":8080", "Listening address")
 	flag.Parse()
 
 	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
 	l, e := net.Listen("tcp", *addr)
+	tls := tls.Tls{
+		CAPem:    *caPem,
+		CAKeyPem: *caKeyPem,
+	}
 	candy.Must(e)
-	run(c, t, l)
+	run(c, t, l, tls)
 }
 
 // By making the first two parameters closures, we get the flexibility
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener) {
+func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
+	tls tls.Tls) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +65,20 @@ func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener) {
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
 		}))
+
+	router.HandleFunc("/tls/{role}/{ip}/",
+		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
+			role := strings.ToLower(mux.Vars(r)["role"])
+			ip := mux.Vars(r)["ip"]
+            log.Printf(role + ip)
+            data, err := tls.GenerateCerts(role, ip)
+            if err != nil {
+                w.Write([]byte(data))
+            } else {
+                w.Write([]byte(err.Error()))
+            }
+		}))
+
 	log.Printf("%v", http.Serve(ln, router))
 }
 
