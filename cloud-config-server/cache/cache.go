@@ -102,9 +102,13 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 		Timeout: timeout,
 	}
 	resp, err := client.Get(url)
-	if err != nil || resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s, StatusCode=%d", err, resp.StatusCode)
+	if err != nil {
+		return nil, err
 	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Expecting StatusCode 200, but got %d", resp.StatusCode)
+	}
+
 	defer func() {
 		candy.Must(resp.Body.Close())
 	}()
