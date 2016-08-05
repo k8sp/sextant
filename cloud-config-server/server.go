@@ -1,63 +1,83 @@
+// cloud-config-server starts an HTTP server, which can be accessed
+// via URLs in the form of
+//
+//   http://<addr:port>?mac=aa:bb:cc:dd:ee:ff
+//
+// and returns the cloud-config YAML file specificially tailored for
+// the node whose primary NIC's MAC address matches that specified in
+// above URL.
 package main
 
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
+	"path"
 	"strings"
 	"text/template"
 
 	"github.com/gorilla/mux"
 	"github.com/k8sp/auto-install/cloud-config-server/cache"
-	tp "github.com/k8sp/auto-install/cloud-config-server/template"
-	tpcfg "github.com/k8sp/auto-install/config"
+	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
+	"github.com/k8sp/auto-install/config"
+	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
 
-var templateURL = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D"
-var configURL = "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D"
-var configCache *cache.Cache
-var templCache *cache.Cache
-
 func main() {
-	flag.StringVar(&configURL, "configURL", "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml?token=ABVwec2SvquxRR_h9JF-9Rg8RvuuWjcpks5XnqyawA%3D%3D", "cluster config yaml file url")
-	flag.StringVar(&templateURL, "templateURL", "https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template?token=ABVwef_01-UjZGXlw2ZXgCKfZM58UEsyks5XnquFwA%3D%3D", "cloud-config template url")
+	clusterDesc := flag.String("cluster-desc",
+		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml",
+		"URL to cluster description YAML file.")
+	ccTemplate := flag.String("cc-template",
+		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
+		"URL to cloud-config file template.")
+	addr := flag.String("addr", ":8080", "Listening address")
 	flag.Parse()
 
-	configCache = cache.New(configURL, "./cluster-desc.yml")
-	templCache = cache.New(templateURL, "./cloud-config.template")
-
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/cloud-config/{mac}", HTTPHandler)
-	log.Printf("%v\n", http.ListenAndServe(":8080", router))
+	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
+	l, e := net.Listen("tcp", *addr)
+	candy.Must(e)
+	run(c, t, l)
 }
 
-// HTTPHandler process http request.
-func HTTPHandler(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-		}
-	}()
+// By making the first two parameters closures, we get the flexibility
+// to create closures reading from the cache for production serving,
+// and from constant values for testing.  Please refer to func main()
+// for the former case, and server_test.go for the latter case.
+func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener) {
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/cloud-config/{mac}",
+		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
+			mac := strings.ToLower(mux.Vars(r)["mac"])
+			tmpl := template.Must(template.New("template").Parse(ccTemplate()))
+			c := &config.Cluster{}
+			candy.Must(yaml.Unmarshal(clusterDesc(), c))
+			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
+		}))
+	log.Printf("%v", http.Serve(ln, router))
+}
 
-	vars := mux.Vars(r)
-
-	mac := strings.ToLower(vars["mac"])
-	mac = strings.Replace(mac, ".yml", "", -1)
-	mac = strings.Replace(mac, ":", "-", -1)
-
-	config := string(configCache.Get())
-	templ := string(templCache.Get())
-
-	if templ == "" || config == "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("SERVER ERROR!\n"))
-		return
+func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+			}
+		}()
+		h(w, r)
 	}
+}
 
-	tpl := template.Must(template.New("template").Parse(templ))
-	cfg := &tpcfg.Cluster{}
-	yaml.Unmarshal([]byte(config), &cfg)
-	tp.Execute(tpl, cfg, mac, w)
+func makeCacheGetter(clusterDesc, ccTemplate string) (func() []byte, func() string) {
+	dir, e := ioutil.TempDir("", "")
+	candy.Must(e)
+	clusterCache := cache.New(clusterDesc, path.Join(dir, "cluster-desc.yml"))
+	templCache := cache.New(ccTemplate, path.Join(dir, "cloud-config.template"))
+
+	c := func() []byte { return clusterCache.Get() }
+	t := func() string { return string(templCache.Get()) }
+	return c, t
 }
