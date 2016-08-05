@@ -76,9 +76,9 @@ write_files:
       FLANNELD_IFACE={{ .IP }}
       FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
 
-  - path: /opt/bin/install-manifests.sh
+  - path: /etc/kubernetes/manifests/kubernetes_master.manifest
     owner: root
-    permissions: 0755
+    permissions: 0644
     content: |
       apiVersion: v1
       kind: Pod
