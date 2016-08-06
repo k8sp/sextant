@@ -55,6 +55,10 @@ func New(url, filename string) *Cache {
 	}
 
 	go func() {
+		if len(c.url) == 0 {
+			return // No periodic update if url is empty.
+		}
+
 		tic := time.Tick(updatePeriod)
 		for {
 			select {
@@ -85,14 +89,22 @@ func New(url, filename string) *Cache {
 	return c
 }
 
-// local panics if cannot read remote nor local file.
+// load panics if cannot read remote nor local file.
 func load(url, fn string) []byte {
-	b, e := httpGet(url, loadTimeout)
+	var (
+		b []byte
+		e error
+	)
+	if len(url) > 0 {
+		log.Printf("Try loading from %s...", url)
+		b, e = httpGet(url, loadTimeout)
+	}
+	if e != nil || len(url) == 0 {
+		log.Printf("Try loading from %s...", fn)
+		b, e = ioutil.ReadFile(fn)
+	}
 	if e != nil {
-		log.Printf("Cannot load from %s: %v. Try load from local file.", url, e)
-		if b, e = ioutil.ReadFile(fn); e != nil {
-			log.Panicf("Cannot load from local file %s either: %v", fn, e)
-		}
+		log.Panicf("Cannot load neither remotely nor locally.")
 	}
 	return b
 }
