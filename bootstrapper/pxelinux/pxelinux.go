@@ -21,12 +21,27 @@ func Install() {
 
 	switch dist {
 	case centos:
+		cmd.Run("yum", "-y", "install", "xinetd")
+		cmd.Run("yum", "-y", "install", "tftp-server")
 		cmd.Run("yum", "-y", "install", "syslinux")
 		cmd.Run("cp", "/usr/share/syslinux/pxelinux.0", "/var/lib/tftpboot/")
+		cmd.Run("cp", "/usr/share/syslinux/modules/bios/ldlinux.c32", "/var/lib/tftpboot/")
 	case ubuntu:
-		cmd.Run("apt-get", "update")
+//		cmd.Run("apt-get", "update")
+		cmd.Run("apt-get", "-y", "install", "tftpd-hpa")
 		cmd.Run("apt-get", "-y", "install", "syslinux")
 		cmd.Run("cp", "/usr/lib/syslinux/pxelinux.0", "/var/lib/tftpboot/")
+		cmd.Run("cp", "/usr/lib/syslinux/modules/bios/ldlinux.c32", "/var/lib/tftpboot/")
+		cmd.Run("mkdir", "/tftpboot/pxelinux.cfg/default")
 	}
+
+	switch dist {
+	case ubuntu:
+		cmd.Run("service", "tftpd-hpa", "restart")
+	case centos:
+		cmd.Run("systemctl", "restart", "xinetd")
+		cmd.Run("systemctl", "restart", "tftp")
+	}
+
 
 }
