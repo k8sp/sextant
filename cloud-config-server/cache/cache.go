@@ -62,10 +62,14 @@ func New(url, filename string) *Cache {
 		tic := time.Tick(updatePeriod)
 		for {
 			select {
-			case <-tic:
-			case <-c.update:
+			case <-c.close:
+				close(c.update)
+				close(c.close)
+				return
+			default:
 			}
 
+			log.Printf("Cache updating %s / %s", c.url, c.filename)
 			if b, e := httpGet(c.url, loadTimeout); e == nil {
 				c.mu.Lock()
 				c.content = b
@@ -77,11 +81,8 @@ func New(url, filename string) *Cache {
 			}
 
 			select {
-			case <-c.close:
-				close(c.update)
-				close(c.close)
-				return
-			default:
+			case <-tic:
+			case <-c.update:
 			}
 		}
 	}()
