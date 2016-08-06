@@ -2,12 +2,10 @@ package pxelinux
 
 import (
 	"flag"
-	"os"
 	"testing"
-
+	"fmt"
 	"gopkg.in/yaml.v2"
-
-	"log"
+	"io/ioutil"
 
 	"github.com/k8sp/auto-install/bootstrapper/vmtest"
 	"github.com/k8sp/auto-install/config"
@@ -29,19 +27,34 @@ func TestInstall(t *testing.T) {
 		switch config.LinuxDistro() {
 		case "ubuntu":
 			{
-				if _, err := os.Stat("/usr/lib/PXELINUX/pxelinux.0"); os.IsNotExist(err) {
-					log.Printf("Failed to install/configure pxelinux, /usr/lib/PXELINUX/pxelinux.0 doesn't exist")
-				}
-				if _, err := os.Stat("/usr/lib/syslinux/modules/bios/ldlinux.c32"); os.IsNotExist(err) {
-					log.Printf("Failed to install/configure pxelinux, /usr/lib/syslinux/modules/bios/ldlinux.c32 doesn't exist")
-				}
+	                var para="default coreos\n\nlabel coreos\n\tkernel coreos_production_pxe.vmlinuz\n\tappend initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=10.0.2.15/install-coreos.sh"
+		        str, err:=ioutil.ReadFile("/var/lib/tftpboot/pxelinux.cfg/default")
+			if err != nil{
+				fmt.Printf("read fail error=%s\r\n", err.Error())
+			}
+ 			if(string(str) == para){
+				fmt.Print("pxelinux pass")
+			}else{
+				fmt.Print("pxelinux fail")
+			}
 			}
 		case "centos":
-			if _, err := os.Stat("/usr/share/syslinux/pxelinux.0"); os.IsNotExist(err) {
-				log.Printf("Failed to install/configure pxelinux, /usr/share/syslinux/pxelinux.0 doesn't exist")
-			}
+			{
+                        var para="default coreos\n\nlabel coreos\n\tkernel coreos_production_pxe.vmlinuz\n\tappend initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=10.0.2.15/install-coreos.sh"
+                        str, err:=ioutil.ReadFile("/var/lib/tftpboot/pxelinux.cfg/default")
+                        if err != nil{
+                                fmt.Printf("read fail error=%s\r\n", err.Error())
+                        }
+                        if(string(str) == para){
+                                fmt.Print("pxelinux pass")
+                        }else{
+                                fmt.Print("pxelinux fail")
+                        }
 
+			}
+		
 		}
 
 	}
+
 }
