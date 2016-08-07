@@ -55,13 +55,21 @@ func New(url, filename string) *Cache {
 	}
 
 	go func() {
+		if len(c.url) == 0 {
+			return // No periodic update if url is empty.
+		}
+
 		tic := time.Tick(updatePeriod)
 		for {
 			select {
-			case <-tic:
-			case <-c.update:
+			case <-c.close:
+				close(c.update)
+				close(c.close)
+				return
+			default:
 			}
 
+			log.Printf("Cache updating %s / %s", c.url, c.filename)
 			if b, e := httpGet(c.url, loadTimeout); e == nil {
 				c.mu.Lock()
 				c.content = b
@@ -73,11 +81,8 @@ func New(url, filename string) *Cache {
 			}
 
 			select {
-			case <-c.close:
-				close(c.update)
-				close(c.close)
-				return
-			default:
+			case <-tic:
+			case <-c.update:
 			}
 		}
 	}()
@@ -85,14 +90,22 @@ func New(url, filename string) *Cache {
 	return c
 }
 
-// local panics if cannot read remote nor local file.
+// load panics if cannot read remote nor local file.
 func load(url, fn string) []byte {
-	b, e := httpGet(url, loadTimeout)
+	var (
+		b []byte
+		e error
+	)
+	if len(url) > 0 {
+		log.Printf("Try loading from %s...", url)
+		b, e = httpGet(url, loadTimeout)
+	}
+	if e != nil || len(url) == 0 {
+		log.Printf("Try loading from %s...", fn)
+		b, e = ioutil.ReadFile(fn)
+	}
 	if e != nil {
-		log.Printf("Cannot load from %s: %v. Try load from local file.", url, e)
-		if b, e = ioutil.ReadFile(fn); e != nil {
-			log.Panicf("Cannot load from local file %s either: %v", fn, e)
-		}
+		log.Panicf("Cannot load neither remotely nor locally.")
 	}
 	return b
 }
@@ -102,9 +115,13 @@ func httpGet(url string, timeout time.Duration) ([]byte, error) {
 		Timeout: timeout,
 	}
 	resp, err := client.Get(url)
-	if err != nil || resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s, StatusCode=%d", err, resp.StatusCode)
+	if err != nil {
+		return nil, err
 	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Expecting StatusCode 200, but got %d", resp.StatusCode)
+	}
+
 	defer func() {
 		candy.Must(resp.Body.Close())
 	}()

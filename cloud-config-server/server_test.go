@@ -24,8 +24,8 @@ func TestRun(t *testing.T) {
 	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
 	candy.Must(e)
 
-	ccTemplate := func() string { return string(ccTmpl) }
 	clusterDesc := func() []byte { return []byte(config.ExampleYAML) }
+	ccTemplate := func() []byte { return ccTmpl }
 
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
