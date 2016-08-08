@@ -2,38 +2,28 @@
 
 write_files:
   {{- if .KubeMaster }}
-	- path: /etc/kubernetes/ssl/ca.pem
-		owner: core
-		permissions: 0600
-		content: |
-			{{ .CertCA }}
-	
-	- path: /etc/kubernetes/ssl/apiserver.pem
-	  owner: core
-		permissions: 0600
-		content: |
-		  {{ .CertAPIServer }}
-  
-	- path: /etc/kubernetes/ssl/apiserver-key.pem
-	  owner: core
-		permissions: 0600
-		content: |
-		  {{ .CertAPIServerKey }}
-
+  - path: /opt/bin/tls-install-master.sh
+    owner: root
+    permissions: 0600
+    content: |
+      wget -N -P /etc/kubernetes/ssl/certs.txt http://10.10.10.192:8080/tls/master/${DEFAULT_IPV4}
+      cd /etc/kubernetes/ssl
+      csplit -k a.txt '/<>/' '{1}' 
+      mv xx00 apiserver.pem
+      mv xx01 apiserver-key.pem && sed -i '1d' apiserver-key.pem
+      mv xx02 ca.pem && sed -i '1d' ca.pem
   {{- else }}
-	- path: /etc/kubernetes/ssl/worker.pem
-	  owner: core
-		permissions: 0600
-		content: |
-		  {{ .CertWorker }}
-	
-	- path: /etc/kubernetes/ssl/worker-key.pem
-	  owner: core
-		permissions: 0600
-		content: |
-		  {{ .CertWorkerKey }}
-
-  {{- end}}
+  - path: /opt/bin/tls-install-worker.sh
+    owner: root
+    permissions: 0600
+    content: |
+      wget -N -P /etc/kubernetes/ssl/certs.txt http://10.10.10.192:8080/tls/worker/${DEFAULT_IPV4}
+      cd /etc/kubernetes/ssl
+      csplit -k a.txt '/<>/' '{1}'
+      mv xx00 worker.pem
+      mv xx01 worker-key.pem && sed -i '1d' worker-key.pem
+      mv xx02 ca.pem && sed -i '1d' ca.pem
+  {{- end }}
 coreos:
     etcd2:
         name: "%H"

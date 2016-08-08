@@ -16,11 +16,6 @@ type ExecutionConfig struct {
 	EtcdMember        bool
 	InitialCluster    string
 	SSHAuthorizedKeys string
-	CertCA            string
-	CertAPIServer     string
-	CertAPIServerKey  string
-	CertWorker        string
-	CertWorkerKey     string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -35,15 +30,9 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 		EtcdMember:        node.EtcdMember,
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
-		CertCA:            config.CertCA(),
-		CertAPIServer:     config.CertAPIServer(node.IP),
-		CertAPIServerKey:  config.CertAPIServerKey(node.IP),
-		CertWorker:        config.CertWorker(node.IP),
-		CertWorkerKey:     config.CertWorkerKey(node.IP),
 	}
 	return tmpl.Execute(w, ec)
 }
-
 
 func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 	for _, n := range c.Nodes {

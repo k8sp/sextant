@@ -35,11 +35,17 @@ func main() {
 	ccTemplate := flag.String("cc-template",
 		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
 		"URL to cloud-config file template.")
-	caPem := flag.String("ca", "/etc/ssl/ca.pem", "Root CA Cert, such as ca.pem")
-	caKeyPem := flag.String("ca-key", "/etc/ssl/ca-key.pem", "Root CA Key, such as ca-key.pem")
+	caPem := flag.String("ca", "", "Root CA Cert, such as ca.pem")
+	caKeyPem := flag.String("ca-key", "", "Root CA Key, such as ca-key.pem")
 	addr := flag.String("addr", ":8080", "Listening address")
+
 	flag.Parse()
 
+	if len(*caPem) == 0 || len(*caKeyPem) == 0 {
+		fmt.Printf("ca and ca-key should not be empty. Usage: \n\n")
+		flag.PrintDefaults()
+		return
+	}
 	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
 	l, e := net.Listen("tcp", *addr)
 	tls := tls.Tls{
@@ -70,12 +76,12 @@ func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			role := strings.ToLower(mux.Vars(r)["role"])
 			ip := mux.Vars(r)["ip"]
-            data, err := tls.GenerateCerts(role, ip)
-            if err != nil {
-                w.Write([]byte("Error"))
-            } else {
-                w.Write([]byte(data))
-            }
+			data, err := tls.GenerateCerts(role, ip)
+			if err != nil {
+				w.Write([]byte("Error"))
+			} else {
+				w.Write([]byte(data))
+			}
 		}))
 
 	log.Printf("%v", http.Serve(ln, router))

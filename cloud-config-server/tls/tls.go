@@ -67,12 +67,14 @@ func (t Tls) GenerateWorkerCert(ip string) string {
 		log.Printf("Generate worker cert fail: %v\n", err)
 		return ""
 	}
+
 	dataWorker, e := ioutil.ReadFile(workerPem)
 	candy.Must(e)
 	dataWorkerKey, e := ioutil.ReadFile(workerKeyPem)
 	candy.Must(e)
 	dataCA, e := ioutil.ReadFile(t.CAPem)
 	candy.Must(e)
+
 	data := bytes.Buffer{}
 	data.Write(dataWorker)
 	data.WriteString("<>\n")
@@ -89,6 +91,7 @@ func (t Tls) GenerateMasterCert(ip string) string {
 	var apiserverCsr = dataDir + "/apiserver.csr"
 	var apiserverPem = dataDir + "/apiserver.pem"
 	var apiserverKeyPem = dataDir + "/apiserver-key.pem"
+	log.Printf("Generate master %s cert...", ip)
 	os.Mkdir(dataDir, os.ModePerm)
 
 	cmd := exec.Command("bash", "-s")
@@ -107,12 +110,14 @@ func (t Tls) GenerateMasterCert(ip string) string {
 		log.Printf("Generate master cert fail: %v\n", err)
 		return ""
 	}
+
 	dataAPIServer, e := ioutil.ReadFile(apiserverPem)
 	candy.Must(e)
 	dataAPIServerKey, e := ioutil.ReadFile(apiserverKeyPem)
 	candy.Must(e)
 	dataCA, e := ioutil.ReadFile(t.CAPem)
 	candy.Must(e)
+
 	data := bytes.Buffer{}
 	data.Write(dataAPIServer)
 	data.WriteString("<>\n")

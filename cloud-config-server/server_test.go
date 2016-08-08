@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	"github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
@@ -17,6 +18,8 @@ import (
 
 const (
 	tmplFile = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	ca       = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca.pem"
+	caKey    = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca-key.pem"
 )
 
 func TestRun(t *testing.T) {
@@ -30,7 +33,9 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	go run(clusterDesc, ccTemplate, ln)
+	tls := tls.Tls{CAPem: path.Join(candy.GoPath(), ca), CAKeyPem: path.Join(candy.GoPath(), caKey)}
+
+	go run(clusterDesc, ccTemplate, ln, tls)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))
