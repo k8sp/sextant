@@ -66,7 +66,7 @@ func (t TLS) GenerateWorkerCert(ip string) string {
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("Generate worker cert fail: %v\n", err)
+		log.Printf("Generate worker cert fail: %s\n", err)
 		return ""
 	}
 
