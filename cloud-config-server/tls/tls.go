@@ -98,18 +98,19 @@ func (t TLS) GenerateMasterCert(ip string) string {
 
 	cmd := exec.Command("bash", "-s")
 	cmdString := `
-		sed "s/<MASTER_HOST>/` + ip + `/g" ` + CertEtcDIR + `/openssl.cnf > ` + masterConfPath + `
-		openssl genrsa -out ` + apiserverKeyPem + ` 2048 \n
-		openssl req -new -key ` + apiserverKeyPem + ` -out ` + apiserverCsr + ` -subj "/CN=kube-apiserver" -config ` + masterConfPath + `
-		openssl x509 -req -in ` + apiserverCsr + ` -CA ` + t.CAPem + ` -CAkey ` + t.CAKeyPem + ` -CAcreateserial -out \
-			` + apiserverPem + ` -days 365 -extensions v3_req -extfile ` + masterConfPath
+sed "s/<MASTER_HOST>/` + ip + `/g" ` + CertEtcDIR + `/openssl.cnf > ` + masterConfPath + `
+openssl genrsa -out ` + apiserverKeyPem + ` 2048 \n
+openssl req -new -key ` + apiserverKeyPem + ` -out ` + apiserverCsr + ` -subj "/CN=kube-apiserver" -config ` + masterConfPath + `
+openssl x509 -req -in ` + apiserverCsr + ` -CA ` + t.CAPem + ` -CAkey ` + t.CAKeyPem + ` -CAcreateserial -out \
+` + apiserverPem + ` -days 365 -extensions v3_req -extfile ` + masterConfPath
 	cmd.Stdin = strings.NewReader(cmdString)
 	var out bytes.Buffer
+	var stderr bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 	err := cmd.Run()
-	log.Printf("Cmd String:%s\n", cmdString)
 	if err != nil {
-		log.Printf("Generate master cert fail: %v\n", err)
+		log.Printf("Generate master cert fail: %v\n", stderr)
 		return ""
 	}
 
