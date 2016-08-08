@@ -66,7 +66,7 @@ func main() {
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
+func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener,
 	tls tls.TLS) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
