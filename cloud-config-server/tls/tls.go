@@ -12,7 +12,7 @@ import (
 	"github.com/topicai/candy"
 )
 
-// TLS is a struct containe TLS root cert
+// TLS is a struct containe tls root cert
 type TLS struct {
 	// CAPem is Root CA Cert
 	CAPem string
@@ -22,7 +22,7 @@ type TLS struct {
 }
 
 // CertBaseDIR The base fold of saving cert files
-var CertBaseDIR = os.Getenv("GOPATH") + "/src/github.com/k8sp/auto-install/cloud-config-server/TLS"
+var CertBaseDIR = os.Getenv("GOPATH") + "/src/github.com/k8sp/auto-install/cloud-config-server/tls"
 
 // CertDataBaseDIR is data fold
 var CertDataBaseDIR = CertBaseDIR + "/data"
@@ -45,7 +45,7 @@ func (t TLS) GenerateCerts(role string, ip string) (data string, err error) {
 	return "", errors.New("Role should be master or worker")
 }
 
-// GenerateWorkerCert generate master cert files, located ./TLS/data/master-${ip}/
+// GenerateWorkerCert generate master cert files, located ./tls/data/master-${ip}/
 func (t TLS) GenerateWorkerCert(ip string) string {
 	var dataDir = CertDataBaseDIR + "/worker-" + ip
 	var workerConfPath = dataDir + "/worker-openssl.cnf"
@@ -86,7 +86,7 @@ func (t TLS) GenerateWorkerCert(ip string) string {
 	return data.String()
 }
 
-// GenerateMasterCert generate worker cert files, located ./TLS/data/worker-${ip}/
+// GenerateMasterCert generate worker cert files, located ./tls/data/worker-${ip}/
 func (t TLS) GenerateMasterCert(ip string) string {
 	var dataDir = CertDataBaseDIR + "/master-" + ip
 	var masterConfPath = dataDir + "/openssl.cnf"
