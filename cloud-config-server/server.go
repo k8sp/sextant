@@ -29,14 +29,19 @@ import (
 )
 
 func main() {
-	clusterDesc := flag.String("cluster-desc",
+	clusterDescURL := flag.String("cluster-desc-url",
 		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml",
-		"URL to cluster description YAML file.")
-	ccTemplate := flag.String("cc-template",
+		"URL to remote cluster description YAML file.")
+	clusterDescFile := flag.String("cluster-desc-file", "./cluster-desc.yml", "Local copy of cluster description YAML file.")
+
+	ccTemplateURL := flag.String("cc-template-url",
 		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
 		"URL to cloud-config file template.")
+	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
+
 	caPem := flag.String("ca", "", "Root CA Cert, such as ca.pem")
 	caKeyPem := flag.String("ca-key", "", "Root CA Key, such as ca-key.pem")
+
 	addr := flag.String("addr", ":8080", "Listening address")
 
 	flag.Parse()
@@ -46,7 +51,8 @@ func main() {
 		flag.PrintDefaults()
 		return
 	}
-	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
+	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
+	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 	l, e := net.Listen("tcp", *addr)
 	tls := tls.TLS{
 		CAPem:    *caPem,
@@ -66,7 +72,7 @@ func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			mac := strings.ToLower(mux.Vars(r)["mac"])
-			tmpl := template.Must(template.New("template").Parse(ccTemplate()))
+			tmpl := template.Must(template.New("template").Parse(string(ccTemplate())))
 			c := &config.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
@@ -98,13 +104,12 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func makeCacheGetter(clusterDesc, ccTemplate string) (func() []byte, func() string) {
-	dir, e := ioutil.TempDir("", "")
-	candy.Must(e)
-	clusterCache := cache.New(clusterDesc, path.Join(dir, "cluster-desc.yml"))
-	templCache := cache.New(ccTemplate, path.Join(dir, "cloud-config.template"))
-
-	c := func() []byte { return clusterCache.Get() }
-	t := func() string { return string(templCache.Get()) }
-	return c, t
+func makeCacheGetter(url, fn string) func() []byte {
+	if len(fn) == 0 {
+		dir, e := ioutil.TempDir("", "")
+		candy.Must(e)
+		fn = path.Join(dir, "localfile")
+	}
+	c := cache.New(url, fn)
+	return func() []byte { return c.Get() }
 }

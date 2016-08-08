@@ -51,11 +51,13 @@ coreos:
         - name: "docker.socket"
           command: "start"
         - name: "flanneld.service"
+          {{- if .KubeMaster }}
           drop-ins:
             - name: 50-network-config.conf
               content: |
                 [Service]
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+          {{- end }}
           command: "start"
         - name: "settimezone.service"
           command: start
@@ -80,7 +82,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://10.10.10.192/set-dns-to-etcd.sh
+            ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://{{ .BootstrapperIP }}/set-dns-to-etcd.sh
             ExecStart=/bin/bash /home/core/set-dns-to-etcd.sh
             RemainAfterExit=no
             Type=oneshot
@@ -97,7 +99,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://10.10.10.192/ceph/install-osd.sh
+            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/ceph/install-osd.sh
             ExecStart=/bin/bash /home/core/install-osd.sh
             RemainAfterExit=no
             Type=oneshot
@@ -115,7 +117,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://10.10.10.192/ceph/install-mon.sh
+            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
             ExecStart=/bin/bash /home/core/install-mon.sh
             RemainAfterExit=no
             Type=oneshot
@@ -160,11 +162,11 @@ coreos:
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
             {{- if .KubeMaster }}
-            ExecStart=/usr/bin/wget -O /home/core/master.zip http://10.10.10.192/install-k8s/master.zip
+            ExecStart=/usr/bin/wget -O /home/core/master.zip http://{{ .BootstrapperIP }}/install-k8s/master.zip
             ExecStart=/usr/bin/unzip -d /home/core -o /home/core/master.zip
             ExecStart=/bin/bash /home/core/master/setup_k8s_master.sh
             {{- else }}
-            ExecStart=/usr/bin/wget -O /home/core/worker.zip http://10.10.10.192/install-k8s/worker.zip
+            ExecStart=/usr/bin/wget -O /home/core/worker.zip http://{{ .BootstrapperIP }}/install-k8s/worker.zip
             ExecStart=/usr/bin/unzip -d /home/core -o /home/core/worker.zip
             ExecStart=/bin/bash /home/core/worker/setup_k8s_worker.sh
             {{- end }}
