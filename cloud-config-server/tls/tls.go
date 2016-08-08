@@ -107,7 +107,7 @@ func (t TLS) GenerateMasterCert(ip string) string {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
-	log.Printf("Output:" + out.String())
+	log.Printf("Cmd String:%s\n", cmdString)
 	if err != nil {
 		log.Printf("Generate master cert fail: %v\n", err)
 		return ""
