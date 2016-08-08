@@ -48,7 +48,7 @@ func main() {
 	}
 	c, t := makeCacheGetter(*clusterDesc, *ccTemplate)
 	l, e := net.Listen("tcp", *addr)
-	tls := tls.Tls{
+	tls := tls.TLS{
 		CAPem:    *caPem,
 		CAKeyPem: *caKeyPem,
 	}
@@ -61,7 +61,7 @@ func main() {
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
 func run(clusterDesc func() []byte, ccTemplate func() string, ln net.Listener,
-	tls tls.Tls) {
+	tls tls.TLS) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {

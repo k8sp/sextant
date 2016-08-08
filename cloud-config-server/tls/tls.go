@@ -12,7 +12,8 @@ import (
 	"github.com/topicai/candy"
 )
 
-type Tls struct {
+// TLS is a struct containe TLS root cert
+type TLS struct {
 	// CAPem is Root CA Cert
 	CAPem string
 
@@ -21,7 +22,7 @@ type Tls struct {
 }
 
 // CertBaseDIR The base fold of saving cert files
-var CertBaseDIR = os.Getenv("GOPATH") + "/src/github.com/k8sp/auto-install/cloud-config-server/tls"
+var CertBaseDIR = os.Getenv("GOPATH") + "/src/github.com/k8sp/auto-install/cloud-config-server/TLS"
 
 // CertDataBaseDIR is data fold
 var CertDataBaseDIR = CertBaseDIR + "/data"
@@ -34,7 +35,8 @@ func fileExist(filename string) bool {
 	return err == nil
 }
 
-func (t Tls) GenerateCerts(role string, ip string) (data string, err error) {
+// GenerateCerts genearete cert file dependence role and ip
+func (t TLS) GenerateCerts(role string, ip string) (data string, err error) {
 	if role == "master" {
 		return t.GenerateMasterCert(ip), nil
 	} else if role == "worker" {
@@ -43,8 +45,8 @@ func (t Tls) GenerateCerts(role string, ip string) (data string, err error) {
 	return "", errors.New("Role should be master or worker")
 }
 
-// GenerateWorkerCert generate master cert files, located ./tls/data/master-${ip}/
-func (t Tls) GenerateWorkerCert(ip string) string {
+// GenerateWorkerCert generate master cert files, located ./TLS/data/master-${ip}/
+func (t TLS) GenerateWorkerCert(ip string) string {
 	var dataDir = CertDataBaseDIR + "/worker-" + ip
 	var workerConfPath = dataDir + "/worker-openssl.cnf"
 	var workerPem = dataDir + "/worker.pem"
@@ -84,8 +86,8 @@ func (t Tls) GenerateWorkerCert(ip string) string {
 	return data.String()
 }
 
-// GenerateMasterCert generate worker cert files, located ./tls/data/worker-${ip}/
-func (t Tls) GenerateMasterCert(ip string) string {
+// GenerateMasterCert generate worker cert files, located ./TLS/data/worker-${ip}/
+func (t TLS) GenerateMasterCert(ip string) string {
 	var dataDir = CertDataBaseDIR + "/master-" + ip
 	var masterConfPath = dataDir + "/openssl.cnf"
 	var apiserverCsr = dataDir + "/apiserver.csr"

@@ -33,7 +33,7 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	tls := tls.Tls{CAPem: path.Join(candy.GoPath(), ca), CAKeyPem: path.Join(candy.GoPath(), caKey)}
+	tls := tls.TLS{CAPem: path.Join(candy.GoPath(), ca), CAKeyPem: path.Join(candy.GoPath(), caKey)}
 
 	go run(clusterDesc, ccTemplate, ln, tls)
 
