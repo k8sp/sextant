@@ -110,7 +110,7 @@ openssl x509 -req -in ` + apiserverCsr + ` -CA ` + t.CAPem + ` -CAkey ` + t.CAKe
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("Generate master cert fail: %v\n", stderr)
+		log.Printf("Generate master cert fail: %s\n", stderr.String())
 		return ""
 	}
 
