@@ -120,6 +120,28 @@ coreos:
             RemainAfterExit=no
             Type=oneshot
         {{- end }}
+        
+        {{- if .KubeMaster }}
+        - name: "install-tls.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install tls cert file
+            [Service]
+            ExecStart=/bin/bash /opt/bin/tls-install-master.sh
+            RemainAfterExit=yes
+            Type=oneshot
+        {{- else }}
+        - name: "install-tls.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install tls cert file
+            [Service]
+            ExecStart=/bin/bash /opt/bin/tls-install-worker.sh
+            RemainAfterExit=yes
+            Type=oneshot
+        {{- end }}
 
         - name: "install-k8s.service"
           command: start
@@ -132,6 +154,8 @@ coreos:
             After=flanneld.service
             Requires=network.target
             After=network.target
+            Requires=install-tls.service
+            After=install-tls.service
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
