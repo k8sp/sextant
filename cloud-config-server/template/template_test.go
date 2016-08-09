@@ -1,9 +1,9 @@
 package template
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
 	"text/template"
 
@@ -26,8 +26,11 @@ func TestExecute(t *testing.T) {
 
 	tmpl, e := template.ParseFiles("cloud-config.template")
 	candy.Must(e)
-	//Execute(tmpl, config, "00-25-90-c0-f7-80", os.Stdout)
-	Execute(tmpl, config, "00-25-90-c0-f6-ee", os.Stdout)
-	//Execute(tmpl, config, "00-25-90-c0-f7-62", os.Stdout)
+	var ccTmpl bytes.Buffer
+	Execute(tmpl, config, "00-25-90-c0-f6-ee", &ccTmpl)
 
+	yml := make(map[interface{}]interface{})
+	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
+	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster-token"]
+	assert.Equal(t, initialEtcdCluster, "etcd-cluster-1")
 }

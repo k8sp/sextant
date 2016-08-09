@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	tmplFile = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
-	ca       = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca.pem"
-	caKey    = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca-key.pem"
+	tmplFile  = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	caCrt     = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca.pem"
+	caKey     = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca-key.pem"
+	tlsTplDir = "src/github.com/k8sp/auto-install/cloud-config-server/tls/etc"
 )
 
 func TestRun(t *testing.T) {
@@ -33,9 +34,14 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	tls := tls.TLS{CAPem: path.Join(candy.GoPath(), ca), CAKeyPem: path.Join(candy.GoPath(), caKey)}
+	tmpDir, e := ioutil.TempDir("", "")
+	candy.Must(e)
+	t.Log("Tls cert tmp path: " + tmpDir)
 
-	go run(clusterDesc, ccTemplate, ln, tls)
+	tls := tls.New(path.Join(candy.GoPath(), caCrt), path.Join(candy.GoPath(), caKey),
+		tmpDir, path.Join(candy.GoPath(), tlsTplDir))
+
+	go run(clusterDesc, ccTemplate, ln, *tls)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))

@@ -39,27 +39,27 @@ func main() {
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
-	caPem := flag.String("ca", "", "Root CA Cert, such as ca.pem")
-	caKeyPem := flag.String("ca-key", "", "Root CA Key, such as ca-key.pem")
+	tlsCertDir := flag.String("tls-base-dir", "./tls/data", "Tls base dir store openssl template file and cert files")
+	tlsTplDir := flag.String("tls-tpl-dir", "./tls/etc", "Tls template dir store openssl template file")
 
+	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
+	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
 
 	flag.Parse()
 
-	if len(*caPem) == 0 || len(*caKeyPem) == 0 {
-		fmt.Printf("ca and ca-key should not be empty. Usage: \n\n")
+	if len(*caCrt) == 0 || len(*caKey) == 0 {
+		fmt.Printf("ca-crt and ca-key should not be empty. Usage: \n\n")
 		flag.PrintDefaults()
 		return
 	}
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
+	tls := tls.New(*caCrt, *caKey, *tlsCertDir, *tlsTplDir)
+
 	l, e := net.Listen("tcp", *addr)
-	tls := tls.TLS{
-		CAPem:    *caPem,
-		CAKeyPem: *caKeyPem,
-	}
 	candy.Must(e)
-	run(c, t, l, tls)
+	run(c, t, l, *tls)
 }
 
 // By making the first two parameters closures, we get the flexibility
@@ -67,7 +67,7 @@ func main() {
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
 func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener,
-	tls tls.TLS) {
+	t tls.TLS) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -82,11 +82,11 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener,
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			role := strings.ToLower(mux.Vars(r)["role"])
 			ip := mux.Vars(r)["ip"]
-			data, err := tls.GenerateCerts(role, ip)
+			data, err := t.GenerateCert(role, ip)
 			if err != nil {
-				w.Write([]byte("Error"))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			} else {
-				w.Write([]byte(data))
+				w.Write(data)
 			}
 		}))
 
