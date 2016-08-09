@@ -1,144 +1,86 @@
-package tls
+package certgen
 
 import (
-	"bytes"
+	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path"
-	"strings"
 
+	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/topicai/candy"
 )
 
-// Generate tls cert files, the folder struct:
-// TlsBaseDir
-//	`-data
-//		`-master-{ip}
-//			`-apiserver-key.pem
-//			|-apiserver.pem
-//			|-openssl.cnf
-//		|-worker-{ip}
-//			`-worker.pem
-//			|-worker-key.pem
-//			|-worker-openssl.cnf
-// 	|-etc
-//		`-openssl.cnf
-//		|-worker-openssl.cnf
+const (
+	masterOpenSSLConfTmpl = `[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+IP.1 = 10.100.0.1
+IP.2 = {{.}}
+`
 
-// TLS is a
-type TLS struct {
-	caCrt            string
-	caKey            string
-	tlsCertDir       string
-	tlsTplDir        string
-	tplMasterOpenssl string
-	tplWorkerOpenssl string
-}
+	workerOpenSSLConfTmpl = `[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+IP.1 = {{.}}
+`
+)
 
-// New construct a TLS type
-func New(caCrt, caKey, tlsCertDir, tlsTplDir string) *TLS {
-	t := &TLS{
-		caCrt:            caCrt,
-		caKey:            caKey,
-		tlsCertDir:       tlsCertDir,
-		tlsTplDir:        tlsTplDir,
-		tplMasterOpenssl: path.Join(tlsTplDir, "openssl.cnf"),
-		tplWorkerOpenssl: path.Join(tlsTplDir, "worker-openssl.cnf"),
-	}
-	return t
-}
-
-func fileExist(filename string) bool {
-	_, err := os.Stat(filename)
-	return err == nil
-}
-
-// GenerateCert depending on role and ip
-func (t *TLS) GenerateCert(role, ip string) ([]byte, error) {
+func openSSLCnfTmpl(role string) *template.Template {
 	if role == "master" {
-		return t.GenerateMasterCert(ip)
+		return template.Must(template.New("").Parse(masterOpenSSLConfTmpl))
 	}
-	return t.GenerateWorkerCert(ip)
+	return template.Must(template.New("").Parse(workerOpenSSLConfTmpl))
 }
 
-// GenerateWorkerCert generate master cert files, located ./tls/data/master-${ip}/
-func (t *TLS) GenerateWorkerCert(ip string) ([]byte, error) {
-	var dataDir = path.Join(t.tlsCertDir, "worker-"+ip)
-	var workerConfPath = dataDir + "/worker-openssl.cnf"
-	var workerPem = dataDir + "/worker.pem"
-	var workerKeyPem = dataDir + "/worker-key.pem"
-	var workerCSRPath = dataDir + "/worker.csr"
-	os.Mkdir(dataDir, os.ModePerm)
+// Gen generates and returns the TLS certse.  It panics for errors.
+func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
+	out, e := ioutil.TempDir("", "")
+	candy.Must(e)
+	defer func() {
+		if e := os.RemoveAll(out); e != nil {
+			log.Printf("Generator.Gen failed deleting %s", out)
+		}
+	}()
 
-	cmd := exec.Command("bash", "-s")
-	cmdString := `
-sed "s/<WORKER_HOST>/` + ip + `/g" ` + t.tplWorkerOpenssl + ` > ` + workerConfPath + `
-openssl genrsa -out ` + workerKeyPem + ` 2048
-openssl req -new -key ` + workerKeyPem + ` -out ` + workerCSRPath + ` -subj "/CN=worker" -config ` + workerConfPath + `
-openssl x509 -req -in ` + workerCSRPath + ` -CA ` + t.caCrt + ` -CAkey ` + t.caKey +
-		` -CAcreateserial -out ` + workerPem + ` -days 365 -extensions v3_req -extfile ` + workerConfPath
-	cmd.Stdin = strings.NewReader(cmdString)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if e := cmd.Run(); e != nil {
-		log.Printf("Generate worker cert fail: %s\n", stderr.String())
-		return []byte(""), e
+	cnf := path.Join(out, "openssl.cnf")
+	key := path.Join(out, "key.pem")
+	csr := path.Join(out, "csr.pem")
+	crt := path.Join(out, "crt.pem")
+
+	candy.WithCreated(cnf, func(w io.Writer) {
+		candy.Must(openSSLCnfTmpl(role).Execute(w, ip))
+	})
+
+	subj := "/CN=worker"
+	if role == "master" {
+		subj = "/CN=kube-apiserver"
 	}
 
-	dataWorker, e := ioutil.ReadFile(workerPem)
-	candy.Must(e)
-	dataWorkerKey, e := ioutil.ReadFile(workerKeyPem)
-	candy.Must(e)
-	dataCA, e := ioutil.ReadFile(t.caCrt)
-	candy.Must(e)
+	cmd.Run("openssl", "genrsa", "-out", key, "2048")
+	cmd.Run("openssl", "req", "-new", "-key", key, "-out", csr, "-subj", subj, "-config", cnf)
+	cmd.Run("openssl", "x509", "-req", "-in", csr, "-CA", caCrt, "-CAkey", caKey, "-CAcreateserial", "-out", crt, "-days", "365", "-extensions", "v3_req", "-extfile", cnf)
 
-	data := bytes.Buffer{}
-	data.Write(dataWorker)
-	data.WriteString("<>\n")
-	data.Write(dataWorkerKey)
-	data.WriteString("<>\n")
-	data.Write(dataCA)
-	return data.Bytes(), nil
-}
-
-// GenerateMasterCert generate worker cert files, located ./tls/data/worker-${ip}/
-func (t *TLS) GenerateMasterCert(ip string) ([]byte, error) {
-	var dataDir = path.Join(t.tlsCertDir, "master-"+ip)
-	var masterConfPath = dataDir + "/openssl.cnf"
-	var apiserverCsr = dataDir + "/apiserver.csr"
-	var apiserverPem = dataDir + "/apiserver.pem"
-	var apiserverKeyPem = dataDir + "/apiserver-key.pem"
-	os.Mkdir(dataDir, os.ModePerm)
-
-	cmd := exec.Command("bash", "-s")
-	cmdString := `
-sed "s/<MASTER_HOST>/` + ip + `/g" ` + t.tplMasterOpenssl + ` > ` + masterConfPath + `
-openssl genrsa -out ` + apiserverKeyPem + ` 2048 \n
-openssl req -new -key ` + apiserverKeyPem + ` -out ` + apiserverCsr + ` -subj "/CN=kube-apiserver" -config ` + masterConfPath + `
-openssl x509 -req -in ` + apiserverCsr + ` -CA ` + t.caCrt + ` -CAkey ` + t.caKey + ` -CAcreateserial -out \
-` + apiserverPem + ` -days 365 -extensions v3_req -extfile ` + masterConfPath
-	cmd.Stdin = strings.NewReader(cmdString)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if e := cmd.Run(); e != nil {
-		log.Printf("Generate master cert fail: %s\n", stderr.String())
-		return []byte(""), e
-	}
-
-	dataAPIServer, e := ioutil.ReadFile(apiserverPem)
+	k, e := ioutil.ReadFile(key)
 	candy.Must(e)
-	dataAPIServerKey, e := ioutil.ReadFile(apiserverKeyPem)
+	c, e := ioutil.ReadFile(crt)
 	candy.Must(e)
-	dataCA, e := ioutil.ReadFile(t.caCrt)
-	candy.Must(e)
-
-	data := bytes.Buffer{}
-	data.Write(dataAPIServer)
-	data.WriteString("<>\n")
-	data.Write(dataAPIServerKey)
-	data.WriteString("<>\n")
-	data.Write(dataCA)
-	return data.Bytes(), nil
+	return k, c
 }
