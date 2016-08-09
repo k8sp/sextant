@@ -9,7 +9,7 @@ import (
 )
 
 func TestGen(t *testing.T) {
-	key, crt := Gen("192.168.1.1", "master", candy.TestData("ca.pem"), candy.TestData("ca-key.pem"))
+	key, crt := Gen("192.168.1.1", "master", candy.TestData("ca.crt"), candy.TestData("ca.key"))
 
 	assert.True(t, strings.HasPrefix(string(key), "-----BEGIN RSA PRIVATE KEY-----"))
 	assert.True(t, strings.HasSuffix(string(key), "-----END RSA PRIVATE KEY-----\n"))
