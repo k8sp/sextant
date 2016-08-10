@@ -14,15 +14,6 @@ function TestInVM() {
 	cd vm
 	vagrant init $VMBOX
 	sed -i.bak 's/# config.vm.provider "virtualbox" do |vb|/config.vm.provider "virtualbox" do |vb| vb.memory = "1024" end/g' Vagrantfile
-
-	# The following line is very hacky.  It means that whenever we
-	# ssh or scp to the guest machine, we need to input password
-	# "vagrant".  We do this only because vagrant 1.8.5 has a bug
-	# which prevents passwordless login when the guest runs
-	# CentOS.  Once vagrant 1.8.6 releases, we should upgrade and
-	# remove this line.
-	sed -i.bak 's/# config.vm.box_check_update = false/config.ssh.username, config.ssh.password, config.ssh.insert_key = "vagrant", "vagrant", true/' Vagrantfile
-	
 	vagrant up
 	vagrant scp ../$PKG.test /home/vagrant/
 	vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
@@ -39,7 +30,6 @@ fi
 
 PKG=$(basename $(go list .))
 
-TestInVM $PKG "ubuntu/trusty64"
 TestInVM $PKG "centos/7"
 
 rm -rf vm
