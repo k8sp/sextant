@@ -55,7 +55,7 @@ func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
 	out, e := ioutil.TempDir("", "")
 	candy.Must(e)
 	defer func() {
-		if e := os.RemoveAll(out); e != nil {
+		if e = os.RemoveAll(out); e != nil {
 			log.Printf("Generator.Gen failed deleting %s", out)
 		}
 	}()
@@ -68,7 +68,8 @@ func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
 	candy.WithCreated(cnf, func(w io.Writer) {
 		candy.Must(openSSLCnfTmpl(role).Execute(w, ip))
 	})
-
+	d, _ := ioutil.ReadFile(cnf)
+	log.Print(string(d))
 	subj := "/CN=worker"
 	if role == "master" {
 		subj = "/CN=kube-apiserver"

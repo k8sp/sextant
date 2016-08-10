@@ -10,17 +10,15 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	"github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 )
 
 const (
-	tmplFile  = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
-	caCrt     = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca.pem"
-	caKey     = "src/github.com/k8sp/auto-install/cloud-config-server/tls/data/ca-key.pem"
-	tlsTplDir = "src/github.com/k8sp/auto-install/cloud-config-server/tls/etc"
+	tmplFile = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	caCrt    = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.pem"
+	caKey    = "src/github.com/k8sp/auto-install/cloud-config-server//testdata/ca-key.pem"
 )
 
 func TestRun(t *testing.T) {
@@ -38,10 +36,7 @@ func TestRun(t *testing.T) {
 	candy.Must(e)
 	t.Log("Tls cert tmp path: " + tmpDir)
 
-	tls := tls.New(path.Join(candy.GoPath(), caCrt), path.Join(candy.GoPath(), caKey),
-		tmpDir, path.Join(candy.GoPath(), tlsTplDir))
-
-	go run(clusterDesc, ccTemplate, ln, *tls)
+	go run(clusterDesc, ccTemplate, ln, caCrt, caKey)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))

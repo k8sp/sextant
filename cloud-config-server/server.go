@@ -9,6 +9,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -21,8 +22,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/k8sp/auto-install/cloud-config-server/cache"
+	"github.com/k8sp/auto-install/cloud-config-server/certgen"
 	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
-	"github.com/k8sp/auto-install/cloud-config-server/tls"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
@@ -39,9 +40,6 @@ func main() {
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
-	tlsCertDir := flag.String("tls-base-dir", "./tls/data", "Tls base dir store openssl template file and cert files")
-	tlsTplDir := flag.String("tls-tpl-dir", "./tls/etc", "Tls template dir store openssl template file")
-
 	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
 	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
@@ -55,19 +53,17 @@ func main() {
 	}
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
-	tls := tls.New(*caCrt, *caKey, *tlsCertDir, *tlsTplDir)
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l, *tls)
+	run(c, t, l, *caCrt, *caKey)
 }
 
 // By making the first two parameters closures, we get the flexibility
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener,
-	t tls.TLS) {
+func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caCrt, caKey string) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -82,12 +78,9 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener,
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			role := strings.ToLower(mux.Vars(r)["role"])
 			ip := mux.Vars(r)["ip"]
-			data, err := t.GenerateCert(role, ip)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			} else {
-				w.Write(data)
-			}
+			crt, key := certgen.Gen(ip, role, caCrt, caKey)
+			_, e := w.Write(makeCertData(crt, key, caCrt))
+			candy.Must(e)
 		}))
 
 	log.Printf("%v", http.Serve(ln, router))
@@ -102,6 +95,20 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 		}()
 		h(w, r)
 	}
+}
+
+func makeCertData(crt, key []byte, caCrt string) []byte {
+	ca, e := ioutil.ReadFile(caCrt)
+	candy.Must(e)
+
+	var buffer bytes.Buffer
+	buffer.Write(crt)
+	buffer.WriteString("<>")
+	buffer.Write(key)
+	buffer.WriteString("<>")
+	buffer.Write(ca)
+	buffer.WriteString("<>")
+	return buffer.Bytes()
 }
 
 func makeCacheGetter(url, fn string) func() []byte {
