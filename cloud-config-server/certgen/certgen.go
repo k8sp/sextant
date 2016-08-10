@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/topicai/candy"
@@ -70,7 +71,7 @@ func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
 	})
 	d, _ := ioutil.ReadFile(cnf)
 	log.Print(string(d))
-	subj := "/CN=worker"
+	subj := "/CN=worker-" + strings.Replace(ip, ".", "-", -1)
 	if role == "master" {
 		subj = "/CN=kube-apiserver"
 	}
