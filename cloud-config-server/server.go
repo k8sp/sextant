@@ -103,11 +103,11 @@ func makeCertData(crt, key []byte, caCrt string) []byte {
 
 	var buffer bytes.Buffer
 	buffer.Write(crt)
-	buffer.WriteString("<>")
+	buffer.WriteString("<>\n")
 	buffer.Write(key)
-	buffer.WriteString("<>")
+	buffer.WriteString("<>\n")
 	buffer.Write(ca)
-	buffer.WriteString("<>")
+	buffer.WriteString("<>\n")
 	return buffer.Bytes()
 }
 

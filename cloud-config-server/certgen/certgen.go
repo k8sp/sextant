@@ -69,8 +69,6 @@ func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
 	candy.WithCreated(cnf, func(w io.Writer) {
 		candy.Must(openSSLCnfTmpl(role).Execute(w, ip))
 	})
-	d, _ := ioutil.ReadFile(cnf)
-	log.Print(string(d))
 	subj := "/CN=worker-" + strings.Replace(ip, ".", "-", -1)
 	if role == "master" {
 		subj = "/CN=kube-apiserver"

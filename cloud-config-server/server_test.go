@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -17,8 +18,8 @@ import (
 
 const (
 	tmplFile = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
-	caCrt    = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.pem"
-	caKey    = "src/github.com/k8sp/auto-install/cloud-config-server//testdata/ca-key.pem"
+	caCrt    = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.crt"
+	caKey    = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.key"
 )
 
 func TestRun(t *testing.T) {
@@ -36,7 +37,8 @@ func TestRun(t *testing.T) {
 	candy.Must(e)
 	t.Log("Tls cert tmp path: " + tmpDir)
 
-	go run(clusterDesc, ccTemplate, ln, caCrt, caKey)
+	go run(clusterDesc, ccTemplate, ln, path.Join(candy.GoPath(), caCrt),
+		path.Join(candy.GoPath(), caKey))
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))
@@ -55,4 +57,14 @@ func TestRun(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
+
+	// Retrieve cert file from in-goroutine server
+	r, e = http.Get(fmt.Sprintf("http://%s/tls/worker/192.168.2.3", ln.Addr()))
+	candy.Must(e)
+
+	cert, e := ioutil.ReadAll(r.Body)
+	candy.Must(e)
+	candy.Must(r.Body.Close())
+
+	assert.True(t, strings.HasPrefix(string(cert), "-----BEGIN RSA PRIVATE KEY-----"))
 }
