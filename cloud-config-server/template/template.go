@@ -15,6 +15,8 @@ type ExecutionConfig struct {
 	EtcdMember        bool
 	InitialCluster    string
 	SSHAuthorizedKeys string
+	EtcdEndpoints	  string
+	MasterIP	  string
 	BootstrapperIP    string
 }
 
@@ -30,6 +32,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac string, w io.Wr
 		EtcdMember:        node.EtcdMember,
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
+		MasterIP:	   config.GetMasterIP(),
+	        EtcdEndpoints:     config.GetEtcdEndpoints(),
 		BootstrapperIP:    config.Bootstrapper,
 	}
 	return tmpl.Execute(w, ec)
