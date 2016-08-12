@@ -9,7 +9,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/k8sp/auto-install/cloud-config-server/cache"
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
 	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
@@ -71,16 +69,7 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, c
 			tmpl := template.Must(template.New("template").Parse(string(ccTemplate())))
 			c := &config.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
-			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
-		}))
-
-	router.HandleFunc("/tls/{role}/{ip}/",
-		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
-			role := strings.ToLower(mux.Vars(r)["role"])
-			ip := mux.Vars(r)["ip"]
-			crt, key := certgen.Gen(ip, role, caCrt, caKey)
-			_, e := w.Write(makeCertData(crt, key, caCrt))
-			candy.Must(e)
+			candy.Must(cctemplate.Execute(tmpl, c, mac, caCrt, caKey, w))
 		}))
 
 	log.Printf("%v", http.Serve(ln, router))
@@ -95,20 +84,6 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 		}()
 		h(w, r)
 	}
-}
-
-func makeCertData(crt, key []byte, caCrt string) []byte {
-	ca, e := ioutil.ReadFile(caCrt)
-	candy.Must(e)
-
-	var buffer bytes.Buffer
-	buffer.Write(crt)
-	buffer.WriteString("<>\n")
-	buffer.Write(key)
-	buffer.WriteString("<>\n")
-	buffer.Write(ca)
-	buffer.WriteString("<>\n")
-	return buffer.Bytes()
 }
 
 func makeCacheGetter(url, fn string) func() []byte {

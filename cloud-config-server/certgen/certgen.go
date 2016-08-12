@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/k8sp/auto-install/bootstrapper/cmd"
 	"github.com/topicai/candy"
@@ -40,19 +39,19 @@ basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
-IP.1 = {{.}}
+DNS.1 = {{.}}
 `
 )
 
-func openSSLCnfTmpl(role string) *template.Template {
-	if role == "master" {
+func openSSLCnfTmpl(master bool) *template.Template {
+	if master == true {
 		return template.Must(template.New("").Parse(masterOpenSSLConfTmpl))
 	}
 	return template.Must(template.New("").Parse(workerOpenSSLConfTmpl))
 }
 
 // Gen generates and returns the TLS certse.  It panics for errors.
-func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
+func Gen(master bool, hostname, caCrt, caKey string) ([]byte, []byte) {
 	out, e := ioutil.TempDir("", "")
 	candy.Must(e)
 	defer func() {
@@ -67,13 +66,14 @@ func Gen(ip, role, caCrt, caKey string) ([]byte, []byte) {
 	crt := path.Join(out, "crt.pem")
 
 	candy.WithCreated(cnf, func(w io.Writer) {
-		candy.Must(openSSLCnfTmpl(role).Execute(w, ip))
+		candy.Must(openSSLCnfTmpl(master).Execute(w, hostname))
 	})
-	subj := "/CN=worker-" + strings.Replace(ip, ".", "-", -1)
-	if role == "master" {
+	subj := "/CN=" + hostname
+	if master == true {
 		subj = "/CN=kube-apiserver"
 	}
-
+	d, _ := ioutil.ReadFile(cnf)
+	log.Print(string(d))
 	cmd.Run("openssl", "genrsa", "-out", key, "2048")
 	cmd.Run("openssl", "req", "-new", "-key", key, "-out", csr, "-subj", subj, "-config", cnf)
 	cmd.Run("openssl", "x509", "-req", "-in", csr, "-CA", caCrt, "-CAkey", caKey, "-CAcreateserial", "-out", crt, "-days", "365", "-extensions", "v3_req", "-extfile", cnf)

@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"path"
-	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -57,14 +56,4 @@ func TestRun(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
-
-	// Retrieve cert file from in-goroutine server
-	r, e = http.Get(fmt.Sprintf("http://%s/tls/worker/192.168.2.3", ln.Addr()))
-	candy.Must(e)
-
-	cert, e := ioutil.ReadAll(r.Body)
-	candy.Must(e)
-	candy.Must(r.Body.Close())
-
-	assert.True(t, strings.HasPrefix(string(cert), "-----BEGIN RSA PRIVATE KEY-----"))
 }
