@@ -39,8 +39,8 @@ func main() {
 	addr := flag.String("addr", ":8080", "Listening address")
 	flag.Parse()
 
-	c := cache.makeCacheGetter(*clusterDescURL, *clusterDescFile)
-	t := cache.makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
+	c := cache.MakeCacheGetter(*clusterDescURL, *clusterDescFile)
+	t := cache.MakeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
 	run(c, t, l)
