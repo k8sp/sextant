@@ -11,16 +11,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
-	"path"
 	"strings"
 	"text/template"
 
 	"github.com/gorilla/mux"
-	"github.com/k8sp/auto-install/cloud-config-server/cache"
+	"github.com/k8sp/auto-install/cache"
 	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
@@ -41,8 +39,8 @@ func main() {
 	addr := flag.String("addr", ":8080", "Listening address")
 	flag.Parse()
 
-	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
-	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
+	c := cache.makeCacheGetter(*clusterDescURL, *clusterDescFile)
+	t := cache.makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
 	run(c, t, l)
@@ -74,14 +72,4 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 		}()
 		h(w, r)
 	}
-}
-
-func makeCacheGetter(url, fn string) func() []byte {
-	if len(fn) == 0 {
-		dir, e := ioutil.TempDir("", "")
-		candy.Must(e)
-		fn = path.Join(dir, "localfile")
-	}
-	c := cache.New(url, fn)
-	return func() []byte { return c.Get() }
 }
