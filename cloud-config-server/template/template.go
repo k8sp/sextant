@@ -51,9 +51,12 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caCrt, caKey s
 		MasterIP:          config.GetMasterIP(),
 		EtcdEndpoints:     config.GetEtcdEndpoints(),
 		BootstrapperIP:    config.Bootstrapper,
-		CaCrt:             strings.Join(strings.Split(string(ca), "\n"), "\n      "),
-		Crt:               strings.Join(strings.Split(string(c), "\n"), "\n      "),
-		Key:               strings.Join(strings.Split(string(k), "\n"), "\n      "),
+		// Mulit-line context in yaml should keep the indent,
+		// there is no good idea for templaet package to auto keep the indent,
+		// so insert 6*whitespace at the begging of everty line
+		CaCrt: strings.Join(strings.Split(string(ca), "\n"), "\n      "),
+		Crt:   strings.Join(strings.Split(string(c), "\n"), "\n      "),
+		Key:   strings.Join(strings.Split(string(k), "\n"), "\n      "),
 	}
 	return tmpl.Execute(w, ec)
 }
