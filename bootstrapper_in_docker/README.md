@@ -13,7 +13,7 @@ Bootstrapper可以部署在集群中的任意一台机器，并在这台机器�
 
 集群规划如下图：
 
-![bootstrapper design][bootstrapper_design.png]
+<img src="./bootstrapper_design.png" width=800 />
 
 ## 组件功能
 ### Bootstrapper main
