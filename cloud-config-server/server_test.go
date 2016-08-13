@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
+	"os"
 	"path"
 	"testing"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/k8sp/auto-install/cloud-config-server/certgen"
 	"github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
@@ -20,6 +23,15 @@ const (
 )
 
 func TestRun(t *testing.T) {
+	out, e := ioutil.TempDir("", "")
+	candy.Must(e)
+	defer func() {
+		if e = os.RemoveAll(out); e != nil {
+			log.Printf("Generator.Gen failed deleting %s", out)
+		}
+	}()
+	caKey, caCrt := certgen.GenerateRootCA(out)
+
 	// Run the cloud-config-server in a goroutine.
 	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
 	candy.Must(e)
@@ -30,7 +42,7 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	go run(clusterDesc, ccTemplate, ln)
+	go run(clusterDesc, ccTemplate, ln, caKey, caCrt)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))
