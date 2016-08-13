@@ -21,6 +21,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/k8sp/auto-install/cloud-config-server/cache"
+	"github.com/k8sp/auto-install/cloud-config-server/certgen"
 	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
@@ -38,30 +39,28 @@ func main() {
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
-	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
-	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
+	caCrt := *flag.String("ca-crt", "", "CA certificate file, in PEM format")
+	caKey := *flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
 
 	flag.Parse()
 
-	if len(*caCrt) == 0 || len(*caKey) == 0 {
-		fmt.Printf("ca-crt and ca-key should not be empty. Usage: \n\n")
-		flag.PrintDefaults()
-		return
+	if len(caCrt) == 0 || len(caKey) == 0 {
+		caKey, caCrt = certgen.GenerateRootCA("./")
 	}
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l, *caCrt, *caKey)
+	run(c, t, l, caKey, caCrt)
 }
 
 // By making the first two parameters closures, we get the flexibility
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caCrt, caKey string) {
+func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caKey, caCrt string) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +68,7 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, c
 			tmpl := template.Must(template.New("template").Parse(string(ccTemplate())))
 			c := &config.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
-			candy.Must(cctemplate.Execute(tmpl, c, mac, caCrt, caKey, w))
+			candy.Must(cctemplate.Execute(tmpl, c, mac, caKey, caCrt, w))
 		}))
 
 	log.Printf("%v", http.Serve(ln, router))

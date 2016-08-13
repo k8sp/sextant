@@ -4,22 +4,27 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"path"
+	"log"
+	"os"
 	"testing"
 	"text/template"
 
+	"github.com/k8sp/auto-install/cloud-config-server/certgen"
 	tpcfg "github.com/k8sp/auto-install/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	caCrt = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.crt"
-	caKey = "src/github.com/k8sp/auto-install/cloud-config-server/certgen/testdata/ca.key"
-)
-
 func TestExecute(t *testing.T) {
+	out, err := ioutil.TempDir("", "")
+	candy.Must(err)
+	defer func() {
+		if e := os.RemoveAll(out); e != nil {
+			log.Printf("Generator.Gen failed deleting %s", out)
+		}
+	}()
+	caKey, caCrt := certgen.GenerateRootCA(out)
 
 	config := candy.WithOpened("./unisound-ailab/build_config.yml", func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
@@ -33,7 +38,7 @@ func TestExecute(t *testing.T) {
 	tmpl, e := template.ParseFiles("cloud-config.template")
 	candy.Must(e)
 	var ccTmpl bytes.Buffer
-	Execute(tmpl, config, "00-25-90-c0-f6-ee", path.Join(candy.GoPath(), caCrt), path.Join(candy.GoPath(), caKey), &ccTmpl)
+	Execute(tmpl, config, "00-25-90-c0-f6-ee", caKey, caCrt, &ccTmpl)
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
 

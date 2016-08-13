@@ -30,14 +30,14 @@ type ExecutionConfig struct {
 
 // Execute returns the executed cloud-config template for a node with
 // given MAC address.
-func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caCrt, caKey string, w io.Writer) error {
+func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt string, w io.Writer) error {
 	node := getNodeByMAC(config, mac)
 	ca, e := ioutil.ReadFile(caCrt)
 	candy.Must(e)
 
-	k, c := certgen.Gen(false, node.Hostname(), caCrt, caKey)
+	k, c := certgen.Gen(false, node.Hostname(), caKey, caCrt)
 	if node.KubeMaster == true {
-		k, c = certgen.Gen(true, node.Hostname(), caCrt, caKey)
+		k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
 	}
 
 	ec := ExecutionConfig{

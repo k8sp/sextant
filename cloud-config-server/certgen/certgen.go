@@ -43,6 +43,16 @@ DNS.1 = {{.}}
 `
 )
 
+// GenerateRootCA generate ca.key and ca.crt depending on out path
+func GenerateRootCA(out string) (string, string) {
+	caKey := path.Join(out, "ca.key")
+	caCrt := path.Join(out, "ca.crt")
+	cmd.Run("openssl", "genrsa", "-out", caKey, "2048")
+	cmd.Run("openssl", "req", "-x509", "-new", "-nodes", "-key", caKey, "-days", "10000", "-out", caCrt, "-subj", "/CN=kube-ca")
+
+	return caKey, caCrt
+}
+
 func openSSLCnfTmpl(master bool) *template.Template {
 	if master == true {
 		return template.Must(template.New("").Parse(masterOpenSSLConfTmpl))
@@ -51,7 +61,7 @@ func openSSLCnfTmpl(master bool) *template.Template {
 }
 
 // Gen generates and returns the TLS certse.  It panics for errors.
-func Gen(master bool, hostname, caCrt, caKey string) ([]byte, []byte) {
+func Gen(master bool, hostname, caKey, caCrt string) ([]byte, []byte) {
 	out, e := ioutil.TempDir("", "")
 	candy.Must(e)
 	defer func() {
