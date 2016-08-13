@@ -35,24 +35,33 @@ func main() {
 
 	ccTemplateURL := flag.String("cc-template-url",
 		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
-		"URL to remote cloud-config file template.")
+		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
+	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
+	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
+
 	flag.Parse()
 
+	if len(*caCrt) == 0 || len(*caKey) == 0 {
+		fmt.Printf("ca-crt and ca-key should not be empty. Usage: \n\n")
+		flag.PrintDefaults()
+		return
+	}
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
+
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l)
+	run(c, t, l, *caCrt, *caKey)
 }
 
 // By making the first two parameters closures, we get the flexibility
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener) {
+func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caCrt, caKey string) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -60,8 +69,9 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener) {
 			tmpl := template.Must(template.New("template").Parse(string(ccTemplate())))
 			c := &config.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
-			candy.Must(cctemplate.Execute(tmpl, c, mac, w))
+			candy.Must(cctemplate.Execute(tmpl, c, mac, caCrt, caKey, w))
 		}))
+
 	log.Printf("%v", http.Serve(ln, router))
 }
 
