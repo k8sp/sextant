@@ -42,7 +42,7 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	go run(clusterDesc, ccTemplate, ln, caKey, caCrt)
+	go run(clusterDesc, ccTemplate, ln, caKey, caCrt, out)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
 	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))
@@ -61,4 +61,17 @@ func TestRun(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
+
+	// Test for static file Handler
+	e = ioutil.WriteFile(path.Join(out, "hello"), []byte("Hello Go"), 0644)
+	candy.Must(e)
+
+	r, e = http.Get(fmt.Sprintf("http://%s/static/hello", ln.Addr()))
+	candy.Must(e)
+
+	f, e := ioutil.ReadAll(r.Body)
+	candy.Must(e)
+	candy.Must(r.Body.Close())
+
+	assert.Equal(t, string(f), "Hello Go")
 }
