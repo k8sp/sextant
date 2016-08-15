@@ -12,7 +12,11 @@ Bootstrapper程序通过执行```docker run -d [bootstrapper_image_name:tag] -v 
 * 计划要自动安装CoreOS和kubernetes的集群机器要和bootstrapper所在的机器网络连通（2层连通）。
 
 ## 自动部署步骤
-在初始化kubernetes集群的时候，集群管理员需要：
+***使用bootstrapper来自动安装k8s集群的步骤如下图***
+
+<img src="./bootstrapper_design.png" width=800 />
+
+***详细流程描述***
 
 1. 规划集群，并且把规划描述成[ClusterDesc配置文件](https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml)，比如如哪个机器作为master，哪些机器作为etcd集群，哪些作为worker。每台机器通过MAC地址唯一标识。
 1. 管理员在一台预先规划好的的机器上，下载／上传bootstrapper的docker image，并通过docker run启动bootstrapper。启动成功后，bootstrapper会提供DHCP, DNS(服务于物理节点), PXE, tftp, cloud-config HTTP服务, CoreOS镜像自动更新服务。
@@ -24,9 +28,7 @@ Bootstrapper程序通过执行```docker run -d [bootstrapper_image_name:tag] -v 
 * ***IP地址的分配和获取：***
   网络配置统一都使用了DHCP，由dnsmasq统一管理和分配。在IP地址租期之内，DHCP会分配给本机一个相对稳定的IP地址。如果超过了租期，物理节点就会获得一个不同的IP，但由于kubernetes worker是根据mac地址生成的hostname上报给master的，之前给这个node打的标签也不会丢失。***所以在配置的时候需要着重考虑租期的配置***
 
-集群规划如下图：
 
-<img src="./bootstrapper_design.png" width=800 />
 
 ## 组件功能
 ### Bootstrapper main
