@@ -1,8 +1,8 @@
 FROM golang:1.6.3-alpine
 RUN set -ex && \
 apk update && \
-apk add --no-cache make git dnsmasq openssl
-RUN go get github.com/docker/distribution && \
+apk add --no-cache make git dnsmasq openssl && \
+go get github.com/docker/distribution && \
 cd /go/src/github.com/docker/distribution && \
 make PREFIX=/go clean binaries && \
 mkdir -p /etc/docker/registry && \
