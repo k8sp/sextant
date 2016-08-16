@@ -1,6 +1,7 @@
 package initcoreos
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -18,6 +19,7 @@ func TestVersion(t *testing.T) {
 	_, alpha := version("alpha")
 	_, beta := version("beta")
 	_, stable := version("stable")
+	fmt.Printf("alpha: %s, beta: %s, stable: %s", alpha, beta, stable)
 	assert.True(t, strings.Compare(stable, beta) <= 0)
 	assert.True(t, strings.Compare(beta, alpha) <= 0)
 }

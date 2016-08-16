@@ -1,6 +1,7 @@
 // Package config defines Go structs that configure a Kubernetes
 // cluster.  The configuration is often encoded and saved as a YAML
 // file, which is used by config-bootstrapper and cloud-config-server.
+// TODO: rename this package to ClusterDesc
 package config
 
 import "strings"
@@ -13,6 +14,11 @@ type Cluster struct {
 	// an Ngix server and SkyDNS server
 	// (https://github.com/k8sp/auto-install/tree/master/dns).
 	Bootstrapper string
+
+	// if true, start a go routine to
+	DownloadCoreOS bool
+	// url to this file
+	ClusterDescURL string
 
 	// The following are for configuring the DHCP service on the
 	// PXE server.  For any node, if its MAC address and IP

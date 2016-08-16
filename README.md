@@ -1,12 +1,13 @@
 # auto-install
 
-[![Build Status](https://travis-ci.org/k8sp/auto-install.png?branch=master)](https://travis-ci.org/k8sp/auto-install) [![GoDoc](https://godoc.org/github.com/k8sp/auto-install?status.svg)](https://godoc.org/github.com/k8sp/auto-install)
-
-This repo includes
-
-- `config`: Go structs that correspond to a YAML file that describes a Kubernetes cluster and a bootstrapper server,
-- `bootstrapper`: a Go program that is supposed to be copied to the bootstrapper server and run as root, so to install and configure the bootstrapper server, and
-- `cloud-config-server`: a Go HTTP server that generates cloud-config file for each node identified by their MAC addresses in the Kuberenetes cluster.
-
-Both `bootstrapper` and `cloud-config-server` take the YAML cluster description file as input.
-
+## 构建Docker镜像
+执行下面的命令构建bootstrapper的docker镜像：
+```
+docker build -t bootstrapper:0.1 .
+```
+## 使用docker启动bootstrapper
+执行下面的命令启动bootstrapper的相关组件，包括了dnsmasq, cloud-config-server, docker registry
+```
+docker run -d --net=host --privileged bootstrapper:0.1
+```
+由于dnsmasq需要运行在特权模式，需要参数：--privileged

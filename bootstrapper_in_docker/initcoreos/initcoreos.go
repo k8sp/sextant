@@ -1,45 +1,34 @@
 package initcoreos
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/k8sp/auto-install/config"
 	"github.com/topicai/candy"
 	"golang.org/x/crypto/openpgp"
 )
 
-func getFromHTTP(url string) (string, error) {
+func httpGet(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
+	return body, err
 }
 
-func downloadFromHTTP(url string, outfile string) error {
-	out, err := os.Create(outfile)
-	if err != nil {
-		return err
+func httpDownload(url string, outfile string) error {
+	resp, err := httpGet(url)
+	if err == nil {
+		return ioutil.WriteFile(outfile, resp, 0744)
 	}
-	defer out.Close()
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	_, err2 := io.Copy(out, resp.Body)
-	if err2 != nil {
-		return err2
-	}
-	return nil
+	return err
 }
 
 func version(channel string) (string, string) {
@@ -47,13 +36,13 @@ func version(channel string) (string, string) {
 		channel = "stable"
 	}
 	url := fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/current/version.txt", channel)
-	channelDesc, err := getFromHTTP(url)
+	channelDesc, err := httpGet(url)
 	if err == nil {
 		var channelVersion string
-		for _, s := range strings.Split(channelDesc, "\n") {
-			kv := strings.Split(s, "=")
-			if kv[0] == "COREOS_VERSION" {
-				channelVersion = kv[1]
+		for _, s := range bytes.Split(channelDesc, []byte("\n")) {
+			kv := bytes.Split(s, []byte("="))
+			if bytes.Compare(kv[0], []byte("COREOS_VERSION")) == 0 {
+				channelVersion = string(kv[1])
 			}
 		}
 		return channel, channelVersion
@@ -99,27 +88,27 @@ func DownloadBootImage(c *config.Cluster) error {
 	pkey := "CoreOS_Image_Signing_Key.asc"
 
 	// Download image files.
-	if e := downloadFromHTTP(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, img),
+	if e := httpDownload(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, img),
 		path.Join(dir, img)); e != nil {
 		return e
 	}
-	if e := downloadFromHTTP(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, cpio),
+	if e := httpDownload(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s", channel, ver, cpio),
 		path.Join(dir, cpio)); e != nil {
 		return e
 	}
 
 	// Download signatures.
-	if e := downloadFromHTTP(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, img),
+	if e := httpDownload(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, img),
 		path.Join(dir, img+".sig")); e != nil {
 		return e
 	}
-	if e := downloadFromHTTP(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, cpio),
+	if e := httpDownload(fmt.Sprintf("https://%s.release.core-os.net/amd64-usr/%s/%s.sig", channel, ver, cpio),
 		path.Join(dir, cpio+".sig")); e != nil {
 		return e
 	}
 
 	// Download the public key.
-	if e := downloadFromHTTP(fmt.Sprintf("https://coreos.com/security/image-signing-key/%s", pkey),
+	if e := httpDownload(fmt.Sprintf("https://coreos.com/security/image-signing-key/%s", pkey),
 		path.Join(dir, pkey)); e != nil {
 		return e
 	}
