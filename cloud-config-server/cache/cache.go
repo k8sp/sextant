@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"path"
 	"sync"
 	"time"
 
@@ -153,15 +152,4 @@ func (c *Cache) Get() []byte {
 // Close closes the cache and release all resources.
 func (c *Cache) Close() {
 	c.close <- 1
-}
-
-// MakeCacheGetter returns a closure for get a cache
-func MakeCacheGetter(url, fn string) func() []byte {
-	if len(fn) == 0 {
-		dir, e := ioutil.TempDir("", "")
-		candy.Must(e)
-		fn = path.Join(dir, "localfile")
-	}
-	c := New(url, fn)
-	return func() []byte { return c.Get() }
 }
