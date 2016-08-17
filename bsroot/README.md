@@ -8,13 +8,14 @@ mounted into the bootstrapper container as `/bsroot`.
 
 ## The Directory Structure of `bsroot` 
 
-- `/dnsmasq.conf`: The dnsmasq config file.
+- `/bsroot/dnsmasq.conf`: The dnsmasq config file.
 
-- `/registry.yml`: The Docker registry config file.
+- `/bsroot/registry.yml`: The Docker registry config file.
 
-- `/registry/`: The directory mounted to bootstrapper container as
-  registry volume. It is created by the Docker registry service
-  running inside the bootstrapper container.
+- `/bsroot/registry/`: The directory mounted to bootstrapper container
+  as registry volume.  It is created by the Docker registry service
+  running inside the bootstrapper container.  This directory is
+  mentioned in `/bsroot/registry.yml`.
 
 ## Build and Run
 
