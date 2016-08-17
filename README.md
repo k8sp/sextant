@@ -3,10 +3,10 @@
 ## 获取k8s所需要的镜像
 执行以下命令获取镜像并save为tar的格式：
 ```
-docker pull typhoon1986/hyperkube-amd64:v1.2.0
+docker pull typhoon1986/hyperkube-amd64_v1.2.0
 docker pull typhoon1986/pause:2.0
-docker save typhoon1986/pause:2.0 > pause:2.0.tar
-docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64:v1.2.0.tar
+docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
+docker save typhoon1986/pause:2.0 > pause_2.0.tar
 ```
 ## 构建Docker镜像
 执行下面的命令构建bootstrapper的docker镜像：
