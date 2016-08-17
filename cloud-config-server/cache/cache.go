@@ -1,10 +1,8 @@
 package cache
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"sync"
 	"time"
 
@@ -70,7 +68,7 @@ func New(url, filename string) *Cache {
 			}
 
 			log.Printf("Cache updating %s / %s", c.url, c.filename)
-			if b, e := httpGet(c.url, loadTimeout); e == nil {
+			if b, e := candy.HTTPGet(c.url, loadTimeout); e == nil {
 				c.mu.Lock()
 				c.content = b
 				c.mu.Unlock()
@@ -98,7 +96,7 @@ func load(url, fn string) []byte {
 	)
 	if len(url) > 0 {
 		log.Printf("Try loading from %s...", url)
-		b, e = httpGet(url, loadTimeout)
+		b, e = candy.HTTPGet(url, loadTimeout)
 	}
 	if e != nil || len(url) == 0 {
 		log.Printf("Try loading from %s...", fn)
@@ -108,30 +106,6 @@ func load(url, fn string) []byte {
 		log.Panicf("Cannot load neither remotely nor locally.")
 	}
 	return b
-}
-
-func httpGet(url string, timeout time.Duration) ([]byte, error) {
-	client := http.Client{
-		Timeout: timeout,
-	}
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Expecting StatusCode 200, but got %d", resp.StatusCode)
-	}
-
-	defer func() {
-		candy.Must(resp.Body.Close())
-	}()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("%v", err)
-		return nil, err
-	}
-	return body, nil
 }
 
 // Get returns content in memory, and triggers an update without waiting.

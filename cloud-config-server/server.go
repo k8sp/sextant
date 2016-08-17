@@ -43,6 +43,8 @@ func main() {
 	caKey := *flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
 
+	dir := *flag.String("dir", "./static/", "The directory to serve files from. Default is ./static/")
+
 	flag.Parse()
 
 	if len(caCrt) == 0 || len(caKey) == 0 {
@@ -53,14 +55,14 @@ func main() {
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l, caKey, caCrt)
+	run(c, t, l, caKey, caCrt, dir)
 }
 
 // By making the first two parameters closures, we get the flexibility
 // to create closures reading from the cache for production serving,
 // and from constant values for testing.  Please refer to func main()
 // for the former case, and server_test.go for the latter case.
-func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caKey, caCrt string) {
+func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, caKey, caCrt, dir string) {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +72,7 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, c
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, caKey, caCrt, w))
 		}))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
 
 	log.Printf("%v", http.Serve(ln, router))
 }
