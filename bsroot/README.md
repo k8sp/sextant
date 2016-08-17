@@ -18,7 +18,11 @@ mounted into the bootstrapper container as `/bsroot`.
 
 ## Build and Run
 
-To build the bootstrapper Docker image:
+The real bootstrapper image will contain several services, just in the
+current early stage I write a Dockerfile as an example that describes
+only one service, the Docker registry.  To build a Docker image from
+this Dockerfile:
+
 ```
 sudo docker build -t registry -f registry.Dockerfile .
 ```
