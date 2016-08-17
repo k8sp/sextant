@@ -21,7 +21,7 @@ func TestVersion(t *testing.T) {
 	_, beta := version("beta")
 	_, stable := version("stable")
 	assert.True(t, strings.Compare(stable, beta) <= 0)
-	assert.True(t, strings.Compare(beta, alpha) <= 0)
+	assert.True(t, strings.Compare(stable, alpha) <= 0)
 }
 
 func TestDownloadBootImage(t *testing.T) {
