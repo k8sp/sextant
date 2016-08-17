@@ -1,4 +1,4 @@
-FROM golang:1.6.3-alpine
+FROM golang:alpine
 RUN set -ex && \
 apk update && \
 apk add --no-cache make git dnsmasq openssl && \
