@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	tmplFile = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	tmplFile    = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	loadTimeout = 15 * time.Second
 )
 
 func TestRun(t *testing.T) {
@@ -42,15 +43,11 @@ func TestRun(t *testing.T) {
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
 	candy.Must(e)
 
-	go run(clusterDesc, ccTemplate, ln, caKey, caCrt)
+	go run(clusterDesc, ccTemplate, ln, caKey, caCrt, out)
 
 	// Retrieve a cloud-config file from the in-goroutine server.
-	r, e := http.Get(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()))
+	cc, e := candy.HTTPGet(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()), loadTimeout)
 	candy.Must(e)
-
-	cc, e := ioutil.ReadAll(r.Body)
-	candy.Must(e)
-	candy.Must(r.Body.Close())
 
 	// Compare only a small fraction -- the etcd2 initial cluster -- for testing.
 	yml := make(map[interface{}]interface{})
@@ -61,4 +58,13 @@ func TestRun(t *testing.T) {
 	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
+
+	// Test for static file Handler
+	e = ioutil.WriteFile(path.Join(out, "hello"), []byte("Hello Go"), 0644)
+	candy.Must(e)
+
+	f, e := candy.HTTPGet(fmt.Sprintf("http://%s/static/hello", ln.Addr()), loadTimeout)
+	candy.Must(e)
+
+	assert.Equal(t, string(f), "Hello Go")
 }
