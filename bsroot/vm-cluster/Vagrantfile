@@ -1,18 +1,19 @@
+# References:
+#  1. Private network: https://github.com/k8sp/auto-install/issues/102#issuecomment-238005425
+#  2. Install Docker: https://docs.docker.com/engine/installation/linux/ubuntulinux/
 Vagrant.configure("2") do |config|
   
-  config.vm.define "bootstrapper" do |bs|
-    bs.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/trusty64"
 
-    bs.vm.network "private_network", ip: "192.168.50.4", name: "vboxnet6"
-    
-    bs.vm.synced_folder "~/work", "/work"
+  config.vm.synced_folder "~/work", "/work"
 
-    bs.vm.provider "virtualbox" do |vb|
+  config.vm.provider "virtualbox" do |vb|
       vb.gui = false
-      vb.memory = "4096"
+      vb.memory = "2048"
     end
 
-    bs.vm.provision "shell", inline: <<-SHELL
+  # Install Docker on both VMs.
+  config.vm.provision "shell", inline: <<-SHELL
 apt-get update
 apt-get install -y apt-transport-https ca-certificates
 apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
@@ -25,15 +26,14 @@ apt-get install -y docker-engine
 service docker start
 groupadd docker
 usermod -aG docker vagrant
+echo '192.168.50.4 bootstrapper' >> /etc/hosts
   SHELL
+
+  config.vm.define "bootstrapper" do |bs|
+    bs.vm.network "private_network", ip: "192.168.50.4", name: "vboxnet6"
   end
 
   config.vm.define "node" do |nd|
-    nd.vm.box = "ubuntu/trusty64"
     nd.vm.network "private_network", ip: "192.168.50.5", name: "vboxnet6"
-    nd.vm.synced_folder "~/work", "/work"
-    nd.vm.provision "shell", inline: <<-SHELL
-echo '192.168.50.4 bootstrapper' >> /etc/hosts
-    SHELL
   end
 end

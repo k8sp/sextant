@@ -31,16 +31,43 @@ only one service, the Docker registry.  To build a Docker image from
 this Dockerfile:
 
 ```
-sudo docker build -t registry -f registry.Dockerfile .
+docker build -t registry -f registry.Dockerfile .
 ```
 
 To run the bootstrapper as a Docker container named `registry`:
 ```
-sudo docker run -d --privileged -p 5000:5000 --name registry -v $(pwd)/bsroot:/bsroot registry
+docker run -d --privileged -p 5000:5000 --name registry -v $(pwd)/bsroot:/bsroot registry
 ```
 
 Then we should be able to push an image into it:
 ```
-sudo docker tag hello-world localhost:5000/hello
-sudo docker push localhost:5000/hello
+docker tag hello-world localhost:5000/hello
+docker push localhost:5000/hello
 ```
+
+## Troubleshooting
+
+1. If `docker push` retries as following
+
+   ```
+   bootstrapper$ docker push localhost:5000/hello
+   The push refers to a repository [localhost:5000/hello]
+   a02596fdd012: Retrying in 5 seconds
+   ```
+
+   it is very likely that the Docker container doesn't have write
+   permission to `/bsroot/registry`.  A simple solution is to manually
+   create it and grants everyone to access it:
+
+   ```
+   bootstrapper$ mkdir /bsroot/registry
+   bootstrapper$ chmod a+rwx /bsroot/registry
+   ```
+
+1. If `docker run -d ... registry` fails with no output, please replace `-d` by `--rm -it`:
+
+   ```
+   docker run --rm -it --privileged -p 5000:5000 --name registry -v $(pwd)/bsroot:/bsroot registry
+   ```
+
+   This would allow `docker run` to copy the output from `registry` to the terminal.
