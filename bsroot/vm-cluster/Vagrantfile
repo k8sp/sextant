@@ -1,0 +1,39 @@
+Vagrant.configure("2") do |config|
+  
+  config.vm.define "bootstrapper" do |bs|
+    bs.vm.box = "ubuntu/trusty64"
+
+    bs.vm.network "private_network", ip: "192.168.50.4", name: "vboxnet6"
+    
+    bs.vm.synced_folder "~/work", "/work"
+
+    bs.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "4096"
+    end
+
+    bs.vm.provision "shell", inline: <<-SHELL
+apt-get update
+apt-get install -y apt-transport-https ca-certificates
+apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+touch /etc/apt/sources.list.d/docker.list
+chown vagrant /etc/apt/sources.list.d/docker.list
+echo 'deb https://apt.dockerproject.org/repo ubuntu-trusty main' >> /etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y linux-image-extra-$(uname -r)
+apt-get install -y docker-engine
+service docker start
+groupadd docker
+usermod -aG docker vagrant
+  SHELL
+  end
+
+  config.vm.define "node" do |nd|
+    nd.vm.box = "ubuntu/trusty64"
+    nd.vm.network "private_network", ip: "192.168.50.5", name: "vboxnet6"
+    nd.vm.synced_folder "~/work", "/work"
+    nd.vm.provision "shell", inline: <<-SHELL
+echo '192.168.50.4 bootstrapper' >> /etc/hosts
+    SHELL
+  end
+end
