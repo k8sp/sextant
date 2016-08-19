@@ -3,7 +3,7 @@
 ## 获取k8s所需要的镜像
 执行以下命令获取镜像并save为tar的格式：
 ```
-docker pull typhoon1986/hyperkube-amd64_v1.2.0
+docker pull typhoon1986/hyperkube-amd64:v1.2.0
 docker pull typhoon1986/pause:2.0
 docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
 docker save typhoon1986/pause:2.0 > pause_2.0.tar
@@ -62,7 +62,7 @@ dhcp-option=28,192.168.8.255
 pxe-prompt="Press F8 for menu.", 60
 pxe-service=x86PC, "Install CoreOS from network server 192.168.50.4", pxelinux
 enable-tftp
-tftp-root=/var/lib/tftpboot
+tftp-root=/bsroot/tftpboot
 ```
 执行下面的命令启动bootstrapper的相关组件，包括了dnsmasq, cloud-config-server, docker registry
 ```

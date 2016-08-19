@@ -3,7 +3,7 @@
 DEFAULT_IPV4=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
 sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8088/g' /go/static/install.sh
 dnsmasq -k --log-facility=- --conf-file=/etc/dnsmasq.conf &
-cloud-config-server -addr ":8088" &
+cloud-config-server -addr ":8088" -dir /bsroot/html &
 registry serve /etc/docker/registry/config.yml &
 sleep 2
 docker load < /opt/hyperkube-amd64_v1.2.0.tar

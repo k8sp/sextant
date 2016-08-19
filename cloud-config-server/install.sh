@@ -5,6 +5,5 @@ if [ -z {$DISK_DEV} ] ; then
 fi
 mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..'`
 wget http://<HTTP_ADDR>/cloud-configs/${mac_addr}.yml
-#wget http://192.168.8.101/cloud-configs/test3.yml
 sudo coreos-install -d {$DISK_DEV} -c ${mac_addr}.yml -b http://<HTTP_ADDR>
 sudo reboot
