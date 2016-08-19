@@ -39,23 +39,23 @@ func main() {
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
-	caCrt := *flag.String("ca-crt", "", "CA certificate file, in PEM format")
-	caKey := *flag.String("ca-key", "", "CA private key file, in PEM format")
+	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
+	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
 
 	dir := *flag.String("dir", "./static/", "The directory to serve files from. Default is ./static/")
 
 	flag.Parse()
 
-	if len(caCrt) == 0 || len(caKey) == 0 {
-		caKey, caCrt = certgen.GenerateRootCA("./")
+	if len(*caCrt) == 0 || len(*caKey) == 0 {
+		*caKey, *caCrt = certgen.GenerateRootCA("./")
 	}
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l, caKey, caCrt, dir)
+	run(c, t, l, *caKey, *caCrt, dir)
 }
 
 // By making the first two parameters closures, we get the flexibility
