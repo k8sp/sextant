@@ -30,10 +30,14 @@ echo '192.168.50.4 bootstrapper' >> /etc/hosts
   SHELL
 
   config.vm.define "bootstrapper" do |bs|
-    bs.vm.network "private_network", ip: "192.168.50.4", name: "vboxnet6"
+    bs.vm.network "private_network", ip: "192.168.50.4", name: "vboxnet0"
   end
 
   config.vm.define "node" do |nd|
-    nd.vm.network "private_network", ip: "192.168.50.5", name: "vboxnet6"
+    nd.vm.network "private_network", ip: "192.168.50.5", name: "vboxnet0"
+  end
+
+  config.vm.define "booted" do |nd|
+    nd.vm.network "private_network", type: "dhcp", name: "vboxnet0"
   end
 end
