@@ -1,3 +1,17 @@
-registry
-.vagrant
+*.asc
+*.sig
+
+*.key
+*.csr
+*.crt
+*.srl
+
+cloud-config-server
+
+*.vmlinuz
+*.gz
+*.zip
+ldlinux.c32
+pxelinux.0
+
 
