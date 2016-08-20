@@ -36,8 +36,4 @@ echo '192.168.50.4 bootstrapper' >> /etc/hosts
   config.vm.define "node" do |nd|
     nd.vm.network "private_network", ip: "192.168.50.5", name: "vboxnet0"
   end
-
-  config.vm.define "booted" do |nd|
-    nd.vm.network "private_network", type: "dhcp", name: "vboxnet0"
-  end
 end
