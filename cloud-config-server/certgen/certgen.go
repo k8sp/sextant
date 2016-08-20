@@ -27,7 +27,7 @@ DNS.2 = kubernetes.default
 DNS.3 = kubernetes.default.svc
 DNS.4 = kubernetes.default.svc.cluster.local
 IP.1 = 10.100.0.1
-IP.2 = {{.}}
+DNS.5 = {{.}}
 `
 
 	workerOpenSSLConfTmpl = `[req]

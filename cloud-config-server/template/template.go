@@ -22,6 +22,7 @@ type ExecutionConfig struct {
 	SSHAuthorizedKeys string
 	EtcdEndpoints     string
 	MasterIP          string
+	MasterHostname    string
 	BootstrapperIP    string
 	CaCrt             string
 	Crt               string
@@ -41,7 +42,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 	}
 
 	ec := ExecutionConfig{
-		Hostname:          mac,
+		Hostname:          node.Hostname(),
 		IP:                node.IP,
 		CephMonitor:       node.CephMonitor,
 		KubeMaster:        node.KubeMaster,
@@ -49,6 +50,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
 		MasterIP:          config.GetMasterIP(),
+		MasterHostname:    config.GetMasterHostname(),
 		EtcdEndpoints:     config.GetEtcdEndpoints(),
 		BootstrapperIP:    config.Bootstrapper,
 		// Mulit-line context in yaml should keep the indent,
@@ -63,7 +65,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 
 func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 	for _, n := range c.Nodes {
-		if n.Hostname() == mac {
+		if n.MAC == mac {
 			return n
 		}
 	}

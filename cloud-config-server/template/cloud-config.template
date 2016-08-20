@@ -65,7 +65,7 @@ write_files:
               - --bind-address=0.0.0.0
               - --insecure-bind-address=0.0.0.0
               - --secure-port=443
-              - --etcd-servers=http://{{ .MasterIP }}:4001
+              - --etcd-servers=http://{{ .MasterHostname }}:4001
               - --service-cluster-ip-range=10.100.0.0/24
               - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
               - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
@@ -191,7 +191,7 @@ write_files:
           command:
           - /hyperkube
           - proxy
-          - --master=https://{{ .MasterIP }}:443
+          - --master=https://{{ .MasterHostname }}:443
           - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
           - --proxy-mode=iptables
           securityContext:
@@ -276,19 +276,6 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
-        - name: generate-tls-keys.service
-          runtime: true
-          command: start
-          content: |
-            [Unit]
-            Description=Generates TLS keys for this node
-            After=setup-network-environment.service
-            Requires=setup-network-environment.service
-            [Service]
-            EnvironmentFile=/etc/network-environment
-            ExecStart=/etc/kubernetes/ssl/generate-tls-keys.sh ${DEFAULT_IPV4}
-            RemainAfterExit=yes
-            Type=oneshot
         - name: "settimezone.service"
           command: start
           content: |
@@ -369,6 +356,16 @@ coreos:
                 [Service]
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
           command: "start"
+        - name: install-aci.service
+          command: start
+          content: |
+              [Service]
+              ExecStartPre=/bin/wget -P -N /etc/kubernetes/ http://{{ .BootstrapperIP }}:8080/static/flannel:0.5.5.aci
+              ExecStartPre=/bin/wget -P -N /etc/kubernetes/ http://{{ .BootstrapperIP }}:8080/static/hyperkube:v1.2.4_coreos.1.aci
+              ExecStartPre=/bin/rkt --insecure-options=all file:///etc/kubernetes/flannel:0.5.5.aci
+              ExecStart=/bin/rkt --insecure-options=all file:////etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci
+              RemainAfterExit=yes
+              Type=oneshot
         - name: kubelet.service
           runtime: true
           command: start
@@ -376,21 +373,21 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            Requires=docker.service
-            After=docker.service
+            Requires=install-aci.service, docker.service
+            After=install-aci.service, docker.service
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
             --pod_infra_container_image=typhoon1986/pause:2.0 \
             --register-node=true \
-            --api-servers=http://{{ .MasterIP }}:8080 \
+            --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin=${NETWORK_PLUGIN} \
             --register-schedulable=false \
             --allow-privileged=true \
             --config=/etc/kubernetes/manifests \
-            --hostname-override={{ .MasterIP }} \
+            --hostname-override={{ .MasterHostname }} \
             --cluster-dns=10.100.0.10 \
             --cluster-domain=cluster.local
             --logtostderr=true
@@ -406,8 +403,8 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            After=generate-tls-keys.service docker.service
-            Requires=generate-tls-keys.service docker.service
+            After=docker.service
+            Requires=docker.service
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
@@ -419,7 +416,7 @@ coreos:
             --cluster-domain=cluster.local \
             --config=/etc/kubernetes/manifests \
             --hostname-override=${DEFAULT_IPV4} \
-            --api-servers=https://{{ .MasterIP }}:443 \
+            --api-servers=https://{{ .MasterHostname }}:443 \
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
