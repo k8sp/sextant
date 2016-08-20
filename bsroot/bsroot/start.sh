@@ -8,7 +8,8 @@
     --cc-template-file=/bsroot/cloud-config.template \
     --ca-crt=/bsroot/ca.crt \
     --ca-key=/bsroot/ca.key \
-    --dir=/bsroot/www & 
+    --dir=/bsroot/www \
+    --addr=:8080 & 
 
 # Without an explicity -k flag, dnsmasq runs in background by default.
 /usr/sbin/dnsmasq -C /bsroot/dnsmasq.conf 

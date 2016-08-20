@@ -1,0 +1,5 @@
+#!/bin/sh
+mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..'`
+wget http://192.168.50.4:8080/cloud-config/${mac_addr}.yml
+sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://192.168.50.4:8080/static
+sudo reboot

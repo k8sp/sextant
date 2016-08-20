@@ -16,6 +16,6 @@ RUN set -ex && apk add --no-cache dnsmasq
 # bsroot/cloud-config-server.
 
 ENTRYPOINT ["/bsroot/start.sh"]
-# CMD ["serve", "/bsroot/registry.yml"]
+
 
 
