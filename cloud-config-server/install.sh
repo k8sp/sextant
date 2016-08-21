@@ -1,9 +1,6 @@
 #!/bin/bash
-# default to install coreos on /dev/sda
-if [ -z {$DISK_DEV} ] ; then
-  DISK_DEV=/dev/sda
-fi
+# FIXME: default to install coreos on /dev/sda
 mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..' | tail -n1`
-wget http://<HTTP_ADDR>/cloud-configs/${mac_addr}.yml
-sudo coreos-install -d {$DISK_DEV} -c ${mac_addr}.yml -b http://<HTTP_ADDR>/static
+wget -O ${mac_addr}.yml http://<HTTP_ADDR>/cloud-config/${mac_addr}
+sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://<HTTP_ADDR>/static -V current
 sudo reboot
