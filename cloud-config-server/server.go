@@ -1,7 +1,7 @@
 // cloud-config-server starts an HTTP server, which can be accessed
 // via URLs in the form of
 //
-//   http://<addr:port>?mac=aa:bb:cc:dd:ee:ff
+//   http://<addr:port>/cloud-config/aa:bb:cc:dd:ee:ff
 //
 // and returns the cloud-config YAML file specificially tailored for
 // the node whose primary NIC's MAC address matches that specified in

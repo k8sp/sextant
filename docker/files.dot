@@ -1,0 +1,59 @@
+digraph {
+	cluster_desc [label="cluster-desc.yml"];
+	dnsmasq_conf [label="dnsmasq.conf"];
+	registry_yml [label="registry.yml"];
+	pxelinux_cfg [label="tftproot/pxelinux.cfg/default"];
+	coreos_img [label="www/$VERSION/coreos_production_image.bin.bz2"];
+	cloud_config [label="cloud-config.yml", style="dotted"];
+	ca_crt [label="ca.{crt,key}"];
+	bootstrapper_crt [label="bootstrapper.{crt,key}"];
+
+	download_pxelinux [label="download-pxelinux.bash", shape="box"];
+	download_coreos [label="download-coreos.bash", shape="box"];
+	build_ccs [label="build-ccs.bash", shape="box"];
+	bootstrapper [shape="box"];
+	gen_tls [label="gen_tls.bash", shape="box"];
+	dnsmasq [shape="box", style="dotted"];
+	pxelinux_0 [label="tftpboot/pxelinux.0\ntftpboot/ldlinux.c32", shape="box"];
+	coreos_vmlinuz [label="tftpboot/coreos_production_pxe.vmlinuz\ntftpboot/coreos_production_pxe_image.cpio.gz", shape="box"];
+	install_coreos_sh [label="www/install-coreos.sh", shape="box"];
+	coreos [label="CoreOS on disk", shape="box", style="dotted"];
+	cloud_config_server [label="cloud-config-server", shape="box"];
+	registry [label="registry", shape="box", style="dotted"];
+	
+	// bootstrapper generates configuration files.
+	cluster_desc -> bootstrapper [label="input"];
+	bootstrapper -> dnsmasq_conf [label="output"];
+	bootstrapper -> registry_yml [label="output"];
+
+	// TLS assets
+	gen_tls -> ca_crt [label="output"];
+	gen_tls -> bootstrapper_crt [label="output"];
+	
+	
+	// dnsmasq
+	download_pxelinux -> pxelinux_0 [label="output"];
+	dnsmasq_conf -> dnsmasq [label="input"];
+	dnsmasq_conf -> pxelinux_0 [label="refer", style="dashed"];
+	pxelinux_cfg -> pxelinux_0 [label="input"];
+	pxelinux_cfg -> coreos_vmlinuz [label="refer", style="dashed"];
+	dnsmasq -> pxelinux_0 [label="start", style="bold"];
+	pxelinux_0 -> coreos_vmlinuz [label="start", style="bold"];
+	download_coreos -> coreos_vmlinuz [label="output"];
+	download_coreos -> coreos_img [label="output"];
+	coreos_vmlinuz -> install_coreos_sh [label="start", style="bold"];
+	coreos_img -> install_coreos_sh [label="input"];
+	install_coreos_sh -> coreos [label="output"];
+	cloud_config -> coreos [label="input"];
+
+	// cloud-config-server
+	build_ccs -> cloud_config_server [label="output"];
+	cluster_desc -> cloud_config_server [label="input"];
+	ca_crt -> cloud_config_server [label="input"];
+	cloud_config_server -> cloud_config [label="output"];
+
+	// Docker registry
+	bootstrapper_crt -> registry [label="input"];
+	registry_yml -> registry [label="input"];
+	
+}

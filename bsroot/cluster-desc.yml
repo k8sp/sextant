@@ -1,0 +1,46 @@
+bootstrapper: 10.10.10.192
+subnet: 10.10.10.0
+netmask: 255.255.255.0
+iplow: 10.10.10.201
+iphigh: 10.10.10.220
+routers: [10.10.10.192]
+broadcast: 10.10.10.255
+nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
+domainname: "ailab.unisound.com"
+
+nodes:
+  - mac: "00:25:90:c0:f7:80"
+    ip: "10.10.10.201"
+    ceph_monitor: y
+    kube_master: y
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:ee"
+    ip: "10.10.10.202"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f6:d6"
+    ip: "10.10.10.203"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:ac"
+    ip: "10.10.10.204"
+    ceph_monitor: n
+    kube_master: n
+    etcd_member: y
+  - mac: "00:25:90:c0:f7:7e"
+    ip: "10.10.10.205"
+    ceph_monitor: n
+    kube_master: n
+    etcd_member: y
+
+ssh_authorized_keys: |1+
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVwfLAgA8DICHp0//xfBTgfU34fVOtKpxgrkceC605HGQ6GIPsBHKw6CYeGziwZBDNtMZxTeyQ7+79sqA2VUR2I5nrhlxw/Wc80yTsjbRmcIbr3mUNCd3+cOqnOAsWEucZCHHcNYwUQ3wIOoyP0cBLKI4b25ucgtawxCmB7PJ1Cme+vIf1cVffeQqedu7hmlpQf/DnQc7O1iBRhEAqKgy1Y+hb0Ryc7StAe0nDHCj+2b08vHlNXaS2sJKrXUE0HhCZZP46APaLmZPmmHeoJKx31M0IERWYaZRvLe0Pl7Pp6DueOSJvvNwR5YbNe5aQ2pO3xiv3wCj6n66dlqAhpmmD vien.lee@localhost"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrYpsQVHBRUA/sZfxgK+9jZBGZfoulXXe0faPCGC0b3L6z/qYzJnNFf1d4gj6hQaGyHGvVlr6Kd/6y+0Eour51R2H+8FO+9Y7BaomuluHzm/jcgruAmbVrXZ8vKDDPDx4Lf1tnU1SqPpKFRgdro+BUcj/0LZ45tzsblpA2JOiMJkpqtx17WPKIzc9q5OZKVcV+zh/O+JuKLW/bDIndGiQRVJBGa87ZkCf+fzO5ME4nl7MsG/YY+9J/UkwDbZQd3wFTRqmHncrSupNhu1R2DttP9eWSHQsJIaEXmqKv4p7p4byztix3A/2hBUILZa3iDwxlCZq7OBrQCc/xOI45VMR7 liangjiameng@liangjiameng-Ubuntu"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr5WIU6wES7WLrWTd3Y+vykAKERYdCzUne3xtlzk9tkcVTQ1IZ5I/cd+x7yw1BM69iRGkGWGRR4Z7k7CzQEbQ8udvK4KEOdZ+JWQfqm8XSlG4CA/cxevu55Trnp7kL4Kb5AtYxnIDhxS6NkrNrte5S4HBpQTA92DXtRW+nplyZ5TAk/qfOMcLoY1tdlTzGdPjWksvb13vvsBv8WkzqIXnBo+2ZJ9ZdieWLJlU0ExPqCH+kdPfv54kf7d8VY8+5jPXZ4IKGOMwi5929iVmkSzrKjvWdMT0aYSAzysohdchLbZcsm4iyQcAwU/J7kkZBbfvOcKr7EGQOif+F1Ag2LtNsQ== liuqs@Megatron"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC866Ci5hod20ghEL+RDkEqKoAHOJtOwS18GiUGs3mrW5dAWrX22UJUTkNAh5SXKh60x/sRhItAAOscZ7zht6zzGfH1U2F2Thph1V3dPy7Fimo0c+rB4VXiQgZRZXKMUJ8rNUBO5avsjVH8gqmT5uyy6hUHqnqvug9PfVjaTunw6TBWSzVEqmsv8MpvH8lBBJ5WJidvXGNaYIB6l90/sm09SQJLheHVQJgFXbSJAOMRVKAoX4XCyAjPSnH4CLqNB8UvY9MGQKxTve2fCeUx8iSuE+Et8QrmF4wNo0Exh9Dsuk7OOr1hoZeECr+0pbahhwYIENjdXpT9lQoOxG35TjEB crawler@Crawler-01"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXena9hVzYpSHINYQyw2Flawjeja3PbcAGJPKmPCsl3sKkPygSXiN1zR8TOBiGrItX4aoLWBydmpn4wjis7RSVQIeeu1+Lk/qKm55zge6t3y1C38DSCPtW23mGvxojRbwAOzHjUqnrmP84g+MglNTaGod3HUMfzKd9YGTNm9QzcSRlmt87YGpsOQLJO0CQSJTwvSzNuH812a9kikdN5SR7OxUqbhxZE6vAk6glcVTrn/fxBY0i/l0LqHelJHGnMza4+jRs+p4Rp/QsLTaK60kfPYTpmJ6SfWrZBVAS0Oen5ZsPPTleu0okzy/20Iu/vrrW6OItEEvkCoLqtjANNUfn core@zodiac-01"
+
+
