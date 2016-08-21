@@ -9,7 +9,7 @@ write_files:
     owner: root
     content: |
       127.0.0.1 localhost
-      {{ .BootstrapperIP }} docker.baifendian.com
+      {{ .BootstrapperIP }} {{ .Dockerdomain }}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem
     owner: core
@@ -62,7 +62,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: docker.baifendian.com/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
               - /hyperkube
               - apiserver
@@ -98,7 +98,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: docker.baifendian.com/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - controller-manager
@@ -121,7 +121,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: docker.baifendian.com/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - scheduler
@@ -135,7 +135,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: docker.baifendian.com/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - proxy
@@ -192,7 +192,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: docker.baifendian.com/hyperkube-amd64:v1.2.4
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
           command:
           - /hyperkube
           - proxy
@@ -264,7 +264,7 @@ coreos:
             - name: 50-network-config.conf
               content: |
                 [Service]
-                Environment="FLANNEL_IMG=docker.baifendian.com/flannel"
+                Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
                 {{- if .KubeMaster }}
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
                 {{ end }}
@@ -380,7 +380,7 @@ coreos:
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
-            --pod_infra_container_image=docker.baifendian.com/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --register-node=true \
             --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
@@ -410,7 +410,7 @@ coreos:
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
-            --pod_infra_container_image=docker.baifendian.com/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --address=0.0.0.0 \
             --allow-privileged=true \
             --cluster-dns=10.100.0.10 \

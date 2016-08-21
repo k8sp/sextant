@@ -25,6 +25,7 @@ func (c Cluster) InitialEtcdCluster() string {
 	return strings.Join(ret, ",")
 }
 
+// GetEtcdEndpoints fetch etcd cluster endpoints
 func (c Cluster) GetEtcdEndpoints() string {
 	var ret []string
 	for _, n := range c.Nodes {

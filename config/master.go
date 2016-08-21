@@ -5,10 +5,7 @@ import (
 	"strings"
 )
 
-// InitialEtcdCluster derives the value of command line parameter
-// --initial_cluster of etcd from Cluter.Nodes and Node.EtcdMember.
-// NOTE: Every node in the cluster will have a etcd daemon running --
-// either as a member or as a proxy.
+// GetMasterIP  fetch master node ip
 func (c Cluster) GetMasterIP() string {
 	var ret []string
 	for _, n := range c.Nodes {
@@ -23,7 +20,7 @@ func (c Cluster) GetMasterIP() string {
 	return strings.Join(ret, ",")
 }
 
-// GetMasterHostname
+// GetMasterHostname fetch master node hostname
 func (c Cluster) GetMasterHostname() string {
 	var ret []string
 	for _, n := range c.Nodes {
