@@ -22,10 +22,12 @@ type ExecutionConfig struct {
 	SSHAuthorizedKeys string
 	EtcdEndpoints     string
 	MasterIP          string
+	MasterHostname    string
 	BootstrapperIP    string
 	CaCrt             string
 	Crt               string
 	Key               string
+	Dockerdomain      string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -41,7 +43,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 	}
 
 	ec := ExecutionConfig{
-		Hostname:          mac,
+		Hostname:          node.Hostname(),
 		IP:                node.IP,
 		CephMonitor:       node.CephMonitor,
 		KubeMaster:        node.KubeMaster,
@@ -49,11 +51,13 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
 		MasterIP:          config.GetMasterIP(),
+		MasterHostname:    config.GetMasterHostname(),
 		EtcdEndpoints:     config.GetEtcdEndpoints(),
 		BootstrapperIP:    config.Bootstrapper,
+		Dockerdomain:      config.Dockerdomain,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
-		// so insert 6*whitespace at the begging of everty line
+		// so insert 6*whitespace at the begging of every line
 		CaCrt: strings.Join(strings.Split(string(ca), "\n"), "\n      "),
 		Crt:   strings.Join(strings.Split(string(c), "\n"), "\n      "),
 		Key:   strings.Join(strings.Split(string(k), "\n"), "\n      "),
@@ -63,7 +67,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 
 func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 	for _, n := range c.Nodes {
-		if n.Hostname() == mac {
+		if n.MAC == mac {
 			return n
 		}
 	}
