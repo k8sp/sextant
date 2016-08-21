@@ -36,22 +36,23 @@ default coreos
 
 label coreos
   kernel coreos_production_pxe.vmlinuz
-  append initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=http://{$DEFAULT_IPV4}:8088/cloud-configs/install.sh coreos.autologin
+  append initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=http://$DEFAULT_IPV4:8088/cloud-configs/install.sh coreos.autologin
 EOF
 # download install.sh
-mkdir -p /bsroot/html/cloud-configs
-cd /bsroot/html/cloud-configs
+mkdir -p /bsroot/html/static/cloud-configs
+cd /bsroot/html/static/cloud-configs
 wget https://raw.githubusercontent.com/k8sp/auto-install/bootstrapper_ng/cloud-config-server/install.sh
 # download coreos image for cc server to serve
-mkdir -p /bsroot/html/current
-cd /bsroot/html/current
+mkdir -p /bsroot/html/static/current
+cd /bsroot/html/static/current
 wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
 wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
 gpg --verify coreos_production_image.bin.bz2.sig
 if [ $? -ne 0 ] ; then
+  echo "download nginx coreos image error"
   exit 1
 fi
-# download kubernetes images, bootstrapper registry will load it later
+cd /bsroot
 docker pull typhoon1986/hyperkube-amd64:v1.2.0
 docker pull typhoon1986/pause:2.0
 docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar

@@ -60,7 +60,7 @@ dhcp-option=28,192.168.8.255
 #dhcp-option=42,0.0.0.0
 # PXE和tftp的相关配置
 pxe-prompt="Press F8 for menu.", 60
-pxe-service=x86PC, "Install CoreOS from network server 192.168.50.4", pxelinux
+pxe-service=x86PC, "Install CoreOS from network server", pxelinux
 enable-tftp
 tftp-root=/bsroot/tftpboot
 ```
