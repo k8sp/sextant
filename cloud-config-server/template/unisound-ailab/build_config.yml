@@ -7,6 +7,7 @@ routers: [10.10.10.192]
 broadcast: 10.10.10.255
 nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
+dockerdomain: "bootstrapper"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
@@ -42,5 +43,3 @@ ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr5WIU6wES7WLrWTd3Y+vykAKERYdCzUne3xtlzk9tkcVTQ1IZ5I/cd+x7yw1BM69iRGkGWGRR4Z7k7CzQEbQ8udvK4KEOdZ+JWQfqm8XSlG4CA/cxevu55Trnp7kL4Kb5AtYxnIDhxS6NkrNrte5S4HBpQTA92DXtRW+nplyZ5TAk/qfOMcLoY1tdlTzGdPjWksvb13vvsBv8WkzqIXnBo+2ZJ9ZdieWLJlU0ExPqCH+kdPfv54kf7d8VY8+5jPXZ4IKGOMwi5929iVmkSzrKjvWdMT0aYSAzysohdchLbZcsm4iyQcAwU/J7kkZBbfvOcKr7EGQOif+F1Ag2LtNsQ== liuqs@Megatron"
     - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC866Ci5hod20ghEL+RDkEqKoAHOJtOwS18GiUGs3mrW5dAWrX22UJUTkNAh5SXKh60x/sRhItAAOscZ7zht6zzGfH1U2F2Thph1V3dPy7Fimo0c+rB4VXiQgZRZXKMUJ8rNUBO5avsjVH8gqmT5uyy6hUHqnqvug9PfVjaTunw6TBWSzVEqmsv8MpvH8lBBJ5WJidvXGNaYIB6l90/sm09SQJLheHVQJgFXbSJAOMRVKAoX4XCyAjPSnH4CLqNB8UvY9MGQKxTve2fCeUx8iSuE+Et8QrmF4wNo0Exh9Dsuk7OOr1hoZeECr+0pbahhwYIENjdXpT9lQoOxG35TjEB crawler@Crawler-01"
     - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXena9hVzYpSHINYQyw2Flawjeja3PbcAGJPKmPCsl3sKkPygSXiN1zR8TOBiGrItX4aoLWBydmpn4wjis7RSVQIeeu1+Lk/qKm55zge6t3y1C38DSCPtW23mGvxojRbwAOzHjUqnrmP84g+MglNTaGod3HUMfzKd9YGTNm9QzcSRlmt87YGpsOQLJO0CQSJTwvSzNuH812a9kikdN5SR7OxUqbhxZE6vAk6glcVTrn/fxBY0i/l0LqHelJHGnMza4+jRs+p4Rp/QsLTaK60kfPYTpmJ6SfWrZBVAS0Oen5ZsPPTleu0okzy/20Iu/vrrW6OItEEvkCoLqtjANNUfn core@zodiac-01"
-
-

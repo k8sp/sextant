@@ -15,23 +15,26 @@ func (c Cluster) InitialEtcdCluster() string {
 		if n.EtcdMember {
 			name := n.Hostname()
 			addr := n.Hostname()
+			/**
 			if len(n.IP) > 0 {
 				addr = n.IP // No need for DNS then.
-			}
+			}*/
 			ret = append(ret, fmt.Sprintf("%s=http://%s:2380", name, addr))
 		}
 	}
 	return strings.Join(ret, ",")
 }
 
+// GetEtcdEndpoints fetch etcd cluster endpoints
 func (c Cluster) GetEtcdEndpoints() string {
 	var ret []string
 	for _, n := range c.Nodes {
 		if n.EtcdMember {
 			addr := n.Hostname()
+			/**
 			if len(n.IP) > 0 {
 				addr = n.IP // No need for DNS then.
-			}
+			}**/
 			ret = append(ret, fmt.Sprintf("http://%s:4001", addr))
 		}
 	}
@@ -44,7 +47,7 @@ func (c Cluster) GetEtcdMachines() string {
 	for _, n := range c.Nodes {
 		if n.EtcdMember {
 			if len(n.IP) > 0 {
-				ret = append(ret, fmt.Sprintf("http://%s:2379", n.IP))
+				ret = append(ret, fmt.Sprintf("http://%s:2379", n.Hostname()))
 			}
 		}
 	}

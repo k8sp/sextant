@@ -23,7 +23,7 @@ Requires=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/skydns -machines=http://10.0.2.21:2379,http://10.0.2.22:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
+ExecStart=/usr/bin/skydns -machines=http://00-25-90-c0-f7-80:2379,http://00-25-90-c0-f6-ee:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
 
 [Install]
 WantedBy=multi-user.target
@@ -39,7 +39,7 @@ respawn limit 20 3
 
 script
 echo $$ > /var/run/skydns.pid
-exec /usr/bin/skydns -machines=http://10.0.2.21:2379,http://10.0.2.22:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
+exec /usr/bin/skydns -machines=http://00-25-90-c0-f7-80:2379,http://00-25-90-c0-f6-ee:2379 -addr=0.0.0.0:53 -nameservers=8.8.8.8:53,8.8.4.4:53 -domain=company.com.
 end script
 
 pre-start script

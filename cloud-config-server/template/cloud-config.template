@@ -5,6 +5,11 @@ write_files:
     permissions: 0600
     content: |
       {{ .CaCrt }}
+  - path: /etc/hosts
+    owner: root
+    content: |
+      127.0.0.1 localhost
+      {{ .BootstrapperIP }} {{ .Dockerdomain }}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem
     owner: core
@@ -20,7 +25,7 @@ write_files:
     owner: root
     permissions: 0600
     content: |
-      FLANNELD_IFACE={{ .IP }}
+      FLANNELD_IFACE=${DEFAULT_IPV4}
       FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
 
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
@@ -57,7 +62,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: typhoon1986/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
               - /hyperkube
               - apiserver
@@ -65,7 +70,7 @@ write_files:
               - --bind-address=0.0.0.0
               - --insecure-bind-address=0.0.0.0
               - --secure-port=443
-              - --etcd-servers=http://{{ .MasterIP }}:4001
+              - --etcd-servers=http://{{ .MasterHostname }}:4001
               - --service-cluster-ip-range=10.100.0.0/24
               - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
               - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
@@ -93,7 +98,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: typhoon1986/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - controller-manager
@@ -116,7 +121,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: typhoon1986/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - scheduler
@@ -130,7 +135,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: typhoon1986/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
             command:
             - /hyperkube
             - proxy
@@ -187,11 +192,11 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: typhoon1986/hyperkube-amd64:v1.2.0
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
           command:
           - /hyperkube
           - proxy
-          - --master=https://{{ .MasterIP }}:443
+          - --master=https://{{ .MasterHostname }}:443
           - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
           - --proxy-mode=iptables
           securityContext:
@@ -224,9 +229,9 @@ coreos:
         initial-cluster: "{{ .InitialCluster }}"
         {{- if .EtcdMember }}
         initial-cluster-token: "etcd-cluster-1"
-        initial-advertise-peer-urls: "http://{{ .IP }}:2380"
-        listen-peer-urls: "http://{{ .IP }}:2380,http://{{ .IP }}:7001"
-        advertise-client-urls: "http://{{ .IP }}:2379"
+        initial-advertise-peer-urls: "http://{{ .Hostname }}:2380"
+        listen-peer-urls: "http://{{ .Hostname }}:2380,http://{{ .Hostname }}:7001"
+        advertise-client-urls: "http://{{ .Hostname }}:2379"
         initial-cluster-state: new
         {{- else }}
         proxy: on
@@ -239,27 +244,31 @@ coreos:
         window_start: "03:00"
         window_length: "3h"
     units:
+        - name: 00-eth0.network
+          runtime: true
+          content: |
+              [Match]
+              Name=eth0
+              #ExecStartPre=-/bin/echo
+              [Network]
+              DHCP=ipv4
         - name: "etcd2.service"
           command: "start"
         - name: "fleet.service"
           command: "start"
         - name: "early-docker.service"
           command: "start"
-
-         {{- if .KubeMaster }}
         - name: "flanneld.service"
-          {{- if .KubeMaster }}
+          command: "start"
           drop-ins:
             - name: 50-network-config.conf
               content: |
                 [Service]
+                Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
+                {{- if .KubeMaster }}
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-          {{- end }}
-          command: "start"
-          {{- else }}
-        - name: flanneld.service
-          command: start
-          {{- end }}
+                {{ end }}
+        {{- if .KubeMaster }}
         - name: setup-network-environment.service
           runtime: true
           command: start
@@ -271,24 +280,12 @@ coreos:
             After=network-online.target
             [Service]
             ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-            ExecStartPre=-/usr/bin/wget -N -P /opt/bin https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
+            ExecStartPre=-/usr/bin/wget -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}:8081/static/setup-network-environment-1.0.1
             ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
-        - name: generate-tls-keys.service
-          runtime: true
-          command: start
-          content: |
-            [Unit]
-            Description=Generates TLS keys for this node
-            After=setup-network-environment.service
-            Requires=setup-network-environment.service
-            [Service]
-            EnvironmentFile=/etc/network-environment
-            ExecStart=/etc/kubernetes/ssl/generate-tls-keys.sh ${DEFAULT_IPV4}
-            RemainAfterExit=yes
-            Type=oneshot
+        {{- end }}
         - name: "settimezone.service"
           command: start
           content: |
@@ -362,13 +359,14 @@ coreos:
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
         {{- if .KubeMaster }}
-        - name: "flanneld.service"
-          drop-ins:
-            - name: 50-network-config.conf
-              content: |
-                [Service]
-                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-          command: "start"
+        - name: install-aci.service
+          command: start
+          content: |
+              [Service]
+              ExecStartPre=/bin/wget -O /etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci http://{{ .BootstrapperIP }}:8081/static/hyperkube:v1.2.4_coreos.1.aci
+              ExecStart=/bin/rkt --insecure-options=all fetch file:////etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci
+              RemainAfterExit=no
+              Type=oneshot
         - name: kubelet.service
           runtime: true
           command: start
@@ -376,21 +374,21 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            Requires=docker.service
-            After=docker.service
+            Requires=install-aci.service, docker.service
+            After=install-aci.service, docker.service
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
-            --pod_infra_container_image=typhoon1986/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --register-node=true \
-            --api-servers=http://{{ .MasterIP }}:8080 \
+            --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin=${NETWORK_PLUGIN} \
             --register-schedulable=false \
             --allow-privileged=true \
             --config=/etc/kubernetes/manifests \
-            --hostname-override={{ .MasterIP }} \
+            --hostname-override={{ .MasterHostname }} \
             --cluster-dns=10.100.0.10 \
             --cluster-domain=cluster.local
             --logtostderr=true
@@ -406,20 +404,20 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            After=generate-tls-keys.service docker.service
-            Requires=generate-tls-keys.service docker.service
+            After=docker.service
+            Requires=docker.service
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             ExecStart=/usr/lib/coreos/kubelet-wrapper \
-            --pod_infra_container_image=typhoon1986/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --address=0.0.0.0 \
             --allow-privileged=true \
             --cluster-dns=10.100.0.10 \
             --cluster-domain=cluster.local \
             --config=/etc/kubernetes/manifests \
             --hostname-override=${DEFAULT_IPV4} \
-            --api-servers=https://{{ .MasterIP }}:443 \
+            --api-servers=https://{{ .MasterHostname }}:443 \
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \

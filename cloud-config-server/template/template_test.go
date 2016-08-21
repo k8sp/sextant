@@ -38,7 +38,7 @@ func TestExecute(t *testing.T) {
 	tmpl, e := template.ParseFiles("cloud-config.template")
 	candy.Must(e)
 	var ccTmpl bytes.Buffer
-	Execute(tmpl, config, "00-25-90-c0-f6-ee", caKey, caCrt, &ccTmpl)
+	Execute(tmpl, config, "00:25:90:c0:f7:80", caKey, caCrt, &ccTmpl)
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
 

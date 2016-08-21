@@ -35,6 +35,7 @@ type Cluster struct {
 	NginxRootDir string `yaml:"nginx_root_dir"`
 
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
+	Dockerdomain      string
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
