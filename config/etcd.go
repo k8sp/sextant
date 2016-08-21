@@ -46,7 +46,7 @@ func (c Cluster) GetEtcdMachines() string {
 	var ret []string
 	for _, n := range c.Nodes {
 		if n.EtcdMember {
-			if len(n.IP) > 0 {
+			if len(n.Hostname()) > 0 {
 				ret = append(ret, fmt.Sprintf("http://%s:2379", n.Hostname()))
 			}
 		}

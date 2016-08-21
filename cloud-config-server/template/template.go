@@ -44,13 +44,11 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 
 	ec := ExecutionConfig{
 		Hostname:          node.Hostname(),
-		IP:                node.IP,
 		CephMonitor:       node.CephMonitor,
 		KubeMaster:        node.KubeMaster,
 		EtcdMember:        node.EtcdMember,
 		InitialCluster:    config.InitialEtcdCluster(),
 		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
-		MasterIP:          config.GetMasterIP(),
 		MasterHostname:    config.GetMasterHostname(),
 		EtcdEndpoints:     config.GetEtcdEndpoints(),
 		BootstrapperIP:    config.Bootstrapper,
@@ -71,5 +69,5 @@ func getNodeByMAC(c *tpcfg.Cluster, mac string) tpcfg.Node {
 			return n
 		}
 	}
-	return tpcfg.Node{MAC: mac, IP: "", CephMonitor: false, KubeMaster: false, EtcdMember: false}
+	return tpcfg.Node{MAC: mac, CephMonitor: false, KubeMaster: false, EtcdMember: false}
 }
