@@ -170,6 +170,7 @@ Then we should be able to push Docker images from any node where we
 installed `ca.crt`, which was used to sign `bootstrapper.crt`:
 
 ```
+docker pull hello-world
 docker tag hello-world bootstrapper:5000/hello
 docker push bootstrapper:5000/hello
 ```
@@ -289,8 +290,8 @@ Select `l` to boot from network.  This should
    it and grants everyone to access it:
 
    ```
-   bootstrapper$ mkdir /bsroot/registry
-   bootstrapper$ chmod a+rwx /bsroot/registry
+   bootstrapper$ mkdir bsroot/registry
+   bootstrapper$ chmod a+rwx bsroot/registry
    ```
 
 1. If `docker run -d ... registry` fails with no output, please replace `-d` by `--rm -it`:
