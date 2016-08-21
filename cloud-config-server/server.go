@@ -43,7 +43,7 @@ func main() {
 	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
 
-	dir := *flag.String("dir", "./static/", "The directory to serve files from. Default is ./static/")
+	dir := flag.String("dir", "./static/", "The directory to serve files from. Default is ./static/")
 
 	flag.Parse()
 
@@ -55,7 +55,7 @@ func main() {
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
-	run(c, t, l, *caKey, *caCrt, dir)
+	run(c, t, l, *caKey, *caCrt, *dir)
 }
 
 // By making the first two parameters closures, we get the flexibility
