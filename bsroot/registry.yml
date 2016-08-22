@@ -6,7 +6,7 @@ storage:
   cache:
     blobdescriptor: inmemory
   filesystem:
-    rootdirectory: /bsroot/registry
+    rootdirectory: /bsroot/registry_data
 http:
   addr: :5000
   headers:

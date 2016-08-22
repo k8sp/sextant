@@ -6,9 +6,7 @@ VERSION=$(curl -s https://$CHANNEL.release.core-os.net/amd64-usr/current/version
 
 echo "Detected most recent version:" $VERSION
 
-if [[ ! -f CoreOS_Image_Signing_Key.asc ]]; then 
-    curl -s -O https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
-fi
+wget -c https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
 gpg --import --keyid-format LONG CoreOS_Image_Signing_Key.asc
 
 (

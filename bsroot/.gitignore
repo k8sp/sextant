@@ -7,10 +7,13 @@
 *.srl
 
 cloud-config-server
+registry
+registry_data
 
 *.vmlinuz
 *.gz
 *.zip
+*.bz2
 ldlinux.c32
 pxelinux.0
 
