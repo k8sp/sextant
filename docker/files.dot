@@ -3,16 +3,17 @@ digraph {
 	dnsmasq_conf [label="dnsmasq.conf"];
 	registry_yml [label="registry.yml"];
 	pxelinux_cfg [label="tftproot/pxelinux.cfg/default"];
-	coreos_img [label="www/$VERSION/coreos_production_image.bin.bz2"];
+	coreos_img [label="www/\n$VERSION/\ncoreos_production_image.bin.bz2"];
 	cloud_config [label="cloud-config.yml", style="dotted"];
 	ca_crt [label="ca.{crt,key}"];
 	bootstrapper_crt [label="bootstrapper.{crt,key}"];
 
-	download_pxelinux [label="download-pxelinux.bash", shape="box"];
-	download_coreos [label="download-coreos.bash", shape="box"];
-	build_ccs [label="build-ccs.bash", shape="box"];
-	bootstrapper [shape="box"];
-	gen_tls [label="gen_tls.bash", shape="box"];
+	download_pxelinux [label="download-pxelinux.bash", shape="box", style="filled", fillcolor="gray"];
+	download_coreos [label="download-coreos.bash", shape="box", style="filled", fillcolor="gray"];
+	build_ccs [label="build-ccs.bash", shape="box", style="filled", fillcolor="gray"];
+	bootstrapper [shape="box", style="filled", fillcolor="gray"];
+	gen_tls [label="gen-tls.bash", shape="box", style="filled", fillcolor="gray"];
+	
 	dnsmasq [shape="box", style="dotted"];
 	pxelinux_0 [label="tftpboot/pxelinux.0\ntftpboot/ldlinux.c32", shape="box"];
 	coreos_vmlinuz [label="tftpboot/coreos_production_pxe.vmlinuz\ntftpboot/coreos_production_pxe_image.cpio.gz", shape="box"];
@@ -25,7 +26,8 @@ digraph {
 	cluster_desc -> bootstrapper [label="input"];
 	bootstrapper -> dnsmasq_conf [label="output"];
 	bootstrapper -> registry_yml [label="output"];
-
+	bootstrapper -> pxelinux_cfg [label="output"];
+	
 	// TLS assets
 	gen_tls -> ca_crt [label="output"];
 	gen_tls -> bootstrapper_crt [label="output"];
