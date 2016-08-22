@@ -104,6 +104,8 @@ EOF
 
 # -------------download stuff used by cloud-config-server-------------
 prepare_cc_server_contents() {
+  cd /bsroot/html/static
+  wget -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
   cd $CURR_DIR

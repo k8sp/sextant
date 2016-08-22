@@ -3,7 +3,7 @@
 DEFAULT_IPV4=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
 sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-configs/install.sh
 # start dnsmasq
-dnsmasq --log-facility=- --conf-file=/bsroot/config/dnsmasq.conf
+dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # start cloud-config-server
 cloud-config-server -addr ":8081" \
   -dir /bsroot/html/static \
