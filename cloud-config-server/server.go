@@ -9,12 +9,14 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"text/template"
@@ -50,6 +52,10 @@ func main() {
 	if len(*caCrt) == 0 || len(*caKey) == 0 {
 		*caKey, *caCrt = certgen.GenerateRootCA("./")
 	}
+	// valid caKey and caCrt file is ready
+	candy.Must(fileExist(*caCrt))
+	candy.Must(fileExist(*caKey))
+
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 
@@ -96,4 +102,12 @@ func makeCacheGetter(url, fn string) func() []byte {
 	}
 	c := cache.New(url, fn)
 	return func() []byte { return c.Get() }
+}
+
+func fileExist(fn string) error {
+	_, err := os.Stat(fn)
+	if err != nil || os.IsNotExist(err) {
+		return errors.New("file " + fn + " is not ready.")
+	}
+	return nil
 }
