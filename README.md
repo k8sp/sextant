@@ -29,7 +29,6 @@ docker run -d --net=host \
   --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /bsroot:/bsroot \
-  -v /var/lib/tftpboot:/var/lib/tftpboot \
   bootstrapper
 ```
 由于dnsmasq需要运行在特权模式，需要参数：--privileged

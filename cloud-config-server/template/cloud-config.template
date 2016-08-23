@@ -358,6 +358,8 @@ coreos:
               [Unit]
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
+              [Service]
+              Environment=DOCKER_OPTS="--insecure-registry {{ .Dockerdomain }}:5000"
         {{- if .KubeMaster }}
         - name: install-aci.service
           command: start
