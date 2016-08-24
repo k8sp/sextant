@@ -101,5 +101,4 @@ nodes:
     ceph_monitor: y
     etcd_member: y
   - mac: "00:25:90:c0:f7:ac"
-  - mac: "00:25:90:c0:f7:7e"
 `
