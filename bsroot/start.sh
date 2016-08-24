@@ -12,7 +12,7 @@
     --addr=:8080 & 
 
 # Without an explicity -k flag, dnsmasq runs in background by default.
-/usr/sbin/dnsmasq -C /bsroot/dnsmasq.conf 
+/bsroot/dnsmasq -C /bsroot/dnsmasq.conf 
 
 # TODO: to make registry run in background, need a trailing #.
-/go/bin/registry serve /bsroot/registry.yml
+/bsroot/registry serve /bsroot/registry.yml
