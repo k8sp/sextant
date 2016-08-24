@@ -62,7 +62,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
               - /hyperkube
               - apiserver
@@ -98,7 +98,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - controller-manager
@@ -121,7 +121,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - scheduler
@@ -135,7 +135,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - proxy
@@ -192,7 +192,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
           command:
           - /hyperkube
           - proxy
@@ -258,6 +258,12 @@ coreos:
           command: "start"
         - name: "early-docker.service"
           command: "start"
+          runtime: true
+          drop-ins:
+          - name: 40-docker-flannel.conf
+            content: |
+              [Service]
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         - name: "flanneld.service"
           command: "start"
           drop-ins:
@@ -268,7 +274,6 @@ coreos:
                 {{- if .KubeMaster }}
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
                 {{ end }}
-        {{- if .KubeMaster }}
         - name: setup-network-environment.service
           runtime: true
           command: start
@@ -285,7 +290,6 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
-        {{- end }}
         - name: "settimezone.service"
           command: start
           content: |
@@ -359,8 +363,7 @@ coreos:
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
               [Service]
-              Environment=DOCKER_OPTS="--insecure-registry {{ .Dockerdomain }}:5000"
-        {{- if .KubeMaster }}
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         - name: install-aci.service
           command: start
           content: |
@@ -369,6 +372,7 @@ coreos:
               ExecStart=/bin/rkt --insecure-options=all fetch file:////etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci
               RemainAfterExit=no
               Type=oneshot
+        {{- if .KubeMaster }}
         - name: kubelet.service
           runtime: true
           command: start
@@ -376,8 +380,8 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            Requires=install-aci.service, docker.service
-            After=install-aci.service, docker.service
+            Requires=install-aci.service docker.service
+            After=install-aci.service docker.service
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
@@ -406,8 +410,8 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            After=docker.service
-            Requires=docker.service
+            After=install-aci.service docker.service
+            Requires=install-aci.service docker.service
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1

@@ -1,10 +1,13 @@
 #!/bin/bash
 # NOTICE: put all prepared files in /bsroot
 # FIXME: DEFAULT_IPV4 may not accessible by clients?
-DEFAULT_IPV4=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
+#DEFAULT_IPV4=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
+DEFAULT_IPV4=`grep "bootstrapper:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g'`
+echo "using bootstrapper IP: $DEFAULT_IPV4..."
+
 CURR_DIR=$(pwd)
 mkdir -p /bsroot
-mkdir -p /bsroot/html
+mkdir -p /bsroot/html/static
 mkdir -p /bsroot/tftpboot
 mkdir -p /bsroot/config
 mkdir -p /bsroot/tls
@@ -139,13 +142,15 @@ prepare_cc_server_contents() {
 download_k8s_images () {
   cd /bsroot
   docker pull typhoon1986/hyperkube-amd64:v1.2.0
-  docker pull typhoon1986/pause:2.0
   docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
+  docker pull typhoon1986/pause:2.0
   docker save typhoon1986/pause:2.0 > pause_2.0.tar
+  docker pull typhoon1986/flannel:0.5.5
+  docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
 }
 
 download_k8s_aci() {
-  wget -O /bsroot/html/static/hyperkube:v1.2.4_coreos.cni.1 https://quay.io/c1/aci/quay.io/coreos/hyperkube/v1.2.4_coreos.cni.1/aci/linux/amd64/
+  wget -O /bsroot/html/static/hyperkube:v1.2.4_coreos.1.aci https://quay.io/c1/aci/quay.io/coreos/hyperkube/v1.2.4_coreos.1/aci/linux/amd64/
 }
 # -------------do the steps-------------
 download_pxe_images
