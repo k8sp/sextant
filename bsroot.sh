@@ -109,6 +109,8 @@ EOF
 prepare_cc_server_contents() {
   cd /bsroot/html/static
   wget -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
+  wget https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
+  chmod +x kubelet
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
   cd $CURR_DIR
@@ -149,14 +151,10 @@ download_k8s_images () {
   docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
 }
 
-download_k8s_aci() {
-  wget -O /bsroot/html/static/hyperkube:v1.2.4_coreos.1.aci https://quay.io/c1/aci/quay.io/coreos/hyperkube/v1.2.4_coreos.1/aci/linux/amd64/
-}
 # -------------do the steps-------------
 download_pxe_images
 gen_pxe_config
 gen_dnsmasq_config
 gen_registry_config
-download_k8s_aci
 prepare_cc_server_contents
 download_k8s_images
