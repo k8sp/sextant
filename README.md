@@ -1,9 +1,13 @@
 # auto-install
 
 ## 准备bootstrapper运行环境
-执行以下命令获取auto-install代码并下载bootstrapper用到的文件到/bsroot目录下：
+***在能访问互联网的一台机器上完成下面的准备环境，配置，创建Docker镜像的步骤***
+获取auto-install代码后，根据要初始化的整体集群规划，
+编辑cloud-config-server/template/unisound-ailab/build_config.yml文件完成配置
+然后下载bootstrapper用到的文件到/bsroot目录下
 ```
 git clone https://github.com/k8sp/auto-install.git
+vim cloud-config-server/template/unisound-ailab/build_config.yml
 cd auto-install
 ./bsroot.sh
 ```
@@ -14,7 +18,12 @@ cd auto-install
 ```
 /bsroot/config/dnsmasq.conf
 /bsroot/config/registry.yml
-/bsroot/config/cluster-desc.yml
+```
+创建跟证书：
+```
+cd /bsroot/tls
+openssl genrsa -out ca-key.pem 2048
+openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
 ```
 
 ## 构建Docker镜像
@@ -22,6 +31,14 @@ cd auto-install
 ```
 docker build -t bootstrapper .
 ```
+
+## 上传到集群内部的bootstrapper机器
+如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
+1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz /bsroot```
+1. 导出编译好的docker镜像：```docker save bootstrapper > bootstrapper.tar```
+1. 将bsroot.tar.gz和bootstrapper.tar上传到你的bootstrapper机器上（使用scp或ftp等工具）
+1. 在bootstrapper机器上解压bsroot.tar.gz到/目录，然后加载docker镜像：```docker load < bootstrapper.tar```
+
 ## 使用docker启动bootstrapper
 执行下面的命令启动bootstrapper的相关组件，包括了dnsmasq, cloud-config-server, docker registry
 ```

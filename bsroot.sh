@@ -15,7 +15,7 @@ mkdir -p /bsroot/tls
 download_pxe_images() {
   cd /bsroot/tftpboot
   # download syslinux and unzip
-  wget https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
+  wget -c https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
   tar xzf syslinux-6.03.tar.gz
   cp syslinux-6.03/bios/core/pxelinux.0 /bsroot/tftpboot
   cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /bsroot/tftpboot
@@ -24,13 +24,13 @@ download_pxe_images() {
   wget https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
   gpg --import --keyid-format LONG /bsroot/tftpboot/CoreOS_Image_Signing_Key.asc
   # download coreos pxe images
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
+  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
   wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig
   gpg --verify coreos_production_pxe.vmlinuz.sig
   if [ $? -ne 0 ] ; then
     exit 1
   fi
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
+  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
   wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig
   gpg --verify coreos_production_pxe_image.cpio.gz.sig
   if [ $? -ne 0 ] ; then
@@ -108,8 +108,8 @@ EOF
 # -------------download stuff used by cloud-config-server-------------
 prepare_cc_server_contents() {
   cd /bsroot/html/static
-  wget -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
-  wget https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
+  wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
+  wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
   chmod +x kubelet
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
@@ -130,7 +130,7 @@ prepare_cc_server_contents() {
     mkdir -p /bsroot/html/static/$VERSION
   fi
   cd /bsroot/html/static/$VERSION
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
+  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
   wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
   gpg --verify coreos_production_image.bin.bz2.sig
 
