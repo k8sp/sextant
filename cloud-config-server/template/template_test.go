@@ -2,7 +2,6 @@ package template
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -42,7 +41,7 @@ func TestExecute(t *testing.T) {
 	Execute(tmpl, config, "00:25:90:c0:f7:80", caKey, caCrt, &ccTmpl)
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
-	fmt.Printf("%s", ccTmpl.String())
+
 	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster-token"]
 	assert.Equal(t, initialEtcdCluster, "etcd-cluster-1")
 }
