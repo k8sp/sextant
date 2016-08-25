@@ -12,7 +12,7 @@ func TestGetMasterIP(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
 	assert.Equal(t,
-		c.GetMasterIP(),
-		"10.0.2.21",
-		)
+		c.GetMasterHostname(),
+		"00-25-90-c0-f7-80",
+	)
 }
