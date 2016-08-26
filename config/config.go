@@ -47,10 +47,9 @@ type Cluster struct {
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
 	MAC         string
-	IP          string // if empty, no fixed IP.
-	CephMonitor bool   `yaml:"ceph_monitor"`
-	KubeMaster  bool   `yaml:"kube_master"`
-	EtcdMember  bool   `yaml:"etcd_member"`
+	CephMonitor bool `yaml:"ceph_monitor"`
+	KubeMaster  bool `yaml:"kube_master"`
+	EtcdMember  bool `yaml:"etcd_member"`
 }
 
 // Join is defined as a method of Cluster, so can be called in
@@ -92,18 +91,14 @@ nginx_root_dir: /usr/share/nginx/html
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
-    ip: 10.0.2.21
     ceph_monitor: y
     kube_master: y
     etcd_member: y
   - mac: "00:25:90:c0:f6:ee"
-    ip: 10.0.2.22
     ceph_monitor: y
     etcd_member: y
   - mac: "00:25:90:c0:f6:d6"
     ceph_monitor: y
     etcd_member: y
   - mac: "00:25:90:c0:f7:ac"
-    ip: 10.0.2.23
-  - mac: "00:25:90:c0:f7:7e"
 `

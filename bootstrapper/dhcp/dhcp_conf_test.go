@@ -28,15 +28,15 @@ subnet 10.0.2.0 netmask 255.255.255.0 {
 
     host 00-25-90-c0-f7-80 {
         hardware ethernet 00:25:90:c0:f7:80;
-        fixed-address 10.0.2.21;
     }
     host 00-25-90-c0-f6-ee {
         hardware ethernet 00:25:90:c0:f6:ee;
-        fixed-address 10.0.2.22;
+    }
+    host 00-25-90-c0-f6-d6 {
+        hardware ethernet 00:25:90:c0:f6:d6;
     }
     host 00-25-90-c0-f7-ac {
         hardware ethernet 00:25:90:c0:f7:ac;
-        fixed-address 10.0.2.23;
     }
 }
 `

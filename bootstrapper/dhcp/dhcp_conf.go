@@ -34,11 +34,10 @@ subnet {{.Subnet}} netmask {{.Netmask}} {
     option routers {{.Join .Routers}};
     option domain-name "{{.DomainName}}";
     option domain-name-servers {{.Join .Nameservers}};
-{{range .Nodes}}{{if .IP}}
+{{range .Nodes}}
     host {{.Hostname}} {
         hardware ethernet {{.Mac}};
-        fixed-address {{.IP}};
-    }{{end}}{{end}}
+    }{{end}}
 }
 `
 )
