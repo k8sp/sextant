@@ -1,6 +1,13 @@
 # auto-install
+auto-install 提供了可以通过PXE快速安装初始化一个kubernetes集群的bootstrapper服务。
 
-## 准备bootstrapper运行环境
+## 环境准备
+bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，满足以下的几个要求：
+1. 待初始化的kubernetes机器需要和bootstrapper server保持网络连通
+1. bootstrapper server是一台安装有docker daemon(1.11以上版本)的Linux服务器
+1. 拥有bootstrapper server的root权限
+
+## 初始化配置和准备bootstrapper需要的镜像文件
 ***在能访问互联网的一台机器上完成下面的准备环境，配置，创建Docker镜像的步骤***
 获取auto-install代码后，根据要初始化的整体集群规划，
 编辑cloud-config-server/template/unisound-ailab/build_config.yml文件完成配置
@@ -11,7 +18,7 @@ vim cloud-config-server/template/unisound-ailab/build_config.yml
 cd auto-install
 ./bsroot.sh
 ```
-* 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper机器
+* 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper server
 
 ## 配置
 根据实际环境配置下面的文件：

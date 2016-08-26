@@ -249,9 +249,10 @@ coreos:
           content: |
               [Match]
               Name=eth0
-              #ExecStartPre=-/bin/echo
               [Network]
               DHCP=ipv4
+              [DHCPv4]
+              UseHostname=false
         - name: "etcd2.service"
           command: "start"
         - name: "fleet.service"
@@ -298,40 +299,6 @@ coreos:
 
             [Service]
             ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
-            RemainAfterExit=no
-            Type=oneshot
-
-        - name: "set-dns-to-etcd.service"
-          command: start
-          content: |
-            [Unit]
-            Description=Send hostname and IP to etcd2
-            Requires=etcd2.service
-            After=etcd2.service
-            Requires=network.target
-            After=network.target
-
-            [Service]
-            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://{{ .BootstrapperIP }}/set-dns-to-etcd.sh
-            ExecStart=/bin/bash /home/core/set-dns-to-etcd.sh
-            RemainAfterExit=no
-            Type=oneshot
-
-        - name: "ceph-osd.service"
-          command: start
-          content: |
-            [Unit]
-            Description=Install ceph osd service
-            Requires=etcd2.service
-            After=etcd2.service
-            Requires=network.target
-            After=network.target
-
-            [Service]
-            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/ceph/install-osd.sh
-            ExecStart=/bin/bash /home/core/install-osd.sh
             RemainAfterExit=no
             Type=oneshot
 
