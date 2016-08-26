@@ -62,7 +62,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
               - /hyperkube
               - apiserver
@@ -98,7 +98,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - controller-manager
@@ -121,7 +121,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - scheduler
@@ -135,7 +135,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
             command:
             - /hyperkube
             - proxy
@@ -192,7 +192,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.4
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
           command:
           - /hyperkube
           - proxy
@@ -249,15 +249,22 @@ coreos:
           content: |
               [Match]
               Name=eth0
-              #ExecStartPre=-/bin/echo
               [Network]
               DHCP=ipv4
+              [DHCPv4]
+              UseHostname=false
         - name: "etcd2.service"
           command: "start"
         - name: "fleet.service"
           command: "start"
         - name: "early-docker.service"
           command: "start"
+          runtime: true
+          drop-ins:
+          - name: 40-docker-flannel.conf
+            content: |
+              [Service]
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         - name: "flanneld.service"
           command: "start"
           drop-ins:
@@ -268,7 +275,6 @@ coreos:
                 {{- if .KubeMaster }}
                 ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
                 {{ end }}
-        {{- if .KubeMaster }}
         - name: setup-network-environment.service
           runtime: true
           command: start
@@ -285,7 +291,6 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
-        {{- end }}
         - name: "settimezone.service"
           command: start
           content: |
@@ -294,40 +299,6 @@ coreos:
 
             [Service]
             ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
-            RemainAfterExit=no
-            Type=oneshot
-
-        - name: "set-dns-to-etcd.service"
-          command: start
-          content: |
-            [Unit]
-            Description=Send hostname and IP to etcd2
-            Requires=etcd2.service
-            After=etcd2.service
-            Requires=network.target
-            After=network.target
-
-            [Service]
-            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/set-dns-to-etcd.sh http://{{ .BootstrapperIP }}/set-dns-to-etcd.sh
-            ExecStart=/bin/bash /home/core/set-dns-to-etcd.sh
-            RemainAfterExit=no
-            Type=oneshot
-
-        - name: "ceph-osd.service"
-          command: start
-          content: |
-            [Unit]
-            Description=Install ceph osd service
-            Requires=etcd2.service
-            After=etcd2.service
-            Requires=network.target
-            After=network.target
-
-            [Service]
-            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/ceph/install-osd.sh
-            ExecStart=/bin/bash /home/core/install-osd.sh
             RemainAfterExit=no
             Type=oneshot
 
@@ -358,15 +329,9 @@ coreos:
               [Unit]
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
-        {{- if .KubeMaster }}
-        - name: install-aci.service
-          command: start
-          content: |
               [Service]
-              ExecStartPre=/bin/wget -O /etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci http://{{ .BootstrapperIP }}:8081/static/hyperkube:v1.2.4_coreos.1.aci
-              ExecStart=/bin/rkt --insecure-options=all fetch file:////etc/kubernetes/hyperkube:v1.2.4_coreos.1.aci
-              RemainAfterExit=no
-              Type=oneshot
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
+        {{- if .KubeMaster }}
         - name: kubelet.service
           runtime: true
           command: start
@@ -374,12 +339,14 @@ coreos:
             [Unit]
             Description=Kubernetes Kubelet
             Documentation=https://github.com/kubernetes/kubernetes
-            Requires=install-aci.service, docker.service
-            After=install-aci.service, docker.service
+            Requires=docker.service
+            After=docker.service
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
-            ExecStart=/usr/lib/coreos/kubelet-wrapper \
+            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+            ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --register-node=true \
             --api-servers=http://{{ .MasterHostname }}:8080 \
@@ -409,7 +376,9 @@ coreos:
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
-            ExecStart=/usr/lib/coreos/kubelet-wrapper \
+            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+            ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
             --address=0.0.0.0 \
             --allow-privileged=true \
