@@ -1,0 +1,36 @@
+#!/bin/bash
+
+function TestInVM() {
+    PKG=$1
+    VMBOX=$2
+    
+    if [[ -d vm ]]; then
+	( cd vm && vagrant destroy -f)
+    fi
+
+    rm -rf vm
+    mkdir vm
+    (
+	cd vm
+	vagrant init $VMBOX
+	sed -i.bak 's/# config.vm.provider "virtualbox" do |vb|/config.vm.provider "virtualbox" do |vb| vb.memory = "1024" end/g' Vagrantfile
+	vagrant up
+	vagrant scp ../$PKG.test /home/vagrant/
+	vagrant ssh -c "sudo /home/vagrant/$PKG.test -test.invm"
+	vagrant halt -f
+	vagrant destroy -f
+    )
+}
+
+GOOS=linux GOARCH=amd64 go test -c 
+if [[ $? != 0 ]]; then
+    echo "Failed building test binary"
+    exit -1
+fi
+
+PKG=$(basename $(go list .))
+
+TestInVM $PKG "centos/7"
+
+rm -rf vm
+ 

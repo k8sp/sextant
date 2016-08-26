@@ -1,0 +1,405 @@
+#cloud-config
+write_files:
+  - path: /etc/kubernetes/ssl/ca.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .CaCrt }}
+  - path: /etc/hosts
+    owner: root
+    content: |
+      127.0.0.1 localhost
+      {{ .BootstrapperIP }} {{ .Dockerdomain }}
+  {{- if .KubeMaster }}
+  - path: /etc/kubernetes/ssl/apiserver.pem
+    owner: core
+    permissions: 0600
+    content: |
+      {{ .Crt }}
+  - path: /etc/kubernetes/ssl/apiserver-key.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Key }}
+  - path: /etc/flannel/options.env
+    owner: root
+    permissions: 0600
+    content: |
+      FLANNELD_IFACE=${DEFAULT_IPV4}
+      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+
+  - path: /etc/kubernetes/manifests/kubernetes_master.manifest
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-controller
+      spec:
+        hostNetwork: true
+        volumes:
+          - name: "etc-kubernetes"
+            hostPath:
+              path: "/etc/kubernetes"
+          - name: ssl-certs-kubernetes
+            hostPath:
+              path: /etc/kubernetes/ssl
+          - name: "ssl-certs-host"
+            hostPath:
+              path: "/usr/share/ca-certificates"
+          - name: "var-run-kubernetes"
+            hostPath:
+              path: "/var/run/kubernetes"
+          - name: "etcd-datadir"
+            hostPath:
+              path: "/var/lib/etcd"
+          - name: "usr"
+            hostPath:
+              path: "/usr"
+          - name: "lib64"
+            hostPath:
+              path: "/lib64"
+        containers:
+          - name: kube-apiserver
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            command:
+              - /hyperkube
+              - apiserver
+              - --allow-privileged=true
+              - --bind-address=0.0.0.0
+              - --insecure-bind-address=0.0.0.0
+              - --secure-port=443
+              - --etcd-servers=http://{{ .MasterHostname }}:4001
+              - --service-cluster-ip-range=10.100.0.0/24
+              - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+              - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+              - --client-ca-file=/etc/kubernetes/ssl/ca.pem
+              - --logtostderr=true
+            ports:
+              - containerPort: 443
+                hostPort: 443
+                name: https
+              - containerPort: 8080
+                hostPort: 8080
+                name: local
+            volumeMounts:
+              - mountPath: /etc/kubernetes/ssl
+                name: ssl-certs-kubernetes
+                readOnly: true
+              - mountPath: /etc/ssl/certs
+                name: ssl-certs-host
+                readOnly: true
+              - mountPath: /etc/kubernetes
+                name: "etc-kubernetes"
+              - mountPath: /var/run/kubernetes
+                name: "var-run-kubernetes"
+
+          - name: kube-controller-manager
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            command:
+            - /hyperkube
+            - controller-manager
+            - --master=http://127.0.0.1:8080
+            - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+            - --root-ca-file=/etc/kubernetes/ssl/ca.pem
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10252s
+              initialDelaySeconds: 15
+              timeoutSeconds: 1
+            volumeMounts:
+            - mountPath: /etc/kubernetes/ssl
+              name: ssl-certs-kubernetes
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs-host
+              readOnly: true
+
+          - name: kube-scheduler
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            command:
+            - /hyperkube
+            - scheduler
+            - --master=http://127.0.0.1:8080
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10251
+              initialDelaySeconds: 15
+              timeoutSeconds: 1
+
+          - name: kube-proxy
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            command:
+            - /hyperkube
+            - proxy
+            - --master=http://127.0.0.1:8080
+            - --proxy-mode=iptables
+            securityContext:
+              privileged: true
+            volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs-host
+              readOnly: true
+  {{- else }}
+  - path: /etc/kubernetes/ssl/worker.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Crt }}
+  - path: /etc/kubernetes/ssl/worker-key.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Key }}
+  - path: /etc/kubernetes/worker-kubeconfig.yaml
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: local
+        cluster:
+          certificate-authority: /etc/kubernetes/ssl/ca.pem
+      users:
+      - name: kubelet
+        user:
+          client-certificate: /etc/kubernetes/ssl/worker.pem
+          client-key: /etc/kubernetes/ssl/worker-key.pem
+      contexts:
+      - context:
+          cluster: local
+          user: kubelet
+        name: kubelet-context
+      current-context: kubelet-context
+
+  - path: /etc/kubernetes/manifests/kube-proxy.manifest
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+       name: kube-proxy
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-proxy
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+          command:
+          - /hyperkube
+          - proxy
+          - --master=https://{{ .MasterHostname }}:443
+          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+          - --proxy-mode=iptables
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: "ssl-certs"
+            - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+              name: "kubeconfig"
+              readOnly: true
+            - mountPath: /etc/kubernetes/ssl
+              name: "etc-kube-ssl"
+              readOnly: true
+        volumes:
+          - name: "ssl-certs"
+            hostPath:
+              path: "/usr/share/ca-certificates"
+          - name: "kubeconfig"
+            hostPath:
+              path: "/etc/kubernetes/worker-kubeconfig.yaml"
+          - name: "etc-kube-ssl"
+            hostPath:
+              path: "/etc/kubernetes/ssl"
+
+  {{- end }}
+coreos:
+    etcd2:
+        name: "%H"
+        listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
+        initial-cluster: "{{ .InitialCluster }}"
+        {{- if .EtcdMember }}
+        initial-cluster-token: "etcd-cluster-1"
+        initial-advertise-peer-urls: "http://{{ .Hostname }}:2380"
+        listen-peer-urls: "http://{{ .Hostname }}:2380,http://{{ .Hostname }}:7001"
+        advertise-client-urls: "http://{{ .Hostname }}:2379"
+        initial-cluster-state: new
+        {{- else }}
+        proxy: on
+        {{- end }}
+    flannel:
+      etcd_endpoints: "{{ .EtcdEndpoints }}"
+    update:
+        reboot-strategy: "etcd-lock"
+    locksmith:
+        window_start: "03:00"
+        window_length: "3h"
+    units:
+        - name: 00-eth0.network
+          runtime: true
+          content: |
+              [Match]
+              Name=eth0
+              [Network]
+              DHCP=ipv4
+              [DHCPv4]
+              UseHostname=false
+        - name: "etcd2.service"
+          command: "start"
+        - name: "fleet.service"
+          command: "start"
+        - name: "early-docker.service"
+          command: "start"
+          runtime: true
+          drop-ins:
+          - name: 40-docker-flannel.conf
+            content: |
+              [Service]
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
+        - name: "flanneld.service"
+          command: "start"
+          drop-ins:
+            - name: 50-network-config.conf
+              content: |
+                [Service]
+                Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
+                {{- if .KubeMaster }}
+                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+                {{ end }}
+        - name: setup-network-environment.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Setup Network Environment
+            Documentation=https://github.com/kelseyhightower/setup-network-environment
+            Requires=network-online.target
+            After=network-online.target
+            [Service]
+            ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+            ExecStartPre=-/usr/bin/wget -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}:8081/static/setup-network-environment-1.0.1
+            ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
+            ExecStart=/opt/bin/setup-network-environment
+            RemainAfterExit=yes
+            Type=oneshot
+        - name: "settimezone.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Set the time zone
+
+            [Service]
+            ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+            RemainAfterExit=no
+            Type=oneshot
+
+        {{- if .CephMonitor }}
+        - name: "ceph-mon.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Install ceph mon services
+            Requires=etcd2.service
+            After=etcd2.service
+            Requires=network.target
+            After=network.target
+
+            [Service]
+            ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
+            ExecStart=/bin/bash /home/core/install-mon.sh
+            RemainAfterExit=no
+            Type=oneshot
+        {{- end }}
+        - name: docker.service
+          runtime: true
+          command: start
+          drop-ins:
+          - name: 40-docker-flannel.conf
+            content: |
+              [Unit]
+              After=docker.socket early-docker.target network.target flanneld.service
+              Requires=docker.socket early-docker.target flanneld.service
+              [Service]
+              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
+        {{- if .KubeMaster }}
+        - name: kubelet.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/kubernetes/kubernetes
+            Requires=docker.service
+            After=docker.service
+            [Service]
+            Environment=KUBELET_VERSION=v1.2.4_coreos.1
+            EnvironmentFile=/etc/network-environment
+            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+            ExecStart=/opt/bin/kubelet \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --register-node=true \
+            --api-servers=http://{{ .MasterHostname }}:8080 \
+            --network-plugin-dir=/etc/kubernetes/cni/net.d \
+            --network-plugin=${NETWORK_PLUGIN} \
+            --register-schedulable=false \
+            --allow-privileged=true \
+            --config=/etc/kubernetes/manifests \
+            --hostname-override={{ .MasterHostname }} \
+            --cluster-dns=10.100.0.10 \
+            --cluster-domain=cluster.local
+            --logtostderr=true
+            Restart=always
+            RestartSec=10
+            [Install]
+            WantedBy=multi-user.target
+        {{- else }}
+        - name: kubelet.service
+          runtime: true
+          command: start
+          content: |
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/kubernetes/kubernetes
+            After=docker.service
+            Requires=docker.service
+            [Service]
+            EnvironmentFile=/etc/network-environment
+            Environment=KUBELET_VERSION=v1.2.4_coreos.1
+            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+            ExecStart=/opt/bin/kubelet \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --address=0.0.0.0 \
+            --allow-privileged=true \
+            --cluster-dns=10.100.0.10 \
+            --cluster-domain=cluster.local \
+            --config=/etc/kubernetes/manifests \
+            --hostname-override=${DEFAULT_IPV4} \
+            --api-servers=https://{{ .MasterHostname }}:443 \
+            --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+            --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
+            --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+            --logtostderr=true \
+            --network-plugin= \
+            --network-plugin-dir=/etc/cni/net.d
+            Restart=always
+            RestartSec=10
+            [Install]
+            WantedBy=multi-user.target
+        {{- end}}
+
+hostname: "{{ .Hostname }}"
+
+ssh_authorized_keys:
+{{ .SSHAuthorizedKeys }}
