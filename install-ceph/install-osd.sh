@@ -4,6 +4,8 @@
 devices=$(lsblk -l |awk '$6=="disk"{print $1}')
 systemdevice=$(lsblk -l |awk '$7=="/usr"{print $1}' |sed 's/[0-9]\+$//')
 
+CEPH_CLUSTER_NAME=ceph
+
 # Run OSD daemon for each device
 for d in $devices
 do
@@ -17,7 +19,7 @@ do
       -v /var/lib/ceph:/var/lib/ceph \
       -v /dev:/dev \
       -e KV_TYPE=etcd \
-      -e OSD_FORCE_ZAP=1 \
+      -e CLUSTER=$CEPH_CLUSTER_NAME \
       -e OSD_DEVICE=${device} \
       ceph/daemon osd
   fi
