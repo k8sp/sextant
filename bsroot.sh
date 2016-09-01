@@ -107,6 +107,12 @@ EOF
 
 # -------------download stuff used by cloud-config-server-------------
 prepare_cc_server_contents() {
+  # put ceph install script in /bsroot/html/static/ceph
+  cd $CURR_DIR
+  mkdir -p /bsroot/html/static/ceph
+  cp ./cloud-config-server/install-ceph/install-mon.sh /bsroot/html/static/ceph/install-mon.sh
+  cp ./cloud-config-server/install-ceph/install-osd.sh /bsroot/html/static/ceph/install-osd.sh
+
   cd /bsroot/html/static
   wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
   wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
