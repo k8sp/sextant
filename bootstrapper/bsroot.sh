@@ -114,11 +114,11 @@ prepare_cc_server_contents() {
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
   cd $CURR_DIR
-  cp ./cloud-config-server/install.sh /bsroot/html/static/cloud-configs
+  cp ../cloud-config-server/install.sh /bsroot/html/static/cloud-configs
   # put cloud-config.template in /bsroot/config
-  cp ./cloud-config-server/template/cloud-config.template /bsroot/config
+  cp ../cloud-config-server/template/cloud-config.template /bsroot/config
   # put cluster-desc.yml to /bsroot/config
-  cp ./cloud-config-server/template/unisound-ailab/build_config.yml /bsroot/config/cluster-desc.yml
+  cp ../cloud-config-server/template/unisound-ailab/build_config.yml /bsroot/config/cluster-desc.yml
   # download coreos image for cc server to serve
   # FIXME: current dir should be a symbol link
   mkdir -p /bsroot/html/static/current
