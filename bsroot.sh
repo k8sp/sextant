@@ -11,6 +11,14 @@ mkdir -p /bsroot/html/static
 mkdir -p /bsroot/tftpboot
 mkdir -p /bsroot/config
 mkdir -p /bsroot/tls
+# -------------check if tools used by this script are installed -------------
+check_prerequisites() {
+  met=0
+  for tool in wget tar gpg docker; do
+    command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; met=1; }
+  done
+  return $met
+}
 # -------------download stuff used by PXE and tftp-------------
 download_pxe_images() {
   cd /bsroot/tftpboot
@@ -164,6 +172,7 @@ download_ceph_images() {
 }
 
 # -------------do the steps-------------
+check_prerequisites || exit 1
 download_pxe_images
 gen_pxe_config
 gen_dnsmasq_config
