@@ -34,7 +34,7 @@ else
     --name $CEPH_MON_DOCKER_NAME \
     -v /etc/ceph:/etc/ceph \
     -v /var/lib/ceph/:/var/lib/ceph \
-    -e CLUSTER=$CEPH_CLUSTER_NAME
+    -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
     -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
