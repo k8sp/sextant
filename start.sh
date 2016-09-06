@@ -29,4 +29,8 @@ docker tag typhoon1986/flannel:0.5.5 $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
 docker push $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:v1.2.0
 docker push $BOOTATRAPPER_DOMAIN:5000/pause:2.0
 docker push $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
+# push ceph images to registry
+docker load < /bsroot/ceph_daemon.tar
+docker tag ceph/daemon $BOOTATRAPPER_DOMAIN:5000/ceph/daemon
+docker push $BOOTATRAPPER_DOMAIN:5000/ceph/daemon
 wait
