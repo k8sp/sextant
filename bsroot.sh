@@ -157,6 +157,12 @@ download_k8s_images () {
   docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
 }
 
+download_ceph_images() {
+  cd /bsroot
+  docker pull ceph/daemon
+  docker save ceph/daemon > ceph_daemon.tar
+}
+
 # -------------do the steps-------------
 download_pxe_images
 gen_pxe_config
@@ -164,3 +170,5 @@ gen_dnsmasq_config
 gen_registry_config
 prepare_cc_server_contents
 download_k8s_images
+download_ceph_images
+
