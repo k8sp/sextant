@@ -36,6 +36,7 @@ type Cluster struct {
 
 	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
 	Dockerdomain      string
+	K8sClusterDNS     string `yaml:"k8s_cluster_dns"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
