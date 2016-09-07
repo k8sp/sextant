@@ -189,10 +189,7 @@ gen_registry_tls(){
     openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
  fi
 
- if [ ! -d /etc/docker/certs.d/$DEFAULT_IPV4:5000 ]; then
-    mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
- fi
-
+ mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
  rm -rf /etc/docker/certs.d/$DEFAULT_IPV4:5000/*
  cp ca.pem /etc/docker/certs.d/$DEFAULT_IPV4:5000/ca.crt
 
