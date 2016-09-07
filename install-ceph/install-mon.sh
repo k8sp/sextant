@@ -42,7 +42,7 @@ else
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
-    -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
+    -e CEPH_PUBLIC_NETWORK=$net_mask \
     "$docker_hub"ceph/daemon mon
 fi
 
