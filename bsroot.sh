@@ -163,31 +163,14 @@ download_k8s_images () {
 gen_registry_tls(){
 
  cd /bsroot/tls
+ rm -rf /bsroot/tls/*
 
- if [[ ! -f ca-key.pem ]]; then
-    echo "Generate ca-key.pem ..."
-    openssl genrsa -out ca-key.pem 2048
- fi
+ openssl genrsa -out ca-key.pem 2048
+ openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
 
- if [[ ! -f ca.pem ]]; then
-    echo "Generate ca.pem ..."
-    openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
- fi
-
- if [[ ! -f bootstrapper.key ]]; then
-    echo "Generate bootstrapper.key ..."
-    openssl genrsa -out bootstrapper.key 2048
- fi
-
- if [[ ! -f bootstrapper.csr ]]; then
-    echo "Generate bootstrapper.csr ..."
-    openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper"
- fi
-
- if [[ ! -f bootstrapper.crt ]]; then
-    echo "Generate bootstrapper.crt ..."
-    openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
- fi
+ openssl genrsa -out bootstrapper.key 2048
+ openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper"
+ openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
 
  mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
  rm -rf /etc/docker/certs.d/$DEFAULT_IPV4:5000/*
