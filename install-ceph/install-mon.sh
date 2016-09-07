@@ -1,7 +1,7 @@
 #!/bin/bash
 
 docker_hub=$1
-if [[ -z $docker_hub ]]; then
+if [[ ! -z $docker_hub ]]; then
   $docker_hub=$docker_hub"/"
 fi
 
