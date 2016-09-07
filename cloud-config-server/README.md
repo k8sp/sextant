@@ -82,11 +82,11 @@ export GOPATH=<GoPathDir>
 
 ## 获取并编译Go代码
 
-下面的命令中需要使用到[Github personal access token](https://github.com/k8sp/auto-install/issues/29)，请根据[这篇文档](https://github.com/k8sp/auto-install/issues/29)事先生成。
+下面的命令中需要使用到[Github personal access token](https://github.com/k8sp/sextant/issues/29)，请根据[这篇文档](https://github.com/k8sp/sextant/issues/29)事先生成。
 
 ```
 git config --global url."https://<GitHubPersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
-go get github.com/k8sp/auto-install/cloud-config-server
+go get github.com/k8sp/sextant/cloud-config-server
 
 ```
 

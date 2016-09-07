@@ -11,7 +11,7 @@ type Cluster struct {
 	// Bootstrapper is the IP of the PXE server (DHCP + TFTP,
 	// https://github.com/k8sp/bare-metal-coreos), which is also
 	// an Ngix server and SkyDNS server
-	// (https://github.com/k8sp/auto-install/tree/master/dns).
+	// (https://github.com/k8sp/sextant/tree/master/dns).
 	Bootstrapper string
 
 	// The following are for configuring the DHCP service on the
@@ -34,8 +34,10 @@ type Cluster struct {
 
 	NginxRootDir string `yaml:"nginx_root_dir"`
 
-	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
-	Dockerdomain      string
+	SSHAuthorizedKeys        string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
+	Dockerdomain             string
+	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
+	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
@@ -74,7 +76,7 @@ func (n Node) Mac() string {
 // It is also used for unit testing.  The IP addresses and subnet used
 // in this example are in accordance with Vagrant VM's default subnet,
 // so unit tests on DHCP can starts DHCP services correctly
-// (c.f. https://github.com/k8sp/auto-install/issues/52).
+// (c.f. https://github.com/k8sp/sextant/issues/52).
 const ExampleYAML = `
 bootstrapper: 10.0.2.15
 
