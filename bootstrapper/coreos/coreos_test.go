@@ -1,7 +1,6 @@
 package coreos
 
 import (
-	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -9,20 +8,8 @@ import (
 	"github.com/k8sp/sextant/bootstrapper/cmd"
 	"github.com/k8sp/sextant/bootstrapper/vmtest"
 	"github.com/k8sp/sextant/config"
-	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 )
-
-func TestVersion(t *testing.T) {
-	channel, _ := version("")
-	assert.Equal(t, "stable", channel)
-
-	_, alpha := version("alpha")
-	_, beta := version("beta")
-	_, stable := version("stable")
-	assert.True(t, strings.Compare(stable, beta) <= 0)
-	assert.True(t, strings.Compare(stable, alpha) <= 0)
-}
 
 func TestDownloadBootImage(t *testing.T) {
 	if *vmtest.InVM {
