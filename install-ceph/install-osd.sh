@@ -1,5 +1,10 @@
 #!/bin/bash
 
+docker_hub=$1
+if [[ -z $docker_hub  ]]; then
+  $docker_hub=$docker_hub"/"
+fi
+
 #Obtain devices
 devices=$(lsblk -l |awk '$6=="disk"{print $1}')
 systemdevice=$(lsblk -l |awk '$7=="/usr"{print $1}' |sed 's/[0-9]\+$//')
@@ -21,7 +26,7 @@ do
       -e KV_TYPE=etcd \
       -e CLUSTER=$CEPH_CLUSTER_NAME \
       -e OSD_DEVICE=${device} \
-      ceph/daemon osd
+      "$docker_hub"ceph/daemon osd
   fi
 done
 

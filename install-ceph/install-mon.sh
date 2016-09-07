@@ -1,5 +1,10 @@
 #!/bin/bash
 
+docker_hub=$1
+if [[ -z $docker_hub ]]; then
+  $docker_hub=$docker_hub"/"
+fi
+
 interface=$(ip route | grep default | awk '{print $5}')
 net_mask=$(ip a show $interface | grep '\binet\b' | awk '{print $2}');
 ip_addr=${net_mask%%/*}
@@ -19,7 +24,7 @@ if [ $? -eq 0 ]; then
     -e KV_TYPE=etcd \
     -e KV_IP=127.0.0.1 \
     -e KV_PORT=2379 \
-    ceph/daemon populate_kvstore
+    "$docker_hub"ceph/daemon populate_kvstore
   docker rm -f ceph_kvstore
 fi
 
@@ -38,7 +43,7 @@ else
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
     -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
-    ceph/daemon mon
+    "$docker_hub"ceph/daemon mon
 fi
 
 # MDS
@@ -53,6 +58,6 @@ else
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e CEPHFS_CREATE=1 \
     -e KV_TYPE=etcd \
-    ceph/daemon mds
+    "$docker_hub"ceph/daemon mds
 fi
 

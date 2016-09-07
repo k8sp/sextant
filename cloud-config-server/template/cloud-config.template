@@ -314,10 +314,9 @@ coreos:
             After=network.target
 
             [Service]
-            ExecStartPre=/bin/bash -c 'docker pull {{ .BootstrapperIP }}:5000/ceph/daemon'
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
-            ExecStart=/bin/bash /home/core/install-mon.sh 
+            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}:8081/static/ceph/install-mon.sh
+            ExecStart=/bin/bash /home/core/install-mon.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
         {{- end }}
@@ -333,10 +332,9 @@ coreos:
             After=network.target
 
             [Service]
-            ExecStartPre=/bin/bash -c 'docker pull {{ .BootstrapperIP }}:5000/ceph/daemon'
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
-            ExecStart=/bin/bash /home/core/install-osd.sh
+            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}:8081/static/ceph/install-osd.sh
+            ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
 
