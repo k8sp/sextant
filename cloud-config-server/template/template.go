@@ -6,8 +6,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
-	tpcfg "github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/cloud-config-server/certgen"
+	tpcfg "github.com/k8sp/sextant/config"
 	"github.com/topicai/candy"
 )
 

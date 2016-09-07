@@ -12,14 +12,14 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/cloud-config-server/certgen"
+	"github.com/k8sp/sextant/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 )
 
 const (
-	tmplFile    = "src/github.com/k8sp/auto-install/cloud-config-server/template/cloud-config.template"
+	tmplFile    = "src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template"
 	loadTimeout = 15 * time.Second
 )
 

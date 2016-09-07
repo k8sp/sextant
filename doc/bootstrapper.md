@@ -28,7 +28,7 @@ docker run -d [bootstrapper_image_name:tag] -v /path/to/ClusterDesc.yaml:/path/t
 
 ***详细流程描述***
 
-1. 规划机群，并且把规划描述成[ClusterDesc配置文件](https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml)，比如如哪个机器作为master，哪些机器作为etcd机群，哪些作为worker。每台机器通过MAC地址唯一标识。
+1. 规划机群，并且把规划描述成[ClusterDesc配置文件](https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/unisound-ailab/build_config.yml)，比如如哪个机器作为master，哪些机器作为etcd机群，哪些作为worker。每台机器通过MAC地址唯一标识。
 1. 管理员在一台预先规划好的的机器上，下载／上传bootstrapper的docker image，并通过docker run启动bootstrapper。启动成功后，bootstrapper会提供DHCP, DNS(服务于物理节点), PXE, tftp, cloud-config HTTP服务, CoreOS镜像自动更新服务。
 1. 将机群中的其他所有节点开机，并从网络引导安装。即可完成整个机群的初始化。
 1. 每启动一台新的机器（网络引导），先从DHCP获取一个IP地址，DHCP server将启动引导指向PXE server，然后由PXE server提供启动镜像（保存在tftpserver），至此，新的机器可以完成内存中的CoreOS引导，为CoreOS操作系统安装提供环境。
@@ -49,7 +49,7 @@ bootstrapper main读取ClusterDesc配置文件，并生成dnsmasq的配置文件
 完成配置后，bootstrapper main会分别启动dnsmasq, cloud-config-server, docker registry, CoreOS镜像自动更新程序（可选）。
 
 ### dnsmasq
-dnsmasq在机群中提供DHCP, DNS(物理机的DNS), PXE服务。使用docker启动dnsmasq的试验方法可以参考：https://github.com/k8sp/auto-install/issues/102
+dnsmasq在机群中提供DHCP, DNS(物理机的DNS), PXE服务。使用docker启动dnsmasq的试验方法可以参考：https://github.com/k8sp/sextant/issues/102
 
 ### cloud-config-server
 cloud-config-server是使用Go语言开发的一个HTTP Server，将提供安装kubernetes组件用到的需要通过HTTP访问的所有资源。包括：

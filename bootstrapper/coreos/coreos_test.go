@@ -6,9 +6,9 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/k8sp/auto-install/bootstrapper/cmd"
-	"github.com/k8sp/auto-install/bootstrapper/vmtest"
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/bootstrapper/cmd"
+	"github.com/k8sp/sextant/bootstrapper/vmtest"
+	"github.com/k8sp/sextant/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 )
