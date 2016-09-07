@@ -159,6 +159,45 @@ download_k8s_images () {
   docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
 }
 
+#-----------docker registry tls-------
+gen_registry_tls(){
+
+ cd /bsroot/tls
+
+ if [[ ! -f ca-key.pem ]]; then
+    echo "Generate ca-key.pem ..."
+    openssl genrsa -out ca-key.pem 2048
+ fi
+
+ if [[ ! -f ca.pem ]]; then
+    echo "Generate ca.pem ..."
+    openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
+ fi
+
+ if [[ ! -f bootstrapper.key ]]; then
+    echo "Generate bootstrapper.key ..."
+    openssl genrsa -out bootstrapper.key 2048
+ fi
+
+ if [[ ! -f bootstrapper.csr ]]; then
+    echo "Generate bootstrapper.csr ..."
+    openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper"
+ fi
+
+ if [[ ! -f bootstrapper.crt ]]; then
+    echo "Generate bootstrapper.crt ..."
+    openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
+ fi
+
+ if [ ! -d /etc/docker/certs.d/$DEFAULT_IPV4:5000 ]; then
+    mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
+ fi
+
+ rm -rf /etc/docker/certs.d/$DEFAULT_IPV4:5000/*
+ cp ca.pem /etc/docker/certs.d/$DEFAULT_IPV4:5000/ca.crt
+
+}
+
 # -------------do the steps-------------
 check_prerequisites || exit 1
 download_pxe_images
@@ -167,3 +206,4 @@ gen_dnsmasq_config
 gen_registry_config
 prepare_cc_server_contents
 download_k8s_images
+gen_registry_tls
