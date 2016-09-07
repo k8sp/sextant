@@ -34,9 +34,10 @@ type Cluster struct {
 
 	NginxRootDir string `yaml:"nginx_root_dir"`
 
-	SSHAuthorizedKeys string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
-	Dockerdomain      string
-	K8sClusterDNS     string `yaml:"k8s_cluster_dns"`
+	SSHAuthorizedKeys        string `yaml:"ssh_authorized_keys"` // So maintainers can SSH to all nodes.
+	Dockerdomain             string
+	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
+	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
