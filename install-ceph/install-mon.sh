@@ -16,7 +16,7 @@ CEPH_MDS_DOCKER_NAME=ceph_mds
 # cephx enabled ?
 etcdctl get /ceph-config/$CEPH_CLUSTER_NAME/auth/cephx
 # populate kvstore
-if [ $? -eq 0 ]; then
+if [ $? -ne 0 ]; then
   echo "Enable cephx."
   docker run -d --net=host \
     --name ceph_kvstore \
