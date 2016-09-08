@@ -8,8 +8,8 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/k8sp/auto-install/bootstrapper/cmd"
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/bootstrapper/cmd"
+	"github.com/k8sp/sextant/config"
 	"github.com/topicai/candy"
 )
 

@@ -6,7 +6,7 @@ import (
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/config"
 	"github.com/stretchr/testify/assert"
 )
 

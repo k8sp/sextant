@@ -8,6 +8,8 @@ broadcast: 10.10.10.255
 nameservers: [10.10.10.192, 8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
 dockerdomain: "bootstrapper"
+k8s_service_cluster_ip_range: 10.100.0.0/24
+k8s_cluster_dns: 10.100.0.10
 
 nodes:
   - mac: "00:25:90:c0:f7:80"

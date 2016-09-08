@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/config"
 	"github.com/topicai/candy"
 )
 

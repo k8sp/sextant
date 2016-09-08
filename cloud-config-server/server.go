@@ -22,22 +22,22 @@ import (
 	"text/template"
 
 	"github.com/gorilla/mux"
-	"github.com/k8sp/auto-install/cloud-config-server/cache"
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
-	cctemplate "github.com/k8sp/auto-install/cloud-config-server/template"
-	"github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/cloud-config-server/cache"
+	"github.com/k8sp/sextant/cloud-config-server/certgen"
+	cctemplate "github.com/k8sp/sextant/cloud-config-server/template"
+	"github.com/k8sp/sextant/config"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
 	clusterDescURL := flag.String("cluster-desc-url",
-		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/unisound-ailab/build_config.yml",
+		"https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/unisound-ailab/build_config.yml",
 		"URL to remote cluster description YAML file.")
 	clusterDescFile := flag.String("cluster-desc-file", "./cluster-desc.yml", "Local copy of cluster description YAML file.")
 
 	ccTemplateURL := flag.String("cc-template-url",
-		"https://raw.githubusercontent.com/k8sp/auto-install/master/cloud-config-server/template/cloud-config.template",
+		"https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/cloud-config.template",
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
