@@ -36,13 +36,6 @@ cd sextant/bootstrapper
 /bsroot/config/dnsmasq.conf
 /bsroot/config/registry.yml
 ```
-创建跟证书：
-```
-cd /bsroot/tls
-openssl genrsa -out ca-key.pem 2048
-openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
-```
-
 ## 构建Docker镜像
 在bootstrapper或本地执行下面的命令构建bootstrapper的docker镜像：
 ```
