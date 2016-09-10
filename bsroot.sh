@@ -167,8 +167,8 @@ download_k8s_images () {
 
 download_ceph_images() {
   cd /bsroot
-  docker pull ceph/daemon
-  docker save ceph/daemon > ceph_daemon.tar
+  docker pull typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370
+  docker save typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 > ceph_daemon.tar
 }
 
 # -------------do the steps-------------
@@ -180,4 +180,3 @@ gen_registry_config
 prepare_cc_server_contents
 download_k8s_images
 download_ceph_images
-

@@ -2,7 +2,7 @@
 
 docker_hub=$1
 if [[ ! -z $docker_hub  ]]; then
-  $docker_hub=$docker_hub"/"
+  docker_hub=$docker_hub"/"
 fi
 
 #Obtain devices
@@ -26,7 +26,6 @@ do
       -e KV_TYPE=etcd \
       -e CLUSTER=$CEPH_CLUSTER_NAME \
       -e OSD_DEVICE=${device} \
-      "$docker_hub"ceph/daemon osd
+      "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /bin/bash -x /entrypoint.sh osd
   fi
 done
-

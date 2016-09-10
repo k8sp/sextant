@@ -2,7 +2,7 @@
 
 docker_hub=$1
 if [[ ! -z $docker_hub ]]; then
-  $docker_hub=$docker_hub"/"
+  docker_hub=$docker_hub"/"
 fi
 
 interface=$(ip route | grep default | awk '{print $5}')
@@ -12,20 +12,23 @@ ip_addr=${net_mask%%/*}
 CEPH_CLUSTER_NAME=ceph
 CEPH_MON_DOCKER_NAME=ceph_mon
 CEPH_MDS_DOCKER_NAME=ceph_mds
+CEPH_IMG_TAG=tag-build-master-jewel-ubuntu-14.04-fix370
 
 # cephx enabled ?
 etcdctl get /ceph-config/$CEPH_CLUSTER_NAME/auth/cephx
 # populate kvstore
+# FIXME: define -e OSD_JOURNAL_SIZE=100 for vm testing
+# NOTICE: use docker run --rm to ensure container is deleted after execution
 if [ $? -ne 0 ]; then
   echo "Enable cephx."
-  docker run -d --net=host \
+  docker run --rm --net=host \
     --name ceph_kvstore \
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e KV_TYPE=etcd \
     -e KV_IP=127.0.0.1 \
     -e KV_PORT=2379 \
-    "$docker_hub"ceph/daemon populate_kvstore
-  docker rm -f ceph_kvstore
+    -e OSD_JOURNAL_SIZE=100 \
+    "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh populate_kvstore
 fi
 
 # MON
@@ -43,7 +46,7 @@ else
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
     -e CEPH_PUBLIC_NETWORK=$net_mask \
-    "$docker_hub"ceph/daemon mon
+    "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh mon
 fi
 
 # MDS
@@ -58,6 +61,5 @@ else
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e CEPHFS_CREATE=1 \
     -e KV_TYPE=etcd \
-    "$docker_hub"ceph/daemon mds
+    "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh mds
 fi
-
