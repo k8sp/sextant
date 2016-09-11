@@ -119,6 +119,10 @@ prepare_cc_server_contents() {
   wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
   wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
   chmod +x kubelet
+
+  wget -c -O /usr/bin/kubectl https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubectl
+  chmod +x /usr/bin/kubectl
+
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
   cd $CURR_DIR
@@ -127,6 +131,10 @@ prepare_cc_server_contents() {
   cp ./cloud-config-server/template/cloud-config.template /bsroot/config
   # put cluster-desc.yml to /bsroot/config
   cp ./cloud-config-server/template/unisound-ailab/build_config.yml /bsroot/config/cluster-desc.yml
+  # put ingress.template in /bsroot/config
+  cp ./cloud-config-server/template/kube-system/ingress.template /bsroot/config/ingress.template
+  # put skydns.template in /bsroot/config
+  cp ./cloud-config-server/template/kube-system/skydns.template /bsroot/config/skydns.template
   # download coreos image for cc server to serve
   # FIXME: current dir should be a symbol link
   mkdir -p /bsroot/html/static/current
@@ -157,6 +165,14 @@ download_k8s_images () {
   docker save typhoon1986/pause:2.0 > pause_2.0.tar
   docker pull typhoon1986/flannel:0.5.5
   docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
+  docker pull yancey1989/nginx-ingress-controller:0.8.3
+  docker save yancey1989/nginx-ingress-controller:0.8.3 > nginx-ingress-controller_0.8.3.tar
+  docker pull yancey1989/kube2sky:1.14
+  docker save yancey1989/kube2sky:1.14 > kube2sky_1.14.tar
+  docker pull typhoon1986/exechealthz:1.0
+  docker save typhoon1986/exechealthz > exechealthz_1.0.tar
+  docker pull typhoon1986/skydns:latest
+  docker save typhoon1986/skydns:latest > skydns_latest.tar
 }
 
 # -------------do the steps-------------
