@@ -7,6 +7,11 @@ MASTER_HOSTNAME=`grep "kube_master: y" /bsroot/config/cluster-desc.yml -B 5 |gre
 sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-configs/install.sh
 # start dnsmasq
 dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
+# run addons
+addons -dir /bsroot/html/static \
+  -cluster-desc-file /bsroot/config/cluster-desc.yml \
+  -ingress-template-file /bsroot/config/ingress.template \
+  -skydns-template-file /bsroot/config/skydns.template &
 # start cloud-config-server
 cloud-config-server -addr ":8081" \
   -dir /bsroot/html/static \
@@ -22,27 +27,22 @@ cloud-config-server -addr ":8081" \
 registry serve /bsroot/config/registry.yml &
 sleep 2
 # push k8s images to registry from bsroot
-docker load < /bsroot/hyperkube-amd64_v1.2.0.tar
-docker load < /bsroot/pause_2.0.tar
-docker load < /bsroot/flannel_0.5.5.tar
-docker load < /bsroot/nginx-ingress-controller_0.8.3.tar
-docker load < /bsroot/kube2sky_1.14.tar
-docker load < /bsroot/exechealthz_1.0.tar
-docker load < /bsroot/skydns_latest.tar
-docker tag typhoon1986/hyperkube-amd64:v1.2.0 $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:v1.2.0
-docker tag typhoon1986/pause:2.0 $BOOTATRAPPER_DOMAIN:5000/pause:2.0
-docker tag typhoon1986/flannel:0.5.5 $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
-docker tag yancey1989/nginx-ingress-controller:0.8.3 $BOOTATRAPPER_DOMAIN:5000/nginx-ingress-controller:0.8.3
-docker tag yancey1989/kube2sky:1.14 $BOOTATRAPPER_DOMAIN:5000/kube2sky:1.14
-docker tag typhoon1986/exechealthz:1.0 $BOOTATRAPPER_DOMAIN/exechealthz:1.0
-docker tag typhoon1986/skydns:latest $BOOTATRAPPER_DOMAIN/skydns:latest
-docker push $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:v1.2.0
-docker push $BOOTATRAPPER_DOMAIN:5000/pause:2.0
-docker push $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
-docker push $BOOTATRAPPER_DOMAIN:5000/nginx-ingress-controller:0.8.3
-docker push $BOOTATRAPPER_DOMAIN:5000/kube2sky:1.14
-docker push $BOOTATRAPPER_DOMAIN/exechealthz:1.0
-docker push $BOOTATRAPPER_DOMAIN/skydns:latest
+DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:v1.2.0' \
+  'typhoon1986/pause:2.0' \
+  'typhoon1986/flannel:0.5.5' \
+  'yancey1989/nginx-ingress-controller:0.8.3' \
+  'yancey1989/kube2sky:1.14' \
+  'typhoon1986/exechealthz:1.0' \
+  'typhoon1986/skydns:latest');
+len=${#DOCKER_IMAGES[@]}
+for ((i=0;i<len;i++)); do
+  DOCKER_IMAGE=${DOCKER_IMAGES[i]}
+  DOCKER_TAR_FILE=`echo /bsroot/${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+  DOCKER_TAG_NAME=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE} | awk -F'/' '{print $1"/"$3}'`
+  docker load < $DOCKER_TAR_FILE
+  docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
+  docker push $DOCKER_TAG_NAME
+done
 # config kubectl
 kubectl set-cluster config set-cluster k8sp --server http://$MASTER_HOSTNAME:8080
 kubectl config set-context k8sp --cluster=k8sp

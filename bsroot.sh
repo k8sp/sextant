@@ -158,7 +158,7 @@ prepare_cc_server_contents() {
 
 # -------------download k8s image for later start.sh to push-------------
 download_k8s_images () {
-  docker_images=('typhoon1986/hyperkube-amd64:v1.2.0' \
+  DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:v1.2.0' \
     'typhoon1986/pause:2.0' \
     'typhoon1986/flannel:0.5.5' \
     'yancey1989/nginx-ingress-controller:0.8.3' \
@@ -166,12 +166,12 @@ download_k8s_images () {
     'typhoon1986/exechealthz:1.0' \
     'typhoon1986/skydns:latest');
   cd /bsroot
-  len=${#docker_images[@]}
+  len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
-    docker_image=${docker_images[i]}
-    docker pull $docker_image
-    tar_name=`echo $docker_image.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
-    docker save $docker_image > $tar_name
+    docker_image=${DOCKER_IMAGES[i]}
+    docker pull $DOCKER_IMAGE
+    DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE
   done
 }
 
