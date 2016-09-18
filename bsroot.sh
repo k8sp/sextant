@@ -171,6 +171,23 @@ download_ceph_images() {
   docker save typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 > ceph_daemon.tar
 }
 
+#-----------docker registry tls-------
+gen_registry_tls(){
+ cd /bsroot/tls
+ rm -rf /bsroot/tls/*
+
+ openssl genrsa -out ca-key.pem 2048
+ openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
+
+ openssl genrsa -out bootstrapper.key 2048
+ openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper"
+ openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
+
+ mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
+ rm -rf /etc/docker/certs.d/$DEFAULT_IPV4:5000/*
+ cp ca.pem /etc/docker/certs.d/$DEFAULT_IPV4:5000/ca.crt
+}
+
 # -------------do the steps-------------
 check_prerequisites || exit 1
 download_pxe_images
@@ -180,3 +197,4 @@ gen_registry_config
 prepare_cc_server_contents
 download_k8s_images
 download_ceph_images
+gen_registry_tls
