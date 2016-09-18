@@ -8,10 +8,14 @@ sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-config
 # start dnsmasq
 dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # run addons
-addons -dir /bsroot/html/static \
-  -cluster-desc-file /bsroot/config/cluster-desc.yml \
-  -ingress-template-file /bsroot/config/ingress.template \
-  -skydns-template-file /bsroot/config/skydns.template &
+addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
+  -template-file /bsroot/config/ingress.template \
+  -config-file /bsroot/html/static/ingress.yaml &
+
+addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
+  -template-file /bsroot/config/skydns.template \
+  -config-file /bsroot/html/static/skydns.yaml &
+
 # start cloud-config-server
 cloud-config-server -addr ":8081" \
   -dir /bsroot/html/static \

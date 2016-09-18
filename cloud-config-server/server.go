@@ -56,8 +56,6 @@ func main() {
 	candy.Must(fileExist(*caCrt))
 	candy.Must(fileExist(*caKey))
 
-	// make ingress and skydns yaml file
-
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
 
