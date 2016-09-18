@@ -33,38 +33,6 @@ type ExecutionConfig struct {
 	K8sServiceClusterIPRange string
 }
 
-// IngressConfig struct config ingress yaml config file which used for deploying ingress
-type IngressConfig struct {
-	IngressReplicas int
-	Dockerdomain    string
-}
-
-// SkyDNSConfig struct config skydns yaml config file which used for deploying skydns
-type SkyDNSConfig struct {
-	K8sClusterDNS string
-	Dockerdomain  string
-	EtcdEndpoint  string
-}
-
-// ExecIngress return executed ingress yaml
-func ExecIngress(tmpl *template.Template, config *tpcfg.Cluster, w io.Writer) error {
-	ic := IngressConfig{
-		IngressReplicas: config.GetIngressReplicas(),
-		Dockerdomain:    config.Dockerdomain,
-	}
-	return tmpl.Execute(w, ic)
-}
-
-// ExecSkyDNS return executed skydns yaml
-func ExecSkyDNS(tmpl *template.Template, config *tpcfg.Cluster, w io.Writer) error {
-	sc := SkyDNSConfig{
-		K8sClusterDNS: config.K8sClusterDNS,
-		Dockerdomain:  config.Dockerdomain,
-		EtcdEndpoint:  strings.Split(config.GetEtcdEndpoints(), ",")[0],
-	}
-	return tmpl.Execute(w, sc)
-}
-
 // Execute returns the executed cloud-config template for a node with
 // given MAC address.
 func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt string, w io.Writer) error {

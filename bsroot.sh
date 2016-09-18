@@ -158,21 +158,21 @@ prepare_cc_server_contents() {
 
 # -------------download k8s image for later start.sh to push-------------
 download_k8s_images () {
+  docker_images=('typhoon1986/hyperkube-amd64:v1.2.0' \
+    'typhoon1986/pause:2.0' \
+    'typhoon1986/flannel:0.5.5' \
+    'yancey1989/nginx-ingress-controller:0.8.3' \
+    'yancey1989/kube2sky:1.14' \
+    'typhoon1986/exechealthz:1.0' \
+    'typhoon1986/skydns:latest');
   cd /bsroot
-  docker pull typhoon1986/hyperkube-amd64:v1.2.0
-  docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
-  docker pull typhoon1986/pause:2.0
-  docker save typhoon1986/pause:2.0 > pause_2.0.tar
-  docker pull typhoon1986/flannel:0.5.5
-  docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
-  docker pull yancey1989/nginx-ingress-controller:0.8.3
-  docker save yancey1989/nginx-ingress-controller:0.8.3 > nginx-ingress-controller_0.8.3.tar
-  docker pull yancey1989/kube2sky:1.14
-  docker save yancey1989/kube2sky:1.14 > kube2sky_1.14.tar
-  docker pull typhoon1986/exechealthz:1.0
-  docker save typhoon1986/exechealthz > exechealthz_1.0.tar
-  docker pull typhoon1986/skydns:latest
-  docker save typhoon1986/skydns:latest > skydns_latest.tar
+  len=${#docker_images[@]}
+  for ((i=0;i<len;i++)); do
+    docker_image=${docker_images[i]}
+    docker pull $docker_image
+    tar_name=`echo $docker_image.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+    docker save $docker_image > $tar_name
+  done
 }
 
 # -------------do the steps-------------

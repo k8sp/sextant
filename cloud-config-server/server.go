@@ -12,7 +12,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -42,9 +41,6 @@ func main() {
 		"URL to cloud-config file template.")
 	ccTemplateFile := flag.String("cc-template-file", "./cloud-config.template", "Local copy of cloud-config file template.")
 
-	ingressTemplateFile := flag.String("ingress-template-file", "./ingress.template", "ingress config file template.")
-	skydnsTempmlateFile := flag.String("skydns-template-file", "./skydns.template", "ingress config file template.")
-
 	caCrt := flag.String("ca-crt", "", "CA certificate file, in PEM format")
 	caKey := flag.String("ca-key", "", "CA private key file, in PEM format")
 	addr := flag.String("addr", ":8080", "Listening address")
@@ -64,9 +60,6 @@ func main() {
 
 	c := makeCacheGetter(*clusterDescURL, *clusterDescFile)
 	t := makeCacheGetter(*ccTemplateURL, *ccTemplateFile)
-
-	candy.Must(makeSystemYaml(c, "ingress", *ingressTemplateFile, *dir))
-	candy.Must(makeSystemYaml(c, "skydns", *skydnsTempmlateFile, *dir))
 
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
@@ -117,28 +110,6 @@ func fileExist(fn string) error {
 	_, err := os.Stat(fn)
 	if err != nil || os.IsNotExist(err) {
 		return errors.New("file " + fn + " is not ready.")
-	}
-	return nil
-}
-
-func makeSystemYaml(clusterDesc func() []byte, flag, templateFile, staticFilePath string) error {
-	log.Printf("Genearting %s ... ", flag)
-	d, _ := ioutil.ReadFile(templateFile)
-	tmpl := template.Must(template.New(flag).Parse(string(d)))
-	c := &config.Cluster{}
-	candy.Must(yaml.Unmarshal(clusterDesc(), c))
-	if flag == "ingress" {
-		ingressYaml := path.Join(staticFilePath, "ingress.yaml")
-		candy.WithCreated(ingressYaml, func(w io.Writer) {
-			candy.Must(cctemplate.ExecIngress(tmpl, c, w))
-		})
-	} else if flag == "skydns" {
-		skydnsYaml := path.Join(staticFilePath, "skydns.yaml")
-		candy.WithCreated(skydnsYaml, func(w io.Writer) {
-			candy.Must(cctemplate.ExecSkyDNS(tmpl, c, w))
-		})
-	} else {
-		return errors.New("System yaml can only support ingress and skydns.")
 	}
 	return nil
 }
