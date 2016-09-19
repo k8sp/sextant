@@ -332,6 +332,21 @@ coreos:
               [Service]
               Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         {{- if .KubeMaster }}
+        - name: kube-addons
+          command: start
+          content: |
+            [Unit]
+            Description=Install Kubernetes addons
+            After=kubelet.service
+            Requires=kubelet.service
+            [Service]
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}:8080/static/ingress.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}:8080/static/skydns.yaml
+            ExecStart=docker run -d --net=host \
+            -e "KUBECTL_OPTS=--server={{ .MasterHostname }}:8080" \
+            -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
+            {{ .BootstrapperIP }}:5000/kube-addon-manager-amd64:v5.1
+            
         - name: kubelet.service
           runtime: true
           command: start

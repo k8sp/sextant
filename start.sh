@@ -37,6 +37,7 @@ DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:v1.2.0' \
   'yancey1989/nginx-ingress-controller:0.8.3' \
   'yancey1989/kube2sky:1.14' \
   'typhoon1986/exechealthz:1.0' \
+  'yancey1989/yancey1989/kube-addon-manager-amd64:v5.1' \
   'typhoon1986/skydns:latest');
 len=${#DOCKER_IMAGES[@]}
 for ((i=0;i<len;i++)); do
@@ -47,10 +48,4 @@ for ((i=0;i<len;i++)); do
   docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
   docker push $DOCKER_TAG_NAME
 done
-# config kubectl
-kubectl set-cluster config set-cluster k8sp --server http://$MASTER_HOSTNAME:8080
-kubectl config set-context k8sp --cluster=k8sp
-kubectl config use-context k8sp
-kubectl create -f /bsroot/html/static/ingress.yaml
-kubectl create -f /bsroot/html/static/skydns.yaml
 wait
