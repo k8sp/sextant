@@ -1,65 +1,93 @@
 #!/bin/bash
-# NOTICE: put all prepared files in /bsroot
-# FIXME: DEFAULT_IPV4 may not accessible by clients?
-#DEFAULT_IPV4=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
-DEFAULT_IPV4=`grep "bootstrapper:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g'`
-echo "using bootstrapper IP: $DEFAULT_IPV4..."
 
-CURR_DIR=$(pwd)
-mkdir -p /bsroot
-mkdir -p /bsroot/html/static
-mkdir -p /bsroot/tftpboot
-mkdir -p /bsroot/config
-mkdir -p /bsroot/tls
-# -------------check if tools used by this script are installed -------------
+# bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
+# scp-ed to the bootstrapper server as /bsroot.
+
+if [[ "$#" -ne 1 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml>"
+fi
+
+CLUSTER_DESC=$PWD/$1 # Remember the fullpath
+echo "Using cluster-desc file $CLUSTER_DESC"
+
+BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
+if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
+    echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
+    exit 1
+fi
+echo "Using bootstrapper server IP $BS_IP"
+
+BSROOT=$PWD/bsroot
+if [[ -d $BSROOT ]]; then
+    echo "$BSROOT already exists.  Overwrite without removing it."
+fi
+
+
 check_prerequisites() {
-  met=0
-  for tool in wget tar gpg docker; do
-    command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; met=1; }
-  done
-  return $met
+    printf "Checking prerequisites ... "
+    err=0
+    for tool in wget tar gpg docker; do
+	command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
+    done
+    if [[ $err -ne 0 ]]; then
+	exit 1
+    fi
+    echo "Done"
 }
-# -------------download stuff used by PXE and tftp-------------
+
+
 download_pxe_images() {
-  cd /bsroot/tftpboot
-  # download syslinux and unzip
-  wget -c https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
-  tar xzf syslinux-6.03.tar.gz
-  cp syslinux-6.03/bios/core/pxelinux.0 /bsroot/tftpboot
-  cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /bsroot/tftpboot
-  cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 /bsroot/tftpboot
-  # download and import coreos pubkey
-  wget https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
-  gpg --import --keyid-format LONG /bsroot/tftpboot/CoreOS_Image_Signing_Key.asc
-  # download coreos pxe images
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig
-  gpg --verify coreos_production_pxe.vmlinuz.sig
-  if [ $? -ne 0 ] ; then
-    exit 1
-  fi
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig
-  gpg --verify coreos_production_pxe_image.cpio.gz.sig
-  if [ $? -ne 0 ] ; then
-    echo "download coreos pxe image error, try rerun this script please."
-    exit 1
-  fi
+    mkdir -p $BSROOT/tftpboot
+
+    printf "Downloading syslinux ... "
+    wget --quiet -c -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
+    cd $BSROOT/tftpboot
+    tar xzf syslinux-6.03.tar.gz
+    cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot
+    cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot
+    cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot
+    echo "Done"
+    
+    printf "Importing CoreOS signing key ... "
+    wget --quiet -c -P $BSROOT/tftpboot https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc || { echo "Failed"; exit 1; }
+    gpg --import --keyid-format LONG $BSROOT/tftpboot/CoreOS_Image_Signing_Key.asc > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
+    
+    printf "Downloading CoreOS PXE vmlinuz image ... "
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
+    cd $BSROOT/tftpboot
+    gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
+    
+    printf "Downloading CoreOS PXE CPIO image ... "
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
+    gpg --verify coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
 }
-gen_pxe_config() {
-  mkdir pxelinux.cfg
-  # gen default pxe config
-  cat > /bsroot/tftpboot/pxelinux.cfg/default <<EOF
+
+
+generate_pxe_config() {
+    printf "Generating pxelinux.cfg ... "
+    mkdir -p $BSROOT/tftpboot/pxelinux.cfg
+    cat > $BSROOT/tftpboot/pxelinux.cfg/default <<EOF
 default coreos
 
 label coreos
   kernel coreos_production_pxe.vmlinuz
-  append initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=http://$DEFAULT_IPV4:8081/static/cloud-configs/install.sh coreos.autologin
+  append initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=http://$BS_IP:8081/static/cloud-config/install.sh coreos.autologin
 EOF
+    echo "Done"
 }
 
-gen_dnsmasq_config() {
-  cat > /bsroot/config/dnsmasq.conf <<EOF
+
+generate_dnsmasq_config() {
+    printf "Generating dnsmasq.conf ... "
+    mkdir -p $BSROOT/config
+    # TODO(yi): Ad-hoc domain name k8s.baifendian.com here.  Try parsing it from cluster-desc.yml.
+    # TODO(yi): Ad-hoc DHCP IP range. Try parsing it from cluster-desc.yml.
+    cat > $BSROOT/config/dnsmasq.conf <<EOF
   interface=eth0
   bind-interfaces
   domain=k8s.baifendian.com
@@ -87,11 +115,14 @@ gen_dnsmasq_config() {
   enable-tftp
   tftp-root=/bsroot/tftpboot
 EOF
+    echo "Done"
 }
 
-gen_registry_config() {
-  mkdir -p /bsroot/registry
-  cat > /bsroot/config/registry.yml <<EOF
+
+generate_registry_config() {
+    printf "Generating Docker registry config file ... "
+    mkdir -p $BSROOT/registry_data
+    cat > $BSROOT/config/registry.yml <<EOF
 version: 0.1
 log:
   fields:
@@ -100,7 +131,7 @@ storage:
   cache:
     blobdescriptor: inmemory
   filesystem:
-    rootdirectory: /bsroot/registry
+    rootdirectory: /bsroot/registry_data
 http:
   addr: :5000
   headers:
@@ -114,79 +145,110 @@ health:
     interval: 10s
     threshold: 3
 EOF
+    echo "Done"
 }
 
-# -------------download stuff used by cloud-config-server-------------
+
 prepare_cc_server_contents() {
-  cd /bsroot/html/static
-  wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
-  wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
-  chmod +x kubelet
-  # copy install.sh
-  mkdir -p /bsroot/html/static/cloud-configs
-  cd $CURR_DIR
-  cp ./cloud-config-server/install.sh /bsroot/html/static/cloud-configs
-  # put cloud-config.template in /bsroot/config
-  cp ./cloud-config-server/template/cloud-config.template /bsroot/config
-  # put cluster-desc.yml to /bsroot/config
-  cp ./cloud-config-server/template/unisound-ailab/build_config.yml /bsroot/config/cluster-desc.yml
-  # download coreos image for cc server to serve
-  # FIXME: current dir should be a symbol link
-  mkdir -p /bsroot/html/static/current
-  cd /bsroot/html/static/current
-  wget https://stable.release.core-os.net/amd64-usr/current/version.txt
-  VERSION=$(cat version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
-  echo "Detected most recent version:" $VERSION
-  if [[ ! -d $VERSION ]]; then
-    mkdir -p /bsroot/html/static/$VERSION
-  fi
-  cd /bsroot/html/static/$VERSION
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
-  gpg --verify coreos_production_image.bin.bz2.sig
+    mkdir -p $BSROOT/html/static/cloud-config
 
-  if [ $? -ne 0 ] ; then
-    echo "download nginx coreos image error, try rerun this script please."
-    exit 1
-  fi
+    # TODO(yi): What is this setup-network-environment file?
+    printf "Downloading setup-network-environment file ... "
+    wget --quiet -c -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
+    echo "Done"
+    
+    # TODO(yi): Why (and how could we ) fix the version of kubelet?  Wouldn't it be the same version of Kubernetes we are going to deploy?
+    printf "Downloading kubelet v1.2.0 ... "
+    wget --quiet -c -P $BSROOT/html/static https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet || { echo "Failed"; exit 1; }
+    chmod +x kubelet
+    echo "Done"
+    
+    printf "Copying cloud-config template and cluster-desc.yml ... "
+    cp $GOPATH/src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template $BSROOT/config/ || { echo "Failed"; exit 1; }
+    cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    printf "Generating install.sh ... "
+    cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
+#!/bin/bash
+# FIXME: default to install coreos on /dev/sda
+mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..' | tail -n1`
+wget -O ${mac_addr}.yml http://$BS_IP/cloud-config/${mac_addr}
+sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://<HTTP_ADDR>/static -V current
+sudo reboot
+EOF
+    echo "Done"
+
+    printf "Checking new CoreOS version ... "
+    VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
+    if [[ $VERSION == "" ]]; then
+	echo "Failed"; exit 1;
+    fi
+    echo "Done"
+
+    printf "Updating CoreOS images ... "
+    if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
+	mkdir -p $BSROOT/html/static/$VERSION
+    fi
+    
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
+    cd $BSROOT/html/static/$VERSION
+    gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+
+    ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
+    echo "Done"
 }
 
-# -------------download k8s image for later start.sh to push-------------
+
 download_k8s_images () {
-  cd /bsroot
-  docker pull typhoon1986/hyperkube-amd64:v1.2.0
-  docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
-  docker pull typhoon1986/pause:2.0
-  docker save typhoon1986/pause:2.0 > pause_2.0.tar
-  docker pull typhoon1986/flannel:0.5.5
-  docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
+    printf "Downloading hyperhube image ... "
+    docker pull typhoon1986/hyperkube-amd64:v1.2.0 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/hyperkube-amd64:v1.2.0 > $BSROOT/hyperkube-amd64_v1.2.0.tar || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    printf "Downloading pause image ... "
+    docker pull typhoon1986/pause:2.0 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/pause:2.0 > $BSROOT/pause_2.0.tar || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    printf "Downloading flannel image ... "
+    docker pull typhoon1986/flannel:0.5.5 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/flannel:0.5.5 > $BSROOT/flannel_0.5.5.tar || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    # Note: we need to run docker load on the bootstrapper server to load these saved images.
 }
 
-#-----------docker registry tls-------
-gen_registry_tls(){
 
- cd /bsroot/tls
- rm -rf /bsroot/tls/*
+generate_tls_assets() {
+    mkdir -p $BSROOT/tls
+    cd $BSROOT/tls
+    rm -rf $BSROOT/tls/*
 
- openssl genrsa -out ca-key.pem 2048
- openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
+    printf "Generating CA TLS assets ... "
+    openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
 
- openssl genrsa -out bootstrapper.key 2048
- openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper"
- openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365
+    printf "Generating bootstrapper TLS assets ... "
+    openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
 
- mkdir -p /etc/docker/certs.d/$DEFAULT_IPV4:5000
- rm -rf /etc/docker/certs.d/$DEFAULT_IPV4:5000/*
- cp ca.pem /etc/docker/certs.d/$DEFAULT_IPV4:5000/ca.crt
-
+    # Note: we need to run the following commands on the bootstrapper server to import ca.crt.
+    # 
+    #  mkdir -p /etc/docker/certs.d/$BS_IP:5000
+    #  rm -rf /etc/docker/certs.d/$BS_IP:5000/*
+    #  cp ca.pem /etc/docker/certs.d/$BS_IP:5000/ca.crt
 }
 
-# -------------do the steps-------------
-check_prerequisites || exit 1
+check_prerequisites
 download_pxe_images
-gen_pxe_config
-gen_dnsmasq_config
-gen_registry_config
+generate_pxe_config
+generate_dnsmasq_config
+generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
-gen_registry_tls
+generate_tls_assets
