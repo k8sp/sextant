@@ -23,23 +23,23 @@ check_prerequisites() {
 download_pxe_images() {
   cd /bsroot/tftpboot
   # download syslinux and unzip
-  wget -c https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
+  wget --quiet -c https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
   tar xzf syslinux-6.03.tar.gz
   cp syslinux-6.03/bios/core/pxelinux.0 /bsroot/tftpboot
   cp syslinux-6.03/bios/com32/menu/vesamenu.c32 /bsroot/tftpboot
   cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 /bsroot/tftpboot
   # download and import coreos pubkey
-  wget https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
+  wget --quiet https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc
   gpg --import --keyid-format LONG /bsroot/tftpboot/CoreOS_Image_Signing_Key.asc
   # download coreos pxe images
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig
+  wget --quiet -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz
+  wget --quiet https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig
   gpg --verify coreos_production_pxe.vmlinuz.sig
   if [ $? -ne 0 ] ; then
     exit 1
   fi
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig
+  wget --quiet -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz
+  wget --quiet https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig
   gpg --verify coreos_production_pxe_image.cpio.gz.sig
   if [ $? -ne 0 ] ; then
     echo "download coreos pxe image error, try rerun this script please."
@@ -116,8 +116,8 @@ EOF
 # -------------download stuff used by cloud-config-server-------------
 prepare_cc_server_contents() {
   cd /bsroot/html/static
-  wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
-  wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
+  wget --quiet -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
+  wget --quiet -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
   chmod +x kubelet
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
@@ -131,15 +131,15 @@ prepare_cc_server_contents() {
   # FIXME: current dir should be a symbol link
   mkdir -p /bsroot/html/static/current
   cd /bsroot/html/static/current
-  wget https://stable.release.core-os.net/amd64-usr/current/version.txt
+  wget --quiet https://stable.release.core-os.net/amd64-usr/current/version.txt
   VERSION=$(cat version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
   echo "Detected most recent version:" $VERSION
   if [[ ! -d $VERSION ]]; then
     mkdir -p /bsroot/html/static/$VERSION
   fi
   cd /bsroot/html/static/$VERSION
-  wget -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
-  wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
+  wget --quiet -c https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
+  wget --quiet https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
   gpg --verify coreos_production_image.bin.bz2.sig
 
   if [ $? -ne 0 ] ; then
