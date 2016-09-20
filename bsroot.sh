@@ -5,10 +5,12 @@
 
 if [[ "$#" -ne 1 ]]; then
     echo "Usage: bsroot.sh <cluster-desc.yml>"
+    exit 1
 fi
 
-CLUSTER_DESC=$PWD/$1 # Remember the fullpath
-echo "Using cluster-desc file $CLUSTER_DESC"
+# Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
+CLOUD_CONFIG_TEMPLATE=$PWD/$(dirname $0)/cloud-config-server/template/cloud-config.template
+CLUSTER_DESC=$PWD/$1
 
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
@@ -165,7 +167,7 @@ prepare_cc_server_contents() {
     echo "Done"
     
     printf "Copying cloud-config template and cluster-desc.yml ... "
-    cp $GOPATH/src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template $BSROOT/config/ || { echo "Failed"; exit 1; }
+    cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
@@ -175,8 +177,7 @@ prepare_cc_server_contents() {
 # FIXME: default to install coreos on /dev/sda
 mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..' | tail -n1`
 wget -O ${mac_addr}.yml http://$BS_IP/cloud-config/${mac_addr}
-sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://<HTTP_ADDR>/static -V current
-sudo reboot
+sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
     echo "Done"
 
