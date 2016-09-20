@@ -40,12 +40,13 @@ download_pxe_images() {
     mkdir -p $BSROOT/tftpboot
 
     printf "Downloading syslinux ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz
+    wget --quiet -c -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
-    tar xzf syslinux-6.03.tar.gz
-    cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot
-    cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot
-    cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot
+    tar xzf syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
+    cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
+    cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
+    cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
+    rm -rf syslinux-6.03 || { echo "Failed"; exit 1; } # Clean the untarred.
     echo "Done"
     
     printf "Importing CoreOS signing key ... "
@@ -191,8 +192,8 @@ EOF
 	mkdir -p $BSROOT/html/static/$VERSION
     fi
     
-    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2
-    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 
