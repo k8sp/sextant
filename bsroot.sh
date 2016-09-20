@@ -118,10 +118,21 @@ EOF
 
 # -------------download stuff used by cloud-config-server-------------
 prepare_cc_server_contents() {
+  cd /bsroot
+  hyperkube_version=`grep "hyperkube_version:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  wget  -c https://github.com/kubernetes/kubernetes/releases/download/$hyperkube_version/kubernetes.tar.gz
+  tar xzf kubernetes.tar.gz || { echo "Failed"; exit 1; }
+  cd /bsroot/kubernetes/server
+  tar xzf kubernetes-server-linux-amd64.tar.gz || { echo "Failed"; exit 1; }
+  cp /bsroot/kubernetes/server/kubernetes/bin/kubelet /bsroot/html/static
+  cp /bsroot/kubernetes/server/kubernetes/bin/kubectl /bsroot
+  rm -rf /bsroot/kubernetes
+
   cd /bsroot/html/static
   wget -c -O setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment
-  wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
-  chmod +x kubelet
+  #wget -c https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet
+  #chmod +x kubelet
+
   # copy install.sh
   mkdir -p /bsroot/html/static/cloud-configs
   cd $CURR_DIR
@@ -153,13 +164,17 @@ prepare_cc_server_contents() {
 
 # -------------download k8s image for later start.sh to push-------------
 download_k8s_images () {
+  hyperkube_version=`grep "hyperkube_version:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  pause_version=`grep "pause_version:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  flannel_version=`grep "flannel_version:" cloud-config-server/template/unisound-ailab/build_config.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+
   cd /bsroot
-  docker pull typhoon1986/hyperkube-amd64:v1.2.0
-  docker save typhoon1986/hyperkube-amd64:v1.2.0 > hyperkube-amd64_v1.2.0.tar
-  docker pull typhoon1986/pause:2.0
-  docker save typhoon1986/pause:2.0 > pause_2.0.tar
-  docker pull typhoon1986/flannel:0.5.5
-  docker save typhoon1986/flannel:0.5.5 > flannel_0.5.5.tar
+  docker pull typhoon1986/hyperkube-amd64:$hyperkube_version
+  docker save typhoon1986/hyperkube-amd64:$hyperkube_version > hyperkube-amd64.tar
+  docker pull typhoon1986/pause-amd64:$pause_version
+  docker save typhoon1986/pause-amd64:$pause_version > pause.tar
+  docker pull typhoon1986/flannel:$flannel_version
+  docker save typhoon1986/flannel:$flannel_version > flannel.tar
 }
 
 #-----------docker registry tls-------

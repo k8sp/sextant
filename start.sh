@@ -20,13 +20,17 @@ cloud-config-server -addr ":8081" \
 registry serve /bsroot/config/registry.yml &
 sleep 2
 # push k8s images to registry from bsroot
-docker load < /bsroot/hyperkube-amd64_v1.2.0.tar
-docker load < /bsroot/pause_2.0.tar
-docker load < /bsroot/flannel_0.5.5.tar
-docker tag typhoon1986/hyperkube-amd64:v1.2.0 $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:v1.2.0
-docker tag typhoon1986/pause:2.0 $BOOTATRAPPER_DOMAIN:5000/pause:2.0
-docker tag typhoon1986/flannel:0.5.5 $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
-docker push $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:v1.2.0
-docker push $BOOTATRAPPER_DOMAIN:5000/pause:2.0
-docker push $BOOTATRAPPER_DOMAIN:5000/flannel:0.5.5
+hyperkube_version=`grep "hyperkube_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g'`
+pause_version=`grep "pause_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g'`
+flannel_version=`grep "flannel_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g'`
+
+docker load < /bsroot/hyperkube-amd64.tar
+docker load < /bsroot/pause.tar
+docker load < /bsroot/flannel.tar
+docker tag typhoon1986/hyperkube-amd64:$hyperkube_version $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:$hyperkube_version
+docker tag typhoon1986/pause-amd64:$pause_version $BOOTATRAPPER_DOMAIN:5000/pause-amd64:$pause_version
+docker tag typhoon1986/flannel:$flannel_version $BOOTATRAPPER_DOMAIN:5000/flannel:$flannel_version
+docker push $BOOTATRAPPER_DOMAIN:5000/hyperkube-amd64:$hyperkube_version
+docker push $BOOTATRAPPER_DOMAIN:5000/pause-amd64:$pause_version
+docker push $BOOTATRAPPER_DOMAIN:5000/flannel:$flannel_version
 wait
