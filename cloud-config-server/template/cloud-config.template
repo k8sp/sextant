@@ -325,7 +325,7 @@ coreos:
             After=network-online.target
             [Service]
             ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-            ExecStartPre=-/usr/bin/wget -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}:8081/static/setup-network-environment-1.0.1
+            ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}:8081/static/setup-network-environment-1.0.1
             ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
@@ -354,7 +354,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
+            ExecStart=/usr/bin/wget --quiet -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
             ExecStart=/bin/bash /home/core/install-mon.sh
             RemainAfterExit=no
             Type=oneshot
@@ -381,7 +381,7 @@ coreos:
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
-            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
@@ -413,7 +413,7 @@ coreos:
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
-            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
