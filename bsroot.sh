@@ -105,6 +105,9 @@ http:
   addr: :5000
   headers:
     X-Content-Type-Options: [nosniff]
+  tls:
+    certificate: /bsroot/tls/bootstrapper.crt
+    key: /bsroot/tls/bootstrapper.key
 health:
   storagedriver:
     enabled: true
