@@ -38,7 +38,7 @@ if docker ps -a | grep -q $CEPH_MON_DOCKER_NAME ; then
 else
   # Start the ceph monitor
   echo "docker container $CEPH_MON_DOCKER_NAME doesn't exist, run it now"
-  docker run -d --net=host \
+  docker run -d --restart=on-failure --net=host \
     --name $CEPH_MON_DOCKER_NAME \
     -v /etc/ceph:/etc/ceph \
     -v /var/lib/ceph/:/var/lib/ceph \
@@ -56,7 +56,7 @@ if docker ps -a | grep -q $CEPH_MDS_DOCKER_NAME ; then
 else
   # Start the ceph monitor
   echo "docker container $CEPH_MDS_DOCKER_NAME doesn't exist, run it now"
-  docker run -d --net=host \
+  docker run -d --restart=on-failure --net=host \
     --name ceph_mds \
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e CEPHFS_CREATE=1 \

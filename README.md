@@ -46,6 +46,7 @@ docker build -t bootstrapper .
 
 ## 上传到集群内部的bootstrapper机器
 如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
+
 1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz /bsroot```
 1. 导出编译好的docker镜像：```docker save bootstrapper > bootstrapper.tar```
 1. 将bsroot.tar.gz和bootstrapper.tar上传到你的bootstrapper机器上（使用scp或ftp等工具）
@@ -63,4 +64,48 @@ docker run -d --net=host \
 由于dnsmasq需要运行在特权模式，需要参数：--privileged
 
 ## 通过bootstrapper来初始化您的kubernetes集群
-***只需要设置kubernetes节点通过PXE网络引导，并开机(和bootstrapper网络联通)，就可以自动完成安装***
+***只需要设置kubernetes节点通过PXE网络引导，并开机(和bootstrapper网络联通)，就可以自动完成kubernetes和ceph安装***
+
+## 使用集群
+### 下载和配置kubectl
+可以选择从以下链接下载对应的版本
+
+* OSX
+  * [官方v1.2.4](https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/darwin/amd64/kubectl)
+  * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
+* Linux
+  * [官方v1.2.4](https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/linux/amd64/kubectl)
+  * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
+
+### 配置kubectl客户端
+* 替换 ${MASTER_HOST} 到百分点云中心的kubernetes服务地址:```k8s.bfdcloud.com```
+* 和管理员申请分配一个你自己的帐号，并获取对应的key文件，包括ca.pem, user-key.pem和user.pem
+* 替换 ${CA_CERT} 为获取到的ca.pem文件的绝对路径，如```/home/core/.kube/ca.pem```
+* 替换 ${ADMIN_KEY} 为获取到的user-key.pem的路径，如```/home/core/.kube/admin-key.pem```
+* 替换 ${ADMIN_CERT} 为获取到的user.pem的路径，如```/home/core/.kube/admin.pem```
+* 替换 ${NAMESPACE} 为管理员分配给你的namespace（字符串）
+然后执行下面的命令完成对kubectl客户端对的配置
+```
+$ kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
+$ kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
+$ kubectl config set-context default-system --cluster=default-cluster --user=default-admin --namespace=${NAMESPACE}
+$ kubectl config use-context default-system
+```
+
+### 测试kubectl客户端可用
+执行下面的命令，观察返回结果是否正常，判断是否译璟完成客户端的正确配置：
+```
+$ kubectl get po
+NAME                             READY     STATUS    RESTARTS   AGE
+my-test-server-rkvw7             1/1       Running   5          2d
+```
+
+### 使用ceph集群
+在集群安装完成之后，可以使用下面的命令获得admin keyring作为后续使用
+```
+etcdctl --endpoints http://08-00-27-ef-d2-12:2379 get /ceph-config/ceph/adminKeyring
+```
+比如，需要使用cephFS mount目录：
+```
+mount -t ceph 192.168.8.112:/ /ceph -o name=admin,secret=[your secret]
+```

@@ -18,7 +18,7 @@ do
     device="/dev/$d"
     CEPH_OSD_DOCKER_NAME=ceph_osd_${d}
     docker rm $CEPH_OSD_DOCKER_NAME
-    docker run -d --pid=host --net=host --privileged=true \
+    docker run -d --restart=on-failure --pid=host --net=host --privileged=true \
       --name $CEPH_OSD_DOCKER_NAME \
       -v /etc/ceph:/etc/ceph \
       -v /var/lib/ceph:/var/lib/ceph \
@@ -27,5 +27,13 @@ do
       -e CLUSTER=$CEPH_CLUSTER_NAME \
       -e OSD_DEVICE=${device} \
       "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /bin/bash -x /entrypoint.sh osd
+
+    # FIXME: wait utill the container finishes bootstrapping
+    st=$(docker ps --format "{{.Status}} {{.Names}}"|grep $CEPH_OSD_DOCKER_NAME | awk '{print $1}')
+    while [ $st != "Up" ] ;
+    do
+      st=$(docker ps --format "{{.Status}} {{.Names}}"|grep $CEPH_OSD_DOCKER_NAME | awk '{print $1}')
+      sleep 5;
+    done
   fi
 done
