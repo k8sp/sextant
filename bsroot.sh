@@ -9,8 +9,11 @@ if [[ "$#" -ne 1 ]]; then
 fi
 
 # Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
-CLOUD_CONFIG_TEMPLATE=$PWD/$(dirname $0)/cloud-config-server/template/cloud-config.template
-CLUSTER_DESC=$PWD/$1
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
+CLUSTER_DESC=$(realpath $1)
 
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
@@ -50,19 +53,19 @@ download_pxe_images() {
     cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
     rm -rf syslinux-6.03 || { echo "Failed"; exit 1; } # Clean the untarred.
     echo "Done"
-    
+
     printf "Importing CoreOS signing key ... "
     wget --quiet -c -P $BSROOT/tftpboot https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc || { echo "Failed"; exit 1; }
     gpg --import --keyid-format LONG $BSROOT/tftpboot/CoreOS_Image_Signing_Key.asc > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     printf "Downloading CoreOS PXE vmlinuz image ... "
     wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     printf "Downloading CoreOS PXE CPIO image ... "
     wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
@@ -159,13 +162,13 @@ prepare_cc_server_contents() {
     printf "Downloading setup-network-environment file ... "
     wget --quiet -c -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     # TODO(yi): Why (and how could we ) fix the version of kubelet?  Wouldn't it be the same version of Kubernetes we are going to deploy?
     printf "Downloading kubelet v1.2.0 ... "
     wget --quiet -c -P $BSROOT/html/static https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet || { echo "Failed"; exit 1; }
     chmod +x kubelet
     echo "Done"
-    
+
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
@@ -192,7 +195,7 @@ EOF
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
 	mkdir -p $BSROOT/html/static/$VERSION
     fi
-    
+
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
@@ -240,7 +243,7 @@ generate_tls_assets() {
     echo "Done"
 
     # Note: we need to run the following commands on the bootstrapper server to import ca.crt.
-    # 
+    #
     #  mkdir -p /etc/docker/certs.d/$BS_IP:5000
     #  rm -rf /etc/docker/certs.d/$BS_IP:5000/*
     #  cp ca.pem /etc/docker/certs.d/$BS_IP:5000/ca.crt
