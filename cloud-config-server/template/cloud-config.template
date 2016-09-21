@@ -1,5 +1,7 @@
 #cloud-config
 write_files:
+  - path: /etc/modules-load.d/rbd.conf
+    content: rbd
   - path: /etc/kubernetes/ssl/ca.pem
     owner: root
     permissions: 0600
@@ -67,7 +69,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
               - /hyperkube
               - apiserver
@@ -103,7 +105,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - controller-manager
@@ -126,7 +128,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - scheduler
@@ -140,7 +142,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - proxy
@@ -197,7 +199,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
           command:
           - /hyperkube
           - proxy
@@ -258,6 +260,8 @@ coreos:
               DHCP=ipv4
               [DHCPv4]
               UseHostname=false
+        - name: "systemd-modules-load.service"
+          command: restart
         - name: "etcd2.service"
           command: "start"
         - name: "fleet.service"
@@ -281,7 +285,7 @@ coreos:
             RestartSec=5
             Environment="TMPDIR=/var/tmp/"
             Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-            Environment="FLANNEL_VER=0.5.5"
+            Environment="FLANNEL_VER={{ .FlannelVersion }}"
             Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
             Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
             Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
@@ -384,7 +388,7 @@ coreos:
             ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
             --register-node=true \
             --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
@@ -416,7 +420,7 @@ coreos:
             ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
             --address=0.0.0.0 \
             --allow-privileged=true \
             --cluster-dns={{ .K8sClusterDNS }} \

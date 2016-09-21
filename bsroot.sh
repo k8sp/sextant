@@ -32,10 +32,10 @@ check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
     for tool in wget tar gpg docker; do
-	command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
+        command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
-	exit 1
+        exit 1
     fi
     echo "Done"
 }
@@ -158,15 +158,25 @@ EOF
 prepare_cc_server_contents() {
     mkdir -p $BSROOT/html/static/cloud-config
 
-    # TODO(yi): What is this setup-network-environment file?
-    printf "Downloading setup-network-environment file ... "
-    wget --quiet -c -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
+    # Fetch release binary tarball from github accroding to the versions
+    # defined in "cluster-desc.yml"
+    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    printf "Downloading and extracting kubernetes release ${hyperkube_version} ... "
+    wget --quiet -c -O $BSROOT/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/$hyperkube_version/kubernetes.tar.gz
+    cd $BSROOT/
+    tar xzf kubernetes.tar.gz || { echo "Failed"; exit 1; }
+    cd $BSROOT/kubernetes/server
+    tar xzf kubernetes-server-linux-amd64.tar.gz || { echo "Failed"; exit 1; }
+    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubelet $BSROOT/html/static
+    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubectl $BSROOT
+    rm -rf $BSROOT/kubernetes
+    chmod +x $BSROOT/html/static/kubelet
     echo "Done"
 
-    # TODO(yi): Why (and how could we ) fix the version of kubelet?  Wouldn't it be the same version of Kubernetes we are going to deploy?
-    printf "Downloading kubelet v1.2.0 ... "
-    wget --quiet -c -P $BSROOT/html/static https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet || { echo "Failed"; exit 1; }
-    chmod +x $BSROOT/html/static/kubelet
+    # setup-network-environment will fetch the default system IP infomation
+    # when using cloud-config file to initiate a kubernetes cluster node
+    printf "Downloading setup-network-environment file ... "
+    wget --quiet -c -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
@@ -194,13 +204,13 @@ EOF
     printf "Checking new CoreOS version ... "
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
-	echo "Failed"; exit 1;
+      echo "Failed"; exit 1;
     fi
-    echo "Done"
+      echo "Done"
 
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
-	mkdir -p $BSROOT/html/static/$VERSION
+        mkdir -p $BSROOT/html/static/$VERSION
     fi
 
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
@@ -214,22 +224,26 @@ EOF
 
 
 download_k8s_images () {
-    printf "Downloading hyperhube image ... "
-    docker pull typhoon1986/hyperkube-amd64:v1.2.0 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/hyperkube-amd64:v1.2.0 > $BSROOT/hyperkube-amd64_v1.2.0.tar || { echo "Failed"; exit 1; }
+    printf "Downloading hyperkube image ... "
+    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    docker pull typhoon1986/hyperkube-amd64:$hyperkube_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/hyperkube-amd64:$hyperkube_version > $BSROOT/hyperkube-amd64.tar || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading pause image ... "
-    docker pull typhoon1986/pause:2.0 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/pause:2.0 > $BSROOT/pause_2.0.tar || { echo "Failed"; exit 1; }
+    pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    docker pull typhoon1986/pause-amd64:$pause_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/pause-amd64:$pause_version > $BSROOT/pause.tar || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading flannel image ... "
-    docker pull typhoon1986/flannel:0.5.5 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/flannel:0.5.5 > $BSROOT/flannel_0.5.5.tar || { echo "Failed"; exit 1; }
+    flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    docker pull typhoon1986/flannel:$flannel_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save typhoon1986/flannel:$flannel_version > $BSROOT/flannel.tar || { echo "Failed"; exit 1; }
     echo "Done"
 
-    # Note: we need to run docker load on the bootstrapper server to load these saved images.
+    # NOTE: we need to run docker load on the bootstrapper server
+    # to load these saved images.
 }
 
 
