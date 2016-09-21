@@ -128,6 +128,7 @@ EOF
 generate_registry_config() {
     printf "Generating Docker registry config file ... "
     mkdir -p $BSROOT/registry_data
+    [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
     cat > $BSROOT/config/registry.yml <<EOF
 version: 0.1
 log:
