@@ -201,7 +201,11 @@ sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V c
 EOF
     echo "Done"
 
-    printf "Checking new CoreOS version ... "
+    printf "Checking new CoreOS version and update version.txt ... "
+    # NOTE: make "current" to store version.txt
+    mkdir -p $BSROOT/html/static/current
+    cd $BSROOT/html/static/current
+    wget --quiet -P $BSROOT/html/static/current https://stable.release.core-os.net/amd64-usr/current/version.txt
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
       echo "Failed"; exit 1;
@@ -218,7 +222,6 @@ EOF
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 
-    ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
