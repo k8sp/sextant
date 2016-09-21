@@ -32,10 +32,10 @@ check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
     for tool in wget tar gpg docker; do
-	command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
+        command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
-	exit 1
+        exit 1
     fi
     echo "Done"
 }
@@ -198,13 +198,13 @@ EOF
     printf "Checking new CoreOS version ... "
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
-	     echo "Failed"; exit 1;
+      echo "Failed"; exit 1;
     fi
       echo "Done"
 
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
-	     mkdir -p $BSROOT/html/static/$VERSION
+        mkdir -p $BSROOT/html/static/$VERSION
     fi
 
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
