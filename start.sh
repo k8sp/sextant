@@ -4,7 +4,7 @@ DEFAULT_IPV4=`grep "bootstrapper:" /bsroot/config/cluster-desc.yml | awk '{print
 BOOTATRAPPER_DOMAIN=`grep "dockerdomain:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/"//g' | sed 's/ //g'`
 MASTER_HOSTNAME=`grep "kube_master: y" /bsroot/config/cluster-desc.yml -B 5 |grep "mac" | awk '{print $3}' | sed 's/"//g'`
 # update install.sh domain
-sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-configs/install.sh
+sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"'/g' /bsroot/html/static/cloud-configs/install.sh
 # start dnsmasq
 dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # run addons
@@ -17,7 +17,7 @@ addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
   -config-file /bsroot/html/static/skydns.yaml &
 
 # start cloud-config-server
-cloud-config-server -addr ":8081" \
+cloud-config-server -addr ":80" \
   -dir /bsroot/html/static \
   -cc-template-file /bsroot/config/cloud-config.template \
   -cc-template-url "" \
@@ -31,9 +31,13 @@ cloud-config-server -addr ":8081" \
 registry serve /bsroot/config/registry.yml &
 sleep 2
 # push k8s images to registry from bsroot
-DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:v1.2.0' \
-  'typhoon1986/pause:2.0' \
-  'typhoon1986/flannel:0.5.5' \
+hyperkube_version=`grep "hyperkube_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+pause_version=`grep "pause_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+flannel_version=`grep "flannel_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+
+DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:${hyperkube_version}' \
+  'typhoon1986/pause:${pause_version}' \
+  'typhoon1986/flannel:${flannel_version}' \
   'yancey1989/nginx-ingress-controller:0.8.3' \
   'yancey1989/kube2sky:1.14' \
   'typhoon1986/exechealthz:1.0' \

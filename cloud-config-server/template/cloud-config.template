@@ -1,6 +1,13 @@
 #cloud-config
 write_files:
+  - path: /etc/modules-load.d/rbd.conf
+    content: rbd
   - path: /etc/kubernetes/ssl/ca.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .CaCrt }}
+  - path: /etc/docker/certs.d/{{ .Dockerdomain }}:5000/ca.crt
     owner: root
     permissions: 0600
     content: |
@@ -21,7 +28,7 @@ write_files:
     permissions: 0600
     content: |
       {{ .Key }}
-  - path: /etc/flannel/options.env
+  - path: /run/flannel/options.env
     owner: root
     permissions: 0600
     content: |
@@ -62,7 +69,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
               - /hyperkube
               - apiserver
@@ -98,7 +105,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - controller-manager
@@ -121,7 +128,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - scheduler
@@ -135,7 +142,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
             command:
             - /hyperkube
             - proxy
@@ -192,7 +199,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:v1.2.0
+          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
           command:
           - /hyperkube
           - proxy
@@ -253,6 +260,8 @@ coreos:
               DHCP=ipv4
               [DHCPv4]
               UseHostname=false
+        - name: "systemd-modules-load.service"
+          command: restart
         - name: "etcd2.service"
           command: "start"
         - name: "fleet.service"
@@ -260,21 +269,55 @@ coreos:
         - name: "early-docker.service"
           command: "start"
           runtime: true
-          drop-ins:
-          - name: 40-docker-flannel.conf
-            content: |
-              [Service]
-              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         - name: "flanneld.service"
           command: "start"
-          drop-ins:
-            - name: 50-network-config.conf
-              content: |
-                [Service]
-                Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
-                {{- if .KubeMaster }}
-                ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
-                {{ end }}
+          content: |
+            [Unit]
+            Description=Network fabric for containers
+            Documentation=https://github.com/coreos/flannel
+            Requires=early-docker.service
+            After=etcd.service etcd2.service early-docker.service
+            Before=early-docker.target
+
+            [Service]
+            Type=notify
+            Restart=always
+            RestartSec=5
+            Environment="TMPDIR=/var/tmp/"
+            Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
+            Environment="FLANNEL_VER={{ .FlannelVersion }}"
+            Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
+            Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
+            Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
+            LimitNOFILE=40000
+            LimitNPROC=1048576
+            ExecStartPre=/sbin/modprobe ip_tables
+            ExecStartPre=/usr/bin/mkdir -p /run/flannel
+            ExecStartPre=/usr/bin/mkdir -p ${ETCD_SSL_DIR}
+            ExecStartPre=-/usr/bin/touch ${FLANNEL_ENV_FILE}
+            {{- if .KubeMaster }}
+            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+            {{ end }}
+
+            ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
+              /usr/bin/docker run --net=host --privileged=true --rm \
+              --volume=/run/flannel:/run/flannel \
+              --env=NOTIFY_SOCKET=/run/flannel/sd.sock \
+              --env=AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+              --env=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+              --env-file=${FLANNEL_ENV_FILE} \
+              --volume=/usr/share/ca-certificates:/etc/ssl/certs:ro \
+              --volume=${ETCD_SSL_DIR}:${ETCD_SSL_DIR}:ro \
+              ${FLANNEL_IMG}:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
+
+            # Update docker options
+            ExecStartPost=/usr/bin/docker run --net=host --rm --volume=/run:/run \
+              ${FLANNEL_IMG}:${FLANNEL_VER} \
+              /opt/bin/mk-docker-opts.sh -d /run/flannel_docker_opts.env -i
+
+            [Install]
+            WantedBy=multi-user.target
+
         - name: setup-network-environment.service
           runtime: true
           command: start
@@ -286,7 +329,7 @@ coreos:
             After=network-online.target
             [Service]
             ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-            ExecStartPre=-/usr/bin/wget -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}:8081/static/setup-network-environment-1.0.1
+            ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}/static/setup-network-environment-1.0.1
             ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
@@ -315,7 +358,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
+            ExecStart=/usr/bin/wget --quiet -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/ceph/install-mon.sh
             ExecStart=/bin/bash /home/core/install-mon.sh
             RemainAfterExit=no
             Type=oneshot
@@ -329,8 +372,6 @@ coreos:
               [Unit]
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
-              [Service]
-              Environment=DOCKER_OPTS="--insecure-registry={{ .Dockerdomain }}:5000"
         {{- if .KubeMaster }}
         - name: kube-addons
           command: start
@@ -359,10 +400,10 @@ coreos:
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
-            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
             --register-node=true \
             --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
@@ -394,10 +435,10 @@ coreos:
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
-            ExecStartPre=/bin/wget -O /opt/bin/kubelet http://{{ .BootstrapperIP }}:8081/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause:2.0 \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
             --address=0.0.0.0 \
             --allow-privileged=true \
             --cluster-dns={{ .K8sClusterDNS }} \
