@@ -166,7 +166,7 @@ prepare_cc_server_contents() {
     # TODO(yi): Why (and how could we ) fix the version of kubelet?  Wouldn't it be the same version of Kubernetes we are going to deploy?
     printf "Downloading kubelet v1.2.0 ... "
     wget --quiet -c -P $BSROOT/html/static https://github.com/typhoonzero/kubernetes_binaries/releases/download/v1.2.0/kubelet || { echo "Failed"; exit 1; }
-    chmod +x kubelet
+    chmod +x $BSROOT/html/static/kubelet
     echo "Done"
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
