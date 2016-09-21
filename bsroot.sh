@@ -180,7 +180,7 @@ prepare_cc_server_contents() {
 # FIXME: default to install coreos on /dev/sda
 mac_addr=`ifconfig | grep -A2 'broadcast' | grep -o '..:..:..:..:..:..' | tail -n1`
 wget -O ${mac_addr}.yml http://$BS_IP/cloud-config/${mac_addr}
-sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
+sudo coreos-install -d /dev/sda -c ${mac_addr}.yml -b http://$BS_IP:8081/static -V current && sudo reboot
 EOF
     echo "Done"
 
