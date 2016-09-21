@@ -179,7 +179,13 @@ prepare_cc_server_contents() {
 #!/bin/bash
 # FIXME: default to install coreos on /dev/sda
 default_iface=\$(awk '\$2 == 00000000 { print \$1  }' /proc/net/route | uniq)
-mac_addr=\`ip addr show dev "\$default_iface" | awk '\$1 ~ /^link\// { print \$2 }'\`
+
+printf "Default interface: \${default_iface}\n"
+default_iface=\`echo \${default_iface} | awk '{ print \$1 }'\`
+
+mac_addr=\`ip addr show dev \${default_iface} | awk '\$1 ~ /^link\// { print \$2 }'\`
+printf "Interface: \${default_iface} MAC address: \${mac_addr}\n"
+
 wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
