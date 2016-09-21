@@ -4,11 +4,11 @@ DEFAULT_IPV4=`grep "bootstrapper:" /bsroot/config/cluster-desc.yml | awk '{print
 BOOTATRAPPER_DOMAIN=`grep "dockerdomain:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/"//g' | sed 's/ //g'`
 
 # update install.sh domain
-sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-configs/install.sh
+sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"'/g' /bsroot/html/static/cloud-configs/install.sh
 # start dnsmasq
 dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # start cloud-config-server
-cloud-config-server -addr ":8081" \
+cloud-config-server -addr ":80" \
   -dir /bsroot/html/static \
   -cc-template-file /bsroot/config/cloud-config.template \
   -cc-template-url "" \
