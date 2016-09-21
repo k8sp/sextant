@@ -8,7 +8,7 @@ sed -i 's/<HTTP_ADDR>/'"$DEFAULT_IPV4"':8081/g' /bsroot/html/static/cloud-config
 # start dnsmasq
 dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # start cloud-config-server
-cloud-config-server -addr ":8081" \
+cloud-config-server -addr ":80" \
   -dir /bsroot/html/static \
   -cc-template-file /bsroot/config/cloud-config.template \
   -cc-template-url "" \
