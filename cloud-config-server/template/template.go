@@ -18,6 +18,7 @@ type ExecutionConfig struct {
 	CephMonitor              bool
 	KubeMaster               bool
 	EtcdMember               bool
+	Ingress                  bool
 	InitialCluster           string
 	SSHAuthorizedKeys        string
 	EtcdEndpoints            string
@@ -52,6 +53,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		CephMonitor:              node.CephMonitor,
 		KubeMaster:               node.KubeMaster,
 		EtcdMember:               node.EtcdMember,
+		Ingress:                  node.Ingress,
 		InitialCluster:           config.InitialEtcdCluster(),
 		SSHAuthorizedKeys:        config.SSHAuthorizedKeys,
 		MasterHostname:           config.GetMasterHostname(),
