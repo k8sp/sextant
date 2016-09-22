@@ -14,7 +14,7 @@ realpath() {
 }
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
 CLUSTER_DESC=$(realpath $1)
-
+SEXTANT_DIR=$(realpath $(dirname $0))
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
     echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
@@ -249,12 +249,12 @@ download_k8s_images () {
     docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
     echo "Done"
   done
-  # NOTE: we need to run docker load on the bootstrapper server
-  # to load these saved images.
   printf "Building bootstrapper image ... "
-  docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
+  # NOTE: we need to run docker load on the bootstrapper server
+  # to load these saved images.
 }
 
 generate_tls_assets() {
