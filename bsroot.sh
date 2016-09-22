@@ -246,6 +246,11 @@ download_k8s_images () {
     docker save typhoon1986/flannel:$flannel_version > $BSROOT/flannel.tar || { echo "Failed"; exit 1; }
     echo "Done"
 
+    printf "Building bootstrapper image ... "
+    docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+    echo "Done"
+
     # NOTE: we need to run docker load on the bootstrapper server
     # to load these saved images.
 }
