@@ -38,6 +38,9 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
+	HyperkubeVersion         string `yaml:"hyperkube_version"`
+	PauseVersion             string `yaml:"pause_version"`
+	FlannelVersion           string `yaml:"flannel_version"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,

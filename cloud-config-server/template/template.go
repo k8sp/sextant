@@ -30,6 +30,9 @@ type ExecutionConfig struct {
 	Dockerdomain             string
 	K8sClusterDNS            string
 	K8sServiceClusterIPRange string
+	HyperkubeVersion         string
+	PauseVersion             string
+	FlannelVersion           string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -57,6 +60,9 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Dockerdomain:             config.Dockerdomain,
 		K8sClusterDNS:            config.K8sClusterDNS,
 		K8sServiceClusterIPRange: config.K8sServiceClusterIPRange,
+		HyperkubeVersion:         config.HyperkubeVersion,
+		PauseVersion:             config.PauseVersion,
+		FlannelVersion:           config.FlannelVersion,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
 		// so insert 6*whitespace at the begging of every line
