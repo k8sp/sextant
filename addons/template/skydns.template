@@ -70,7 +70,7 @@ spec:
             path: /healthz
             port: 8080
             scheme: HTTP
-          initialDelaySeconds: 1
+          initialDelaySeconds: 30
           timeoutSeconds: 5
       - name: healthz
         image: {{ .Dockerdomain }}:5000/exechealthz:1.0
