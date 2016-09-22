@@ -24,6 +24,13 @@ hyperkube_version=`grep "hyperkube_version:" /bsroot/config/cluster-desc.yml | a
 pause_version=`grep "pause_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 flannel_version=`grep "flannel_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 
+docker load < /bsroot/bootstrapper.tar
+docker run -d --net=host \
+  --privileged \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /bsroot:/bsroot \
+  bootstrapper
+
 docker load < /bsroot/hyperkube-amd64.tar
 docker load < /bsroot/pause.tar
 docker load < /bsroot/flannel.tar
