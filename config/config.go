@@ -52,6 +52,7 @@ type Cluster struct {
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
 	MAC         string
+	Ingress     bool
 	CephMonitor bool `yaml:"ceph_monitor"`
 	KubeMaster  bool `yaml:"kube_master"`
 	EtcdMember  bool `yaml:"etcd_member"`
@@ -61,6 +62,17 @@ type Node struct {
 // templates.  For more details, refer to const tmplDHCPConf.
 func (c Cluster) Join(s []string) string {
 	return strings.Join(s, ", ")
+}
+
+// GetIngressReplicas return replica number of the ingress node
+func (c Cluster) GetIngressReplicas() int {
+	var cnt = 0
+	for _, n := range c.Nodes {
+		if n.Ingress {
+			cnt++
+		}
+	}
+	return cnt
 }
 
 // Hostname is defined as a method of Node, so can be call in

@@ -8,6 +8,7 @@ make PREFIX=/go clean binaries && \
 mkdir -p /etc/docker/registry && \
 cp /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml && \
 go get github.com/k8sp/sextant/cloud-config-server && \
+go get github.com/k8sp/sextant/addons && \
 mkdir /go/static
 
 # NOTICE: change install.sh HTTP server ip:port when running start.sh

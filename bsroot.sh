@@ -14,7 +14,7 @@ realpath() {
 }
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
 CLUSTER_DESC=$(realpath $1)
-
+SEXTANT_DIR=$(realpath $(dirname $0))
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
     echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
@@ -225,28 +225,35 @@ EOF
 
 
 download_k8s_images () {
-    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    printf "Downloading hyperkube image version $hyperkube_version ... "
-    docker pull typhoon1986/hyperkube-amd64:$hyperkube_version > /dev/null 2>&1 || { echo "Failed pull"; exit 1; }
-    docker save typhoon1986/hyperkube-amd64:$hyperkube_version > $BSROOT/hyperkube-amd64.tar || { echo "Failed save"; exit 1; }
+  hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+  DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:${hyperkube_version}' \
+    'typhoon1986/pause:${pause_version}' \
+    'typhoon1986/flannel:${flannel_version}' \
+    'yancey1989/nginx-ingress-controller:0.8.3' \
+    'yancey1989/kube2sky:1.14' \
+    'typhoon1986/exechealthz:1.0' \
+    'yancey1989/yancey1989/kube-addon-manager-amd64:v5.1' \
+    'typhoon1986/skydns:latest');
+  cd /bsroot
+  len=${#DOCKER_IMAGES[@]}
+  for ((i=0;i<len;i++)); do
+    DOCKER_IMAGE=${DOCKER_IMAGES[i]}
+    printf "Downloading image ${DOCKER_IMAGE} ..."
+    docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
     echo "Done"
+  done
 
-    printf "Downloading pause image ... "
-    pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    docker pull typhoon1986/pause-amd64:$pause_version > /dev/null 2>&1 || { echo "Failed pull"; exit 1; }
-    docker save typhoon1986/pause-amd64:$pause_version > $BSROOT/pause.tar || { echo "Failed save"; exit 1; }
-    echo "Done"
-
-    printf "Downloading flannel image ... "
-    flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    docker pull typhoon1986/flannel:$flannel_version > /dev/null 2>&1 || { echo "Failed pull"; exit 1; }
-    docker save typhoon1986/flannel:$flannel_version > $BSROOT/flannel.tar || { echo "Failed save"; exit 1; }
-    echo "Done"
-
-    # NOTE: we need to run docker load on the bootstrapper server
-    # to load these saved images.
+  printf "Building bootstrapper image ... "
+  docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+  echo "Done"
+  # NOTE: we need to run docker load on the bootstrapper server
+  # to load these saved images.
 }
-
 
 generate_tls_assets() {
     mkdir -p $BSROOT/tls

@@ -373,6 +373,21 @@ coreos:
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
         {{- if .KubeMaster }}
+        - name: kube-addons
+          command: start
+          content: |
+            [Unit]
+            Description=Install Kubernetes addons
+            After=kubelet.service
+            Requires=kubelet.service
+            [Service]
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
+            ExecStart=docker run -d --net=host \
+            -e "KUBECTL_OPTS=--server={{ .MasterHostname }}:8080" \
+            -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
+            {{ .BootstrapperIP }}:5000/kube-addon-manager-amd64:v5.1
+            
         - name: kubelet.service
           runtime: true
           command: start
@@ -400,6 +415,9 @@ coreos:
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local
             --logtostderr=true
+            {{ if .Ingress }}
+            --node-labels=role=ingress
+            {{ end }}
             Restart=always
             RestartSec=10
             [Install]
