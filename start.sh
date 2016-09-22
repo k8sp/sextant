@@ -52,4 +52,10 @@ for ((i=0;i<len;i++)); do
   docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
   docker push $DOCKER_TAG_NAME
 done
+docker load < /bsroot/bootstrapper.tar
+docker run -d --net=host \
+  --privileged \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /bsroot:/bsroot \
+  bootstrapper
 wait
