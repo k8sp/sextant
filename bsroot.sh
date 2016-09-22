@@ -12,6 +12,8 @@ fi
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
+# Remember current working directory
+WORKDIR=$(pwd)
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
 CLUSTER_DESC=$(realpath $1)
 
@@ -247,6 +249,7 @@ download_k8s_images () {
     echo "Done"
 
     printf "Building bootstrapper image ... "
+    cd $WORKDIR
     docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
     echo "Done"
