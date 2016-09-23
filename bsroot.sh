@@ -162,7 +162,7 @@ prepare_cc_server_contents() {
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
     hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    printf "Downloading and extracting kubernetes release ${hyperkube_version} ... "
+    printf "Downloading and extracting Kubernetes release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/$hyperkube_version/kubernetes.tar.gz
     cd $BSROOT/
     tar xzf kubernetes.tar.gz || { echo "Failed"; exit 1; }
@@ -202,27 +202,24 @@ sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V c
 EOF
     echo "Done"
 
-    printf "Checking new CoreOS version and update version.txt ... "
-    # NOTE: make "current" to store version.txt
-    mkdir -p $BSROOT/html/static/current
-    cd $BSROOT/html/static/current
-    wget --quiet -P $BSROOT/html/static/current https://stable.release.core-os.net/amd64-usr/current/version.txt
+    printf "Checking new CoreOS version ... "
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
-      echo "Failed"; exit 1;
+	echo "Failed"; exit 1;
     fi
-      echo "Done"
+    echo "Done"
 
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
     fi
 
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
+    ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
@@ -249,6 +246,7 @@ download_k8s_images () {
     docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
     echo "Done"
   done
+
   printf "Building bootstrapper image ... "
   docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
