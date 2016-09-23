@@ -236,7 +236,7 @@ download_k8s_images () {
     "typhoon1986/exechealthz:1.0" \
     "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
     "typhoon1986/skydns:latest");
-  cd /bsroot
+  cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
     DOCKER_IMAGE=${DOCKER_IMAGES[i]}
@@ -253,6 +253,9 @@ download_k8s_images () {
   echo "Done"
   # NOTE: we need to run docker load on the bootstrapper server
   # to load these saved images.
+
+  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+    $BSROOT/start_bootstrapper_container.sh > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 }
 
 generate_tls_assets() {
