@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/k8sp/sextant/bootstrapper/cmd"
 	"github.com/topicai/candy"
 )
 
@@ -47,8 +46,8 @@ DNS.1 = {{.}}
 func GenerateRootCA(out string) (string, string) {
 	caKey := path.Join(out, "ca.key")
 	caCrt := path.Join(out, "ca.crt")
-	cmd.Run("openssl", "genrsa", "-out", caKey, "2048")
-	cmd.Run("openssl", "req", "-x509", "-new", "-nodes", "-key", caKey, "-days", "10000", "-out", caCrt, "-subj", "/CN=kube-ca")
+	Run("openssl", "genrsa", "-out", caKey, "2048")
+	Run("openssl", "req", "-x509", "-new", "-nodes", "-key", caKey, "-days", "10000", "-out", caCrt, "-subj", "/CN=kube-ca")
 
 	return caKey, caCrt
 }
@@ -84,9 +83,9 @@ func Gen(master bool, hostname, caKey, caCrt string) ([]byte, []byte) {
 	}
 	d, _ := ioutil.ReadFile(cnf)
 	log.Print(string(d))
-	cmd.Run("openssl", "genrsa", "-out", key, "2048")
-	cmd.Run("openssl", "req", "-new", "-key", key, "-out", csr, "-subj", subj, "-config", cnf)
-	cmd.Run("openssl", "x509", "-req", "-in", csr, "-CA", caCrt, "-CAkey", caKey, "-CAcreateserial", "-out", crt, "-days", "365", "-extensions", "v3_req", "-extfile", cnf)
+	Run("openssl", "genrsa", "-out", key, "2048")
+	Run("openssl", "req", "-new", "-key", key, "-out", csr, "-subj", subj, "-config", cnf)
+	Run("openssl", "x509", "-req", "-in", csr, "-CA", caCrt, "-CAkey", caKey, "-CAcreateserial", "-out", crt, "-days", "365", "-extensions", "v3_req", "-extfile", cnf)
 
 	k, e := ioutil.ReadFile(key)
 	candy.Must(e)
