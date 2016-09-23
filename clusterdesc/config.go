@@ -1,7 +1,7 @@
-// Package config defines Go structs that configure a Kubernetes
+// package clusterdesc defines Go structs that configure a Kubernetes
 // cluster.  The configuration is often encoded and saved as a YAML
 // file, which is used by config-bootstrapper and cloud-config-server.
-package config
+package clusterdesc
 
 import "strings"
 

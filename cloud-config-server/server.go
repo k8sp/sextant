@@ -25,7 +25,7 @@ import (
 	"github.com/k8sp/sextant/cloud-config-server/cache"
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
 	cctemplate "github.com/k8sp/sextant/cloud-config-server/template"
-	"github.com/k8sp/sextant/config"
+	"github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
@@ -74,7 +74,7 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, c
 		makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
 			mac := strings.ToLower(mux.Vars(r)["mac"])
 			tmpl := template.Must(template.New("template").Parse(string(ccTemplate())))
-			c := &config.Cluster{}
+			c := &clusterdesc.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, caKey, caCrt, w))
 		}))
