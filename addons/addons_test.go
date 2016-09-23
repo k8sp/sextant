@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	tpcfg "github.com/k8sp/sextant/config"
+	tpcfg "github.com/k8sp/sextant/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	yaml "gopkg.in/yaml.v2"

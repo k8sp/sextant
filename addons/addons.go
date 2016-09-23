@@ -7,8 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/k8sp/sextant/config"
-	tpcfg "github.com/k8sp/sextant/config"
+	"github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -20,8 +19,12 @@ type addonsConfig struct {
 	EtcdEndpoint    string
 }
 
-func execute(templateFile string, config *tpcfg.Cluster, w io.Writer) error {
-	d, _ := ioutil.ReadFile(templateFile)
+func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) error {
+	d, e := ioutil.ReadFile(templateFile)
+	if e != nil {
+		return e
+	}
+	
 	tmpl := template.Must(template.New("").Parse(string(d)))
 
 	ac := addonsConfig{
@@ -43,8 +46,10 @@ func main() {
 }
 
 func run(clusterDescFile, templateFile, configFile string) {
-	d, _ := ioutil.ReadFile(clusterDescFile)
-	c := &config.Cluster{}
+	d, e := ioutil.ReadFile(clusterDescFile)
+	candy.Must(e)
+	
+	c := &clusterdesc.Cluster{}
 	candy.Must(yaml.Unmarshal(d, c))
 	// Execute ingress yaml
 
