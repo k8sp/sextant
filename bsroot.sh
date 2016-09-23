@@ -228,14 +228,14 @@ download_k8s_images () {
   hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
   pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
   flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  DOCKER_IMAGES=('typhoon1986/hyperkube-amd64:${hyperkube_version}' \
-    'typhoon1986/pause:${pause_version}' \
-    'typhoon1986/flannel:${flannel_version}' \
-    'yancey1989/nginx-ingress-controller:0.8.3' \
-    'yancey1989/kube2sky:1.14' \
-    'typhoon1986/exechealthz:1.0' \
-    'yancey1989/yancey1989/kube-addon-manager-amd64:v5.1' \
-    'typhoon1986/skydns:latest');
+  DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${hyperkube_version}" \
+    "typhoon1986/pause:${pause_version}" \
+    "typhoon1986/flannel:${flannel_version}" \
+    "yancey1989/nginx-ingress-controller:0.8.3" \
+    "yancey1989/kube2sky:1.14" \
+    "typhoon1986/exechealthz:1.0" \
+    "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
+    "typhoon1986/skydns:latest");
   cd /bsroot
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
