@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/k8sp/sextant.svg?branch=master)](https://travis-ci.org/k8sp/sextant.svg?branch=master)
 
 # sextant
-sextant 提供了可以通过PXE全自动化安装初始化一个CoreOS+kubernetes集群。
+sextant 提供了可以通过PXE全自动化安装初始化一个 CoreOS + Kubernetes + Ceph 集群。
 
 ## 名词解释
 | 名词        | 说明           |
@@ -20,7 +20,7 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 
 ## 准备bsroot
 ***在能访问互联网的一台机器上完成下面的准备环境，配置，创建Docker镜像的步骤***
-* 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper server
+* 注：如果bootstrapper server没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper server
 
 获取sextant代码后，根据要初始化的整体集群规划，
 编辑cloud-config-server/template/unisound-ailab/build_config.yml文件完成配置
@@ -39,13 +39,14 @@ scp -r bsroot IP:port:/path/to/bsroot
 ```
 
 ## 构建Docker镜像
-在bootstrapper或本地执行下面的命令构建bootstrapper的docker镜像：
+在bootstrapper server或本地执行下面的命令构建bootstrapper的docker镜像：
 ```
 docker build -t bootstrapper .
 ```
 
 ## 上传bsroot和bootstrapper镜像到bootstrapper server
 如果上述步骤是在bootstrapper server上完成的，则可以跳过此步骤。
+
 1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz bsroot```
 1. 导出编译好的docker镜像：```docker save bootstrapper > bootstrapper.tar```
 1. 将bsroot.tar.gz和bootstrapper.tar上传到你的bootstrapper机器上（使用scp或ftp等工具）
@@ -87,7 +88,7 @@ docker run -d --net=host \
   * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
 
 ### 配置kubectl客户端
-* 替换 ${MASTER_HOST} 到百分点云中心的kubernetes服务地址:```k8s.bfdcloud.com```
+* 替换 ${MASTER_HOST} 为 cluster description 配置 YAML 文件中的 kubernetes master node hostname
 * 和管理员申请分配一个你自己的帐号，并获取对应的key文件，包括ca.pem, user-key.pem和user.pem
 * 替换 ${CA_CERT} 为获取到的ca.pem文件的绝对路径，如```/home/core/.kube/ca.pem```
 * 替换 ${ADMIN_KEY} 为获取到的user-key.pem的路径，如```/home/core/.kube/admin-key.pem```
@@ -102,11 +103,12 @@ $ kubectl config use-context default-system
 ```
 
 ### 测试kubectl客户端可用
-执行下面的命令，观察返回结果是否正常，判断是否译璟完成客户端的正确配置：
+执行下面的命令，观察返回结果是否正常，判断是否已经完成客户端的正确配置：
 ```
-$ kubectl get po
-NAME                             READY     STATUS    RESTARTS   AGE
-my-test-server-rkvw7             1/1       Running   5          2d
+$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                   READY     STATUS    RESTARTS   AGE
+default       busybox                                1/1       Running   54         2d
+default       kube-proxy-192.168.49.47               1/1       Running   0          18d
 ```
 
 ### 使用ceph集群
