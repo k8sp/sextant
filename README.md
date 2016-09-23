@@ -51,6 +51,15 @@ docker build -t bootstrapper .
 1. 将bsroot.tar.gz和bootstrapper.tar上传到你的bootstrapper机器上（使用scp或ftp等工具）
 1. 在bootstrapper机器上解压bsroot.tar.gz，然后加载docker镜像：```docker load < bootstrapper.tar```
 
+## 配置bootstrapepr server的docker证书
+在bootstrapper server上，将bsroot的证书拷贝到docker的配置目录下：
+
+```
+mkdir -p /etc/docker/certs.d/bootstrapper:5000
+rm -rf /etc/docker/certs.d/bootstrapper:5000/*
+cp bsroot/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
+```
+
 ## 启动bootstrapper
 执行下面的命令启动bootstrapper的相关组件，包括了dnsmasq, cloud-config-server, docker registry
 注意通过-v指定解压的bsroot的目录挂载到容器的/bsroot
