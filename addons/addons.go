@@ -19,12 +19,10 @@ type addonsConfig struct {
 	EtcdEndpoint    string
 }
 
-func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) error {
+func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 	d, e := ioutil.ReadFile(templateFile)
-	if e != nil {
-		return e
-	}
-	
+	candy.Must(e)
+
 	tmpl := template.Must(template.New("").Parse(string(d)))
 
 	ac := addonsConfig{
@@ -33,7 +31,7 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) erro
 		K8sClusterDNS:   config.K8sClusterDNS,
 		EtcdEndpoint:    strings.Split(config.GetEtcdEndpoints(), ",")[0],
 	}
-	return tmpl.Execute(w, ac)
+	candy.Must(tmpl.Execute(w, ac))
 }
 
 func main() {
@@ -42,18 +40,10 @@ func main() {
 	configFile := flag.String("config-file", "./ingress.yaml", "config file with yaml")
 	flag.Parse()
 
-	run(*clusterDescFile, *templateFile, *configFile)
-}
-
-func run(clusterDescFile, templateFile, configFile string) {
-	d, e := ioutil.ReadFile(clusterDescFile)
+	d, e := ioutil.ReadFile(*clusterDescFile)
 	candy.Must(e)
-	
+
 	c := &clusterdesc.Cluster{}
 	candy.Must(yaml.Unmarshal(d, c))
-	// Execute ingress yaml
-
-	candy.WithCreated(configFile, func(w io.Writer) {
-		candy.Must(execute(templateFile, c, w))
-	})
+	candy.WithCreated(*configFile, func(w io.Writer) { execute(*templateFile, c, w) })
 }
