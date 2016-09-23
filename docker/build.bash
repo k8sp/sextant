@@ -7,7 +7,3 @@ then
    cp $GOPATH/bin/{cloud-config-server,addons} .
    docker build -t bootstrapper .
 fi
-       
-    
-    
-    
