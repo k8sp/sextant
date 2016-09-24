@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
       master.vm.provider "virtualbox" do |ms|
          ms.gui = true
     	 ms.memory = "1024"
-    	 ms.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net"]
+    	 ms.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
       end
    end
 
@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
       worker.vm.provider "virtualbox" do |wk|
          wk.gui = true
          wk.memory = "1024"
-         wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto"]
+         wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
       end
    end
 end
