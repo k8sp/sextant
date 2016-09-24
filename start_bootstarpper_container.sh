@@ -9,12 +9,20 @@ HYPERKUBE_VERSION=`grep "hyperkube_version:" /bsroot/config/cluster-desc.yml | a
 PAUSE_VERSION=`grep "pause_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 FLANNEL_VERSION=`grep "flannel_version:" /bsroot/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 
-docker load /bsroot/bootstrapper.tar
+# Config Registry tls
+mkdir -p /etc/docker/certs.d/bootstrapper:5000
+rm -rf /etc/docker/certs.d/bootstrapper:5000/*
+cp bsroot/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
+
+docker load /bsroot/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
 docker run -d --net=host \
   --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /bsroot:/bsroot \
   bootstrapper
+
+# Sleep 3 seconds, waitting for registry started.
+sleep 3
 
 DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${HYPERKUBE_VERSION}" \
   "typhoon1986/pause:${PAUSE_VERSION}" \
@@ -22,7 +30,7 @@ DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${HYPERKUBE_VERSION}" \
   "yancey1989/nginx-ingress-controller:0.8.3" \
   "yancey1989/kube2sky:1.14" \
   "typhoon1986/exechealthz:1.0" \
-  "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
+  "yancey1989/kube-addon-manager-amd64:v5.1" \
   "typhoon1986/skydns:latest");
 len=${#DOCKER_IMAGES[@]}
 for ((i=0;i<len;i++)); do

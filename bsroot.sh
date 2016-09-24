@@ -234,7 +234,7 @@ download_k8s_images () {
     "yancey1989/nginx-ingress-controller:0.8.3" \
     "yancey1989/kube2sky:1.14" \
     "typhoon1986/exechealthz:1.0" \
-    "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
+    "yancey1989/kube-addon-manager-amd64:v5.1" \
     "typhoon1986/skydns:latest");
   cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
@@ -248,7 +248,7 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>& || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
   # NOTE: we need to run docker load on the bootstrapper server
