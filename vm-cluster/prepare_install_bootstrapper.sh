@@ -6,5 +6,5 @@ cd ../
 
 # TODO待这个bug修复后删除
 #修复docker api client 和server 版本不一致的问题
-sed -i '/FROM golang:alpine/a\ENV DOCKER_API_VERSION=1.22' ./Dockerfile
+sed -i '/FROM golang:alpine/a\ENV DOCKER_API_VERSION=1.22' ./docker/Dockerfile
 
