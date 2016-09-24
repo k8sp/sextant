@@ -7,8 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/k8sp/sextant/config"
-	tpcfg "github.com/k8sp/sextant/config"
+	"github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -20,8 +19,10 @@ type addonsConfig struct {
 	EtcdEndpoint    string
 }
 
-func execute(templateFile string, config *tpcfg.Cluster, w io.Writer) error {
-	d, _ := ioutil.ReadFile(templateFile)
+func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
+	d, e := ioutil.ReadFile(templateFile)
+	candy.Must(e)
+
 	tmpl := template.Must(template.New("").Parse(string(d)))
 
 	ac := addonsConfig{
@@ -30,7 +31,7 @@ func execute(templateFile string, config *tpcfg.Cluster, w io.Writer) error {
 		K8sClusterDNS:   config.K8sClusterDNS,
 		EtcdEndpoint:    strings.Split(config.GetEtcdEndpoints(), ",")[0],
 	}
-	return tmpl.Execute(w, ac)
+	candy.Must(tmpl.Execute(w, ac))
 }
 
 func main() {
@@ -39,16 +40,10 @@ func main() {
 	configFile := flag.String("config-file", "./ingress.yaml", "config file with yaml")
 	flag.Parse()
 
-	run(*clusterDescFile, *templateFile, *configFile)
-}
+	d, e := ioutil.ReadFile(*clusterDescFile)
+	candy.Must(e)
 
-func run(clusterDescFile, templateFile, configFile string) {
-	d, _ := ioutil.ReadFile(clusterDescFile)
-	c := &config.Cluster{}
+	c := &clusterdesc.Cluster{}
 	candy.Must(yaml.Unmarshal(d, c))
-	// Execute ingress yaml
-
-	candy.WithCreated(configFile, func(w io.Writer) {
-		candy.Must(execute(templateFile, c, w))
-	})
+	candy.WithCreated(*configFile, func(w io.Writer) { execute(*templateFile, c, w) })
 }

@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	tpcfg "github.com/k8sp/sextant/config"
+	tpcfg "github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 )
 
