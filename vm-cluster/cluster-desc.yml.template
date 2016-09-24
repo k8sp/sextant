@@ -8,7 +8,7 @@ broadcast: 192.168.8.255
 nameservers: [192.168.8.101, 8.8.8.8, 8.8.4.4]
 domainname: "k8s.baifendian.com"
 dockerdomain: "bootstrapper"
-k8s_service_cluster_ip_range:192.168.0.0/24
+k8s_service_cluster_ip_range: 192.168.0.0/24
 k8s_cluster_dns: 192.168.0.10
 hyperkube_version: "v1.3.6"
 pause_version: "3.0"
