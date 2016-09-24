@@ -247,7 +247,7 @@ download_k8s_images () {
     'typhoon1986/exechealthz:1.0' \
     'yancey1989/yancey1989/kube-addon-manager-amd64:v5.1' \
     'typhoon1986/skydns:latest');
-  cd /bsroot
+  cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
     DOCKER_IMAGE=${DOCKER_IMAGES[i]}
