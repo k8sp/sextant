@@ -14,7 +14,9 @@ mkdir -p /etc/docker/certs.d/bootstrapper:5000
 rm -rf /etc/docker/certs.d/bootstrapper:5000/*
 cp bsroot/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
 
-docker load /bsroot/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
+echo "127.0.0.1 bootstrapper" >> /etc/hosts
+
+docker load < /bsroot/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
 docker run -d --net=host \
   --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock \

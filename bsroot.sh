@@ -248,14 +248,16 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>& || { echo "Failed"; exit 1; }
+  cd $SEXTANT_DIR/docker
+  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
   # NOTE: we need to run docker load on the bootstrapper server
   # to load these saved images.
 
   cp $SEXTANT_DIR/start_bootstrapper_container.sh \
-    $BSROOT/start_bootstrapper_container.sh > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+  chmod +x $start_bootstrapper_container.sh
 }
 
 generate_tls_assets() {
