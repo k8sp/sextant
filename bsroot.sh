@@ -262,7 +262,7 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  bash docker/build.bash  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
   # NOTE: we need to run docker load on the bootstrapper server
