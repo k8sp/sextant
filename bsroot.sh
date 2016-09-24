@@ -162,15 +162,9 @@ prepare_cc_server_contents() {
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
     hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    printf "Downloading and extracting Kubernetes release ${hyperkube_version} ... "
-    wget --quiet -c -O $BSROOT/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/$hyperkube_version/kubernetes.tar.gz
-    cd $BSROOT/
-    tar xzf kubernetes.tar.gz || { echo "Failed"; exit 1; }
-    cd $BSROOT/kubernetes/server
-    tar xzf kubernetes-server-linux-amd64.tar.gz || { echo "Failed"; exit 1; }
-    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubelet $BSROOT/html/static
-    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubectl $BSROOT
-    rm -rf $BSROOT/kubernetes
+    printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
+    wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
+    wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
     chmod +x $BSROOT/html/static/kubelet
     chmod +x $BSROOT/kubectl
     echo "Done"
@@ -248,7 +242,7 @@ download_k8s_images () {
     "yancey1989/nginx-ingress-controller:0.8.3" \
     "yancey1989/kube2sky:1.14" \
     "typhoon1986/exechealthz:1.0" \
-    "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
+    "yancey1989/kube-addon-manager-amd64:v5.1" \
     "typhoon1986/skydns:latest");
   cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
