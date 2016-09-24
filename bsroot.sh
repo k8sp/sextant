@@ -116,7 +116,7 @@ generate_dnsmasq_config() {
   dhcp-option=28,192.168.8.255
 
   #dhcp-option=42,0.0.0.0
-  pxe-prompt="Press F8 for menu.", 0
+  pxe-prompt="Press F8 for menu.", 5
   pxe-service=x86PC, "Install CoreOS from network server", pxelinux
   enable-tftp
   tftp-root=/bsroot/tftpboot
