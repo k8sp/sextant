@@ -20,7 +20,7 @@ docker load < /bsroot/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can no
 docker run -d --net=host \
   --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ./../bsroot:/bsroot \
+  -v /bsroot:/bsroot \
   bootstrapper
 
 # Sleep 3 seconds, waitting for registry started.
