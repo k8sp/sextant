@@ -12,7 +12,7 @@ FLANNEL_VERSION=`grep "flannel_version:" /bsroot/config/cluster-desc.yml | awk '
 # Config Registry tls
 mkdir -p /etc/docker/certs.d/bootstrapper:5000
 rm -rf /etc/docker/certs.d/bootstrapper:5000/*
-cp bsroot/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
+cp /bsroot/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
 
 echo "127.0.0.1 bootstrapper" >> /etc/hosts
 
@@ -20,7 +20,7 @@ docker load < /bsroot/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can no
 docker run -d --net=host \
   --privileged \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /bsroot:/bsroot \
+  -v ./../bsroot:/bsroot \
   bootstrapper
 
 # Sleep 3 seconds, waitting for registry started.
@@ -37,7 +37,7 @@ DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${HYPERKUBE_VERSION}" \
 len=${#DOCKER_IMAGES[@]}
 for ((i=0;i<len;i++)); do
   DOCKER_IMAGE=${DOCKER_IMAGES[i]}
-  DOCKER_TAR_FILE=`echo /bsroot/${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+  DOCKER_TAR_FILE=`echo /bsroot/${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print "/"$2"/"$4}'`
   DOCKER_TAG_NAME=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE} | awk -F'/' '{print $1"/"$3}'`
   docker load < $DOCKER_TAR_FILE
   docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
