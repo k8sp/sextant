@@ -19,6 +19,7 @@ nodes:
     ceph_monitor: n
     kube_master: y
     etcd_member: y
+    ingress: n
 
 ssh_authorized_keys: |1+
     - "<SSH_KEY>"
