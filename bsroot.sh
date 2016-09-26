@@ -248,7 +248,6 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  cd $SEXTANT_DIR/docker
   bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
