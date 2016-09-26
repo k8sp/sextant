@@ -234,9 +234,9 @@ download_k8s_images () {
     "yancey1989/nginx-ingress-controller:0.8.3" \
     "yancey1989/kube2sky:1.14" \
     "typhoon1986/exechealthz:1.0" \
-    "yancey1989/yancey1989/kube-addon-manager-amd64:v5.1" \
+    "yancey1989/kube-addon-manager-amd64:v5.1" \
     "typhoon1986/skydns:latest");
-  cd /bsroot
+  cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
     DOCKER_IMAGE=${DOCKER_IMAGES[i]}
@@ -248,11 +248,16 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  docker build -t bootstrapper $SEXTANT_DIR > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  cd $SEXTANT_DIR/docker
+  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
   docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
   # NOTE: we need to run docker load on the bootstrapper server
   # to load these saved images.
+
+  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+    $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+  chmod +x $start_bootstrapper_container.sh
 }
 
 generate_tls_assets() {
