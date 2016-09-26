@@ -265,7 +265,7 @@ download_k8s_images () {
 
   cp $SEXTANT_DIR/start_bootstrapper_container.sh \
     $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
-  chmod +x $start_bootstrapper_container.sh
+  chmod +x $BSROOT/start_bootstrapper_container.sh
 }
 
 generate_tls_assets() {
