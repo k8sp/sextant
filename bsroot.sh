@@ -12,9 +12,13 @@ fi
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
+
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
+INGRESS_TEMPLATE=$(realpath $(dirname $0)/addons/template/ingress.template)
+SKYDNS_TEMPLATE=$(realpath $(dirname $0)/addons/template/skydns.template)
 CLUSTER_DESC=$(realpath $1)
 SEXTANT_DIR=$(realpath $(dirname $0))
+
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
     echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
@@ -179,6 +183,11 @@ prepare_cc_server_contents() {
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
+       
+    printf "Copying ingress template and skydns template ... "
+    cp $INGRESS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
+    cp $SKYDNS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
+    echo "Done"
 
     printf "Generating install.sh ... "
     cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
@@ -283,12 +292,6 @@ generate_tls_assets() {
     openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
-
-    # Note: we need to run the following commands on the bootstrapper server to import ca.crt.
-    #
-    #  mkdir -p /etc/docker/certs.d/$BS_IP:5000
-    #  rm -rf /etc/docker/certs.d/$BS_IP:5000/*
-    #  cp ca.pem /etc/docker/certs.d/$BS_IP:5000/ca.crt
 }
 
 check_prerequisites
