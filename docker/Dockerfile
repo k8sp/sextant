@@ -3,7 +3,8 @@ FROM golang:alpine
 # Install required software packages.
 RUN set -ex && \
 apk update && \
-apk add --no-cache make git dnsmasq openssl docker
+apk add --no-cache make git dnsmasq openssl docker && \
+mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 # Upload Sextant Go programs and retrieve dependencies.
 RUN mkdir -p /go/bin

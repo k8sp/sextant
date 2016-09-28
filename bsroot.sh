@@ -179,6 +179,12 @@ prepare_cc_server_contents() {
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
+    printf "Copying addon templates ... "
+    cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
+    echo "Done"
+
     printf "Generating install.sh ... "
     cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
 #!/bin/bash
@@ -199,7 +205,7 @@ EOF
     printf "Checking new CoreOS version ... "
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
-	echo "Failed"; exit 1;
+        echo "Failed"; exit 1;
     fi
     echo "Done"
 
@@ -213,27 +219,26 @@ EOF
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
+    cd $BSROOT/html/static
+    ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
 
 download_k8s_images () {
-  hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${hyperkube_version}" \
-    "typhoon1986/pause:${pause_version}" \
-    "typhoon1986/flannel:${flannel_version}" \
-    "yancey1989/nginx-ingress-controller:0.8.3" \
-    "yancey1989/kube2sky:1.14" \
-    "typhoon1986/exechealthz:1.0" \
-    "yancey1989/kube-addon-manager-amd64:v5.1" \
-    "typhoon1986/skydns:latest");
+  # TODO: should DOCKER_IMAGES from cluster-desc
+  DOCKER_IMAGES=("hyperkube" \
+    "pause" \
+    "flannel" \
+    "ingress" \
+    "kube2sky" \
+    "healthz" \
+    "addon_manager" \
+    "skydns");
   cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
-    DOCKER_IMAGE=${DOCKER_IMAGES[i]}
+    DOCKER_IMAGE=`grep "${DOCKER_IMAGES[i]}:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
     printf "Downloading image ${DOCKER_IMAGE} ..."
     docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`

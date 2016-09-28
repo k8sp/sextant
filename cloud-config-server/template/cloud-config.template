@@ -69,7 +69,7 @@ write_files:
               path: "/lib64"
         containers:
           - name: kube-apiserver
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
             command:
               - /hyperkube
               - apiserver
@@ -105,7 +105,7 @@ write_files:
                 name: "var-run-kubernetes"
 
           - name: kube-controller-manager
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
             command:
             - /hyperkube
             - controller-manager
@@ -128,7 +128,7 @@ write_files:
               readOnly: true
 
           - name: kube-scheduler
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
             command:
             - /hyperkube
             - scheduler
@@ -142,7 +142,7 @@ write_files:
               timeoutSeconds: 1
 
           - name: kube-proxy
-            image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
             command:
             - /hyperkube
             - proxy
@@ -199,7 +199,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-proxy
-          image: {{ .Dockerdomain }}:5000/hyperkube-amd64:{{ .HyperkubeVersion }}
+          image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
           command:
           - /hyperkube
           - proxy
@@ -285,8 +285,7 @@ coreos:
             RestartSec=5
             Environment="TMPDIR=/var/tmp/"
             Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-            Environment="FLANNEL_VER={{ .FlannelVersion }}"
-            Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/flannel"
+            Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/{{ .Images.flannel }}"
             Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
             Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
             LimitNOFILE=40000
@@ -308,11 +307,11 @@ coreos:
               --env-file=${FLANNEL_ENV_FILE} \
               --volume=/usr/share/ca-certificates:/etc/ssl/certs:ro \
               --volume=${ETCD_SSL_DIR}:${ETCD_SSL_DIR}:ro \
-              ${FLANNEL_IMG}:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
+              ${FLANNEL_IMG} /opt/bin/flanneld --ip-masq=true
 
             # Update docker options
             ExecStartPost=/usr/bin/docker run --net=host --rm --volume=/run:/run \
-              ${FLANNEL_IMG}:${FLANNEL_VER} \
+              ${FLANNEL_IMG} \
               /opt/bin/mk-docker-opts.sh -d /run/flannel_docker_opts.env -i
 
             [Install]
@@ -373,7 +372,7 @@ coreos:
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
         {{- if .KubeMaster }}
-        - name: kube-addons
+        - name: kube-addons.service
           command: start
           content: |
             [Unit]
@@ -381,13 +380,15 @@ coreos:
             After=kubelet.service
             Requires=kubelet.service
             [Service]
+            ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
-            ExecStart=docker run -d --net=host \
-            -e "KUBECTL_OPTS=--server={{ .MasterHostname }}:8080" \
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
+            ExecStart=/usr/bin/docker run --rm --net=host \
+            -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
             -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
-            {{ .BootstrapperIP }}:5000/kube-addon-manager-amd64:v5.1
-            
+            {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
+
         - name: kubelet.service
           runtime: true
           command: start
@@ -403,7 +404,7 @@ coreos:
             ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
             --register-node=true \
             --api-servers=http://{{ .MasterHostname }}:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
@@ -413,10 +414,12 @@ coreos:
             --config=/etc/kubernetes/manifests \
             --hostname-override={{ .MasterHostname }} \
             --cluster-dns={{ .K8sClusterDNS }} \
-            --cluster-domain=cluster.local
-            --logtostderr=true
+            --cluster-domain=cluster.local \
             {{ if .Ingress }}
+            --logtostderr=true \
             --node-labels=role=ingress
+            {{ else }}
+            --logtostderr=true
             {{ end }}
             Restart=always
             RestartSec=10
@@ -438,7 +441,7 @@ coreos:
             ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
-            --pod_infra_container_image={{ .Dockerdomain }}:5000/pause-amd64:{{ .PauseVersion }} \
+            --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
             --address=0.0.0.0 \
             --allow-privileged=true \
             --cluster-dns={{ .K8sClusterDNS }} \

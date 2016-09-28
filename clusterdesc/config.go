@@ -1,4 +1,4 @@
-// package clusterdesc defines Go structs that configure a Kubernetes
+// Package clusterdesc defines Go structs that configure a Kubernetes
 // cluster.  The configuration is often encoded and saved as a YAML
 // file, which is used by config-bootstrapper and cloud-config-server.
 package clusterdesc
@@ -38,9 +38,7 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
-	HyperkubeVersion         string `yaml:"hyperkube_version"`
-	PauseVersion             string `yaml:"pause_version"`
-	FlannelVersion           string `yaml:"flannel_version"`
+	Images                   map[string]string
 }
 
 // Node defines properties of some nodes in the cluster.  For example,

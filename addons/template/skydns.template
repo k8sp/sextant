@@ -19,8 +19,8 @@ spec:
         version: v10
         kubernetes.io/cluster-service: "true"
     spec:
-      imagePullSecrets:
-        - name: registry
+      #imagePullSecrets:
+      #  - name: registry
       containers:
       - name: kube2sky
         image: {{ .Dockerdomain }}:5000/kube2sky:1.14
@@ -92,24 +92,3 @@ spec:
       - name: etcd-storage
         emptyDir: {}
       dnsPolicy: Default  # Don't use cluster DNS.
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "KubeDNS"
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP:  {{ .K8sClusterDNS }}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
