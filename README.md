@@ -29,7 +29,7 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 git clone https://github.com/k8sp/sextant.git
 vim cloud-config-server/template/unisound-ailab/build_config.yml
 cd sextant/bootstrapper
-./bsroot.sh
+./bsroot.bash
 ```
 
 ## 配置

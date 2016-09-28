@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
+# bsroot.bash creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
 
 if [[ "$#" -ne 1 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml>"
+    echo "Usage: bsroot.bash <cluster-desc.yml>"
     exit 1
 fi
 
-# Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
+# Remember fullpaths, so that it is not required to run bsroot.bash from its local Git repo.
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
@@ -183,7 +183,7 @@ prepare_cc_server_contents() {
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
-       
+
     printf "Copying ingress template and skydns template ... "
     cp $INGRESS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $SKYDNS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
