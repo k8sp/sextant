@@ -40,15 +40,15 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    1. 配置 Go 环境
 
       ```
-	  mkdir -p ~/work
+      mkdir -p ~/work
       export GOPATH=$HOME/work
-	  ```
+      ```
 
    1. 获取Sextant并且获取其中Go程序的依赖
 
       ```
-	  go get https://github.com/k8sp/sextant/...
-	  ```
+      go get https://github.com/k8sp/sextant/...
+      ```
 
       请注意上面命令里的省略号不可以少。
 
@@ -58,7 +58,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
 
       ```
       $GOPATH/src/github.com/k8sp/sextant/bsroot.sh ~/cluster-desc.yml
-	  ```
+      ```
 
    1. 把准备好的内容上传到 bootstrapper server（或者bootstrapper VM）：
 
