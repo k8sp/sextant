@@ -22,9 +22,8 @@ cloud-config-server -addr ":80" \
   -cluster-desc-file /bsroot/config/cluster-desc.yml \
   -cluster-desc-url "" \
   -ca-crt /bsroot/tls/ca.pem \
-  -ca-key /bsroot/tls/ca-key.pem \
-  -ingress-template-file /bsroot/config/ingress.template \
-  -skydns-template-file /bsroot/config/skydns.template &
+  -ca-key /bsroot/tls/ca-key.pem &
+
 # start registry
 registry serve /bsroot/config/registry.yml &
 sleep 2
