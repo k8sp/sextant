@@ -383,10 +383,10 @@ coreos:
             [Service]
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
-            ExecStart=docker run -d --net=host \
-            -e "KUBECTL_OPTS=--server={{ .MasterHostname }}:8080" \
+            ExecStart=docker run --net=host \
+            -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
             -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
-            {{ .BootstrapperIP }}:5000/kube-addon-manager-amd64:v5.1
+            {{ .Dockerdomain }}:5000/kube-addon-manager-amd64:v5.1
             
         - name: kubelet.service
           runtime: true
