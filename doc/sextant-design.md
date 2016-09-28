@@ -29,7 +29,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
 
    1. 静态IP：dnsmasq运行PXE 和 DNS service的时候需要
    1. docker：执行 bootstrapper docker container
-   1. root权限：bootstrapper container需要以特权模式运行
+   1. root权限：bootstrapper container需要以特权模式运行，比如运行docker container
    1. 计划要自动安装CoreOS和kubernetes的机群机器要和bootstrapper所在的机器网络连通（2层连通）。
 
 ## 使用方法
@@ -66,7 +66,20 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
       scp -r ./bsroot root@bootstrapper:/
       ```
 
-1. 在 bootstrapper server（或者bootstrapper VM）上只需要执行 [`start_bootstrapper_container.sh`](https://github.com/k8sp/sextant/blob/master/start_bootstrapper_container.sh)，它会：
+1. 在 bootstrapper server（或者bootstrapper VM）上执行 [`start_bootstrapper_container.sh`](https://github.com/k8sp/sextant/blob/master/start_bootstrapper_container.sh)：
+
+   ```
+   host $ ssh bootstrapper
+   bootstrapper $ sudo /root/start_bootstrapper_container.sh
+   ```
+
+   或者
+
+   ```
+   host $ ssh root@bootstrapper -c "nohup /root/start_bootstrapper_container.sh"
+   ```
+
+   `start_bootstrapper_container.sh` 会：
 
    1. 启动 bootstrapper service：
 
@@ -123,5 +136,3 @@ cloud-config-server是使用Go语言开发的一个HTTP Server，将提供安装
 1. 不需要额外搭建翻墙环境
 
 这样，bootstrapper在编译的时候就需要下载好docker registry的镜像，kubernetes需要的镜像。启动bootstrapper的时候，先把docker registry的镜像load到docker daemon中，然后再把kubernetes用到的镜像push到启动好的registry中，并打上对应的tag（cloud-config-server生成的cloud-config文件使用的镜像的tag）
-
-
