@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # start_bootstrapper_container.sh load docker image from bsroot and
+# then push them to registry
 if [[ "$#" -gt 1 ]]; then
     echo "Usage: start_bootstrapper_contaienr.sh [bsroot-path]"
     exit 1
@@ -14,6 +15,12 @@ if [[ ! -d $BSROOT ]]; then
     echo "$BSROOT is not a directory"
     exit 2
 fi
+
+if [[ $BSROOT != /* ]]; then
+  echo "bsroot path not start with / !"
+  exit 1
+fi
+
 # push k8s images to registry from bsroot
 BOOTATRAPPER_DOMAIN=`grep "dockerdomain:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/"//g' | sed 's/ //g'`
 HYPERKUBE_VERSION=`grep "hyperkube_version:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
