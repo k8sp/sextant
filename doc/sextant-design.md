@@ -47,7 +47,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    1. 获取Sextant并且获取其中Go程序的依赖
 
       ```
-      go get https://github.com/k8sp/sextant/...
+      go get github.com/k8sp/sextant/...
       ```
 
       请注意上面命令里的省略号不可以少。
