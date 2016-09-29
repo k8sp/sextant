@@ -23,9 +23,6 @@ fi
 
 # push k8s images to registry from bsroot
 BOOTATRAPPER_DOMAIN=`grep "dockerdomain:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/"//g' | sed 's/ //g'`
-HYPERKUBE_VERSION=`grep "hyperkube_version:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-PAUSE_VERSION=`grep "pause_version:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-FLANNEL_VERSION=`grep "flannel_version:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 
 # Config Registry tls
 mkdir -p /etc/docker/certs.d/bootstrapper:5000
@@ -44,19 +41,21 @@ docker run -d --net=host \
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
 
-DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${HYPERKUBE_VERSION}" \
-  "typhoon1986/pause:${PAUSE_VERSION}" \
-  "typhoon1986/flannel:${FLANNEL_VERSION}" \
-  "yancey1989/nginx-ingress-controller:0.8.3" \
-  "yancey1989/kube2sky:1.14" \
-  "typhoon1986/exechealthz:1.0" \
-  "yancey1989/kube-addon-manager-amd64:v5.1" \
-  "typhoon1986/skydns:latest");
+# TODO: should DOCKER_IMAGES from cluster-desc
+DOCKER_IMAGES=("hyperkube" \
+  "pause" \
+  "flannel" \
+  "ingress" \
+  "kube2sky" \
+  "healthz" \
+  "addon_manager" \
+  "skydns");
 len=${#DOCKER_IMAGES[@]}
 for ((i=0;i<len;i++)); do
-  DOCKER_IMAGE=${DOCKER_IMAGES[i]}
+  DOCKER_IMAGE=`sed -n '/^images/,/^nodes/p' $BSROOT/config/cluster-desc.yml | grep "${DOCKER_IMAGES[i]}" | awk '{print $2}'  | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
-  DOCKER_TAG_NAME=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE} | awk -F'/' '{print $1"/"$3}'`
+  # Do *NOT* remove docker image path when push to bootstrapper registry.
+  DOCKER_TAG_NAME=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE}`
   docker load < $DOCKER_TAR_FILE
   docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
   docker push $DOCKER_TAG_NAME
