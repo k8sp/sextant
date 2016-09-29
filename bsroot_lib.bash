@@ -235,17 +235,21 @@ download_k8s_images() {
 	local len=${#DOCKER_IMAGES[@]}
 	for ((i=0;i<len;i++)); do
 	    local DOCKER_IMAGE=${DOCKER_IMAGES[i]}
-	    printf "Downloading image ${DOCKER_IMAGE} ..."
-	    docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 	    local DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
-	    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
-	    echo "Done"
+	    if [ ! -f $DOCKER_TAR_FILE ]; then
+		printf "Downloading image ${DOCKER_IMAGE} ..."
+		docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+		docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
+		echo "Done"
+	    fi
 	done
     )
 }
 
 build_bootstrapper_image() {
-    local
+    local BSROOT=$1
+    local SEXTANT_DIR=$2
+
     printf "Building bootstrapper image ... "
     (
 	cd $SEXTANT_DIR/docker

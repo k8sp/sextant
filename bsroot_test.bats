@@ -77,3 +77,20 @@ teardown() {
 @test "download k8s images" {
     download_k8s_images $BSROOT $SEXTANT_DIR/cloud-config-server/template/unisound-ailab/build_config.yml $SEXTANT_DIR
 }
+
+@test "build bootstrapper image" {
+    build_bootstrapper_image $BSROOT $SEXTANT_DIR
+
+    [ -f $BSROOT/start_bootstrapper_container.sh ]
+    [ -f $BSROOT/bootstrapper.tar ]
+}
+
+@test "generate tls assets" {
+    generate_tls_assets $BSROOT
+
+    [ -f $BSROOT/tls/ca-key.pem ]
+    [ -f $BSROOT/tls/ca.pem ]
+    [ -f $BSROOT/tls/bootstrapper.key ]
+    [ -f $BSROOT/tls/bootstrapper.csr ]
+    [ -f $BSROOT/tls/bootstrapper.crt ]
+}
