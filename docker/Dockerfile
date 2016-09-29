@@ -3,12 +3,13 @@ FROM golang:alpine
 # Install required software packages.
 RUN set -ex && \
 apk update && \
-apk add --no-cache make git dnsmasq openssl docker
+apk add --no-cache make git dnsmasq openssl
 
 # Upload Sextant Go programs and retrieve dependencies.
 RUN mkdir -p /go/bin
 COPY cloud-config-server /go/bin/
 COPY addons              /go/bin/
+
 # Install Docker registry
 RUN go get github.com/docker/distribution && \
 cd /go/src/github.com/docker/distribution && \
