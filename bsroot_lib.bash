@@ -1,40 +1,6 @@
-#!/bin/bash
-
-# bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
-# scp-ed to the bootstrapper server as /bsroot.
-
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml>"
-    exit 1
-fi
-
-# Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
-realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-}
-
-CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
-INGRESS_TEMPLATE=$(realpath $(dirname $0)/addons/template/ingress.template)
-SKYDNS_TEMPLATE=$(realpath $(dirname $0)/addons/template/skydns.template)
-CLUSTER_DESC=$(realpath $1)
-SEXTANT_DIR=$(realpath $(dirname $0))
-
-BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
-if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
-    echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
-    exit 1
-fi
-echo "Using bootstrapper server IP $BS_IP"
-
-BSROOT=$PWD/bsroot
-if [[ -d $BSROOT ]]; then
-    echo "$BSROOT already exists.  Overwrite without removing it."
-fi
-
-
 check_prerequisites() {
     printf "Checking prerequisites ... "
-    err=0
+    local err=0
     for tool in wget tar gpg docker; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
@@ -46,6 +12,8 @@ check_prerequisites() {
 
 
 download_pxe_images() {
+    local BSROOT=$1
+
     mkdir -p $BSROOT/tftpboot
 
     printf "Downloading syslinux ... "
@@ -64,10 +32,10 @@ download_pxe_images() {
     echo "Done"
 
     printf "Downloading CoreOS PXE vmlinuz image ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed coreos_production_pxe.vmlinuz"; exit 1; }
+    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed coreos_production_pxe.vmlinuz.sig"; exit 1; }
     cd $BSROOT/tftpboot
-    gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed GPG verify"; exit 1; }
     echo "Done"
 
     printf "Downloading CoreOS PXE CPIO image ... "
@@ -79,6 +47,9 @@ download_pxe_images() {
 
 
 generate_pxe_config() {
+    local BSROOT=$1
+    local BS_IP=$2
+
     printf "Generating pxelinux.cfg ... "
     mkdir -p $BSROOT/tftpboot/pxelinux.cfg
     cat > $BSROOT/tftpboot/pxelinux.cfg/default <<EOF
@@ -93,6 +64,8 @@ EOF
 
 
 generate_dnsmasq_config() {
+    local BSROOT=$1
+
     printf "Generating dnsmasq.conf ... "
     mkdir -p $BSROOT/config
     # TODO(yi): Ad-hoc domain name k8s.baifendian.com here.  Try parsing it from cluster-desc.yml.
@@ -130,6 +103,8 @@ EOF
 
 
 generate_registry_config() {
+    local BSROOT=$1
+
     printf "Generating Docker registry config file ... "
     mkdir -p $BSROOT/registry_data
     [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
@@ -161,11 +136,16 @@ EOF
 
 
 prepare_cc_server_contents() {
+    local BSROOT=$1
+    local CLUSTER_DESC=$2
+    local SEXTANT_DIR=$3
+    local BS_IP=$4
+
     mkdir -p $BSROOT/html/static/cloud-config
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
-    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    local hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
@@ -180,12 +160,15 @@ prepare_cc_server_contents() {
     echo "Done"
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
+    local CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
-       
+
     printf "Copying ingress template and skydns template ... "
+    local INGRESS_TEMPLATE=$SEXTANT_DIR/addons/template/ingress.template
     cp $INGRESS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
+    local SKYDNS_TEMPLATE=$SEXTANT_DIR/addons/template/skydns.template
     cp $SKYDNS_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     echo "Done"
 
@@ -207,7 +190,7 @@ EOF
     echo "Done"
 
     printf "Checking new CoreOS version ... "
-    VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
+    local VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
 	echo "Failed"; exit 1;
     fi
@@ -221,71 +204,84 @@ EOF
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static/$VERSION
-    gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    (
+	cd $BSROOT/html/static/$VERSION
+	gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    )
     ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
 
-download_k8s_images () {
-  hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-  DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${hyperkube_version}" \
-    "typhoon1986/pause:${pause_version}" \
-    "typhoon1986/flannel:${flannel_version}" \
-    "yancey1989/nginx-ingress-controller:0.8.3" \
-    "yancey1989/kube2sky:1.14" \
-    "typhoon1986/exechealthz:1.0" \
-    "yancey1989/kube-addon-manager-amd64:v5.1" \
-    "typhoon1986/skydns:latest");
-  cd $BSROOT
-  len=${#DOCKER_IMAGES[@]}
-  for ((i=0;i<len;i++)); do
-    DOCKER_IMAGE=${DOCKER_IMAGES[i]}
-    printf "Downloading image ${DOCKER_IMAGE} ..."
-    docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
-    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
-    echo "Done"
-  done
+download_k8s_images() {
+    local BSROOT=$1
+    local CLUSTER_DESC=$2
+    local SEXTANT_DIR=$3
 
-  printf "Building bootstrapper image ... "
-  cd $SEXTANT_DIR/docker
-  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-  docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-  echo "Done"
-  # NOTE: we need to run docker load on the bootstrapper server
-  # to load these saved images.
+    local hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    local pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    local flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
 
-  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
-    $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
-  chmod +x $BSROOT/start_bootstrapper_container.sh
+    local DOCKER_IMAGES=("typhoon1986/hyperkube-amd64:${hyperkube_version}" \
+			     "typhoon1986/pause:${pause_version}" \
+			     "typhoon1986/flannel:${flannel_version}" \
+			     "yancey1989/nginx-ingress-controller:0.8.3" \
+			     "yancey1989/kube2sky:1.14" \
+			     "typhoon1986/exechealthz:1.0" \
+			     "yancey1989/kube-addon-manager-amd64:v5.1" \
+			     "typhoon1986/skydns:latest");
+    (
+	cd $BSROOT
+	local len=${#DOCKER_IMAGES[@]}
+	for ((i=0;i<len;i++)); do
+	    local DOCKER_IMAGE=${DOCKER_IMAGES[i]}
+	    local DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+	    if [ ! -f $DOCKER_TAR_FILE ]; then
+		printf "Downloading image ${DOCKER_IMAGE} ..."
+		docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+		docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
+		echo "Done"
+	    fi
+	done
+    )
+}
+
+build_bootstrapper_image() {
+    local BSROOT=$1
+    local SEXTANT_DIR=$2
+
+    printf "Building bootstrapper image ... "
+    (
+	cd $SEXTANT_DIR/docker
+	bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+	echo "Done"
+	# NOTE: we need to run docker load on the bootstrapper server
+	# to load these saved images.
+    )
+
+    cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+       $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+    chmod +x $BSROOT/start_bootstrapper_container.sh
 }
 
 generate_tls_assets() {
+    local BSROOT=$1
+
     mkdir -p $BSROOT/tls
-    cd $BSROOT/tls
-    rm -rf $BSROOT/tls/*
+    (
+	cd $BSROOT/tls
+	rm -rf $BSROOT/tls/*
 
-    printf "Generating CA TLS assets ... "
-    openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
+	printf "Generating CA TLS assets ... "
+	openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	echo "Done"
 
-    printf "Generating bootstrapper TLS assets ... "
-    openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
+	printf "Generating bootstrapper TLS assets ... "
+	openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+	echo "Done"
+    )
 }
-
-check_prerequisites
-download_pxe_images
-generate_pxe_config
-generate_dnsmasq_config
-generate_registry_config
-prepare_cc_server_contents
-download_k8s_images
-generate_tls_assets
