@@ -17,4 +17,4 @@ mkdir -p /etc/docker/registry && \
 cp /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml
 
 COPY bootstrapper.sh /
-ENTRYPOINT ["/bootstrapper.sh"]
+CMD "/bootstrapper.sh"
