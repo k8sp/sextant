@@ -16,5 +16,5 @@ make PREFIX=/go clean binaries && \
 mkdir -p /etc/docker/registry && \
 cp /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml
 
-COPY bootstrapper.sh /
-CMD "/bootstrapper.sh"
+COPY bootstrapper/entrypoint.sh /
+CMD "/entrypoint.sh"

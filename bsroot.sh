@@ -3,8 +3,8 @@
 # bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
 
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml>"
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh cluster-desc.yml [./bsroot]"
     exit 1
 fi
 
@@ -26,7 +26,12 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
 fi
 echo "Using bootstrapper server IP $BS_IP"
 
-BSROOT=$PWD/bsroot
+if [[ "$#" == 2 ]]; then
+    BSROOT=$2
+else
+    BSROOT=$PWD/bsroot
+fi
+
 if [[ -d $BSROOT ]]; then
     echo "$BSROOT already exists.  Overwrite without removing it."
 fi
@@ -252,14 +257,16 @@ download_k8s_images () {
   done
 
   printf "Building bootstrapper image ... "
-  cd $SEXTANT_DIR/docker
-  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-  docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-  echo "Done"
-  # NOTE: we need to run docker load on the bootstrapper server
-  # to load these saved images.
+  (
+      cd $SEXTANT_DIR
+      docker build -t bootstrapper -f bootstrapper.Dockerfile . || { echo "Failed docker build -f bootstrapper.Dockerfile"; exit 1; }
+      docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+      echo "Done"
+      # NOTE: we need to run docker load on the bootstrapper server
+      # to load these saved images.
+  )
 
-  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+  cp $SEXTANT_DIR/bootstrapper/start.sh \
     $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
   chmod +x $BSROOT/start_bootstrapper_container.sh
 }
