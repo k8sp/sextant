@@ -19,11 +19,9 @@ spec:
         version: v10
         kubernetes.io/cluster-service: "true"
     spec:
-      #imagePullSecrets:
-      #  - name: registry
       containers:
       - name: kube2sky
-        image: {{ .Dockerdomain }}:5000/kube2sky:1.14
+        image: {{ .Dockerdomain }}:5000/{{ .Images.kube2sky }}
         resources:
           # keep request = limit to keep this container in guaranteed class
           limits:
@@ -37,7 +35,7 @@ spec:
         - --domain=cluster.local
         - --etcd-server={{ .EtcdEndpoint }}
       - name: skydns
-        image: {{ .Dockerdomain }}:5000/skydns:latest
+        image: {{ .Dockerdomain }}:5000/{{ .Images.skydns }}
         resources:
           # keep request = limit to keep this container in guaranteed class
           limits:
@@ -73,7 +71,7 @@ spec:
           initialDelaySeconds: 30
           timeoutSeconds: 5
       - name: healthz
-        image: {{ .Dockerdomain }}:5000/exechealthz:1.0
+        image: {{ .Dockerdomain }}:5000/{{ .Images.healthz }}
         resources:
           # keep request = limit to keep this container in guaranteed class
           limits:

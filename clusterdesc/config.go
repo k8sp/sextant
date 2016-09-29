@@ -49,11 +49,11 @@ type Cluster struct {
 // specified in Node.IP, these IPs should not be in the range of
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
-	MAC         string
-	Ingress     bool
-	CephMonitor bool `yaml:"ceph_monitor"`
-	KubeMaster  bool `yaml:"kube_master"`
-	EtcdMember  bool `yaml:"etcd_member"`
+	MAC          string
+	IngressLabel bool
+	CephMonitor  bool `yaml:"ceph_monitor"`
+	KubeMaster   bool `yaml:"kube_master"`
+	EtcdMember   bool `yaml:"etcd_member"`
 }
 
 // Join is defined as a method of Cluster, so can be called in
@@ -66,7 +66,7 @@ func (c Cluster) Join(s []string) string {
 func (c Cluster) GetIngressReplicas() int {
 	var cnt = 0
 	for _, n := range c.Nodes {
-		if n.Ingress {
+		if n.IngressLabel {
 			cnt++
 		}
 	}
