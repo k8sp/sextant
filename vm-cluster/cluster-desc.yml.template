@@ -10,9 +10,16 @@ domainname: "k8s.baifendian.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 192.168.0.0/24
 k8s_cluster_dns: 192.168.0.10
-hyperkube_version: "v1.3.6"
-pause_version: "3.0"
-flannel_version: "0.5.5"
+
+images:
+  hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
+  pause: "typhoon1986/pause-amd64:3.0"
+  flannel: "typhoon1986/flannel:0.5.5"
+  ingress: "yancey1989/nginx-ingress-controller:0.8.3"
+  kube2sky: "yancey1989/kube2sky:1.14"
+  healthz: "typhoon1986/exechealthz:1.0"
+  addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
+  skydns: "typhoon1986/skydns:latest"
 
 nodes:
   - mac: "08:00:27:4a:2d:a1"

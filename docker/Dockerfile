@@ -3,7 +3,8 @@ FROM golang:alpine
 # Install required software packages.
 RUN set -ex && \
 apk update && \
-apk add --no-cache make git dnsmasq openssl
+apk add --no-cache make git dnsmasq openssl docker && \
+mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 # Upload Sextant Go programs and retrieve dependencies.
 RUN mkdir -p /go/bin
@@ -16,7 +17,6 @@ make PREFIX=/go clean binaries && \
 mkdir -p /etc/docker/registry && \
 cp /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml
 
-RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 # TODO(yi): Why do we need to create /go/static?
 RUN mkdir /go/static
 
