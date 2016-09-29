@@ -137,14 +137,15 @@ EOF
 
 prepare_cc_server_contents() {
     local BSROOT=$1
-    local SEXTANT_DIR=$2
-    local BS_IP=$3
+    local CLUSTER_DESC=$2
+    local SEXTANT_DIR=$3
+    local BS_IP=$4
 
     mkdir -p $BSROOT/html/static/cloud-config
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
-    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    local hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
@@ -203,14 +204,16 @@ EOF
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static/$VERSION
-    gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    (
+	cd $BSROOT/html/static/$VERSION
+	gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    )
     ln -sf $BSROOT/html/static/$VERSION $BSROOT/html/static/current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
 
-download_k8s_images () {
+download_k8s_images() {
     local BSROOT=$1
     local CLUSTER_DESC=$2
     local SEXTANT_DIR=$3
@@ -239,7 +242,10 @@ download_k8s_images () {
 	    echo "Done"
 	done
     )
+}
 
+build_bootstrapper_image() {
+    local
     printf "Building bootstrapper image ... "
     (
 	cd $SEXTANT_DIR/docker

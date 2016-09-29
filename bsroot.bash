@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# c.f. https://sipb.mit.edu/doc/safe-shell/
+set -euf -o pipefail
+
 # bsroot.bash creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
 
@@ -40,6 +43,6 @@ download_pxe_images $BSROOT
 generate_pxe_config $BSROOT $BS_IP
 generate_dnsmasq_config $BSROOT
 generate_registry_config $BSROOT
-prepare_cc_server_contents $BSROOT $SEXTANT_DIR $BS_IP
+prepare_cc_server_contents $BSROOT $CLUSTER_DESC $SEXTANT_DIR $BS_IP
 download_k8s_images $BSROOT $CLUSTER_DESC $SEXTANT_DIR
 generate_tls_assets $BSROOT
