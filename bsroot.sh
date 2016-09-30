@@ -33,7 +33,7 @@ fi
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker; do
+    for tool in wget tar gpg docker tr; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
@@ -166,7 +166,6 @@ prepare_cc_server_contents() {
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
     chmod +x $BSROOT/html/static/kubelet
     chmod +x $BSROOT/kubectl
     echo "Done"
@@ -279,6 +278,11 @@ generate_tls_assets() {
     echo "Done"
 }
 
+prepare_files_for_kubectl() {
+  mkdir -p $BSROOT/kubectl
+  cp $BSROOT/config/cluster-desc.yml $BSROOT/tls/ca.pem $BSROOT/tls/ca-key.pem $BSROOT/kubectl
+}
+
 check_prerequisites
 download_pxe_images
 generate_pxe_config
@@ -287,3 +291,4 @@ generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
 generate_tls_assets
+prepare_files_for_kubectl
