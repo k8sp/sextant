@@ -10,36 +10,43 @@ domainname: "ailab.unisound.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
-hyperkube_version: "v1.3.6"
-pause_version: "3.0"
-flannel_version: "0.5.5"
+
+images:
+  hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
+  pause: "typhoon1986/pause-amd64:3.0"
+  flannel: "typhoon1986/flannel:0.5.5"
+  ingress: "yancey1989/nginx-ingress-controller:0.8.3"
+  kube2sky: "yancey1989/kube2sky:1.14"
+  healthz: "typhoon1986/exechealthz:1.0"
+  addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
+  skydns: "typhoon1986/skydns:latest"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
     ceph_monitor: y
     kube_master: y
     etcd_member: y
-    ingress: n
+    ingress_label: n
   - mac: "00:25:90:c0:f6:ee"
     ceph_monitor: y
     kube_master: n
     etcd_member: y
-    ingress: n
+    ingress_label: n
   - mac: "00:25:90:c0:f6:d6"
     ceph_monitor: y
     kube_master: n
     etcd_member: y
-    ingress: n
+    ingress_label: n
   - mac: "00:25:90:c0:f7:ac"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
-    ingress: n
+    ingress_label: n
   - mac: "00:25:90:c0:f7:7e"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
-    ingress: y
+    ingress_label: y
 
 ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"

@@ -1,4 +1,4 @@
-// package clusterdesc defines Go structs that configure a Kubernetes
+// Package clusterdesc defines Go structs that configure a Kubernetes
 // cluster.  The configuration is often encoded and saved as a YAML
 // file, which is used by config-bootstrapper and cloud-config-server.
 package clusterdesc
@@ -38,9 +38,7 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
-	HyperkubeVersion         string `yaml:"hyperkube_version"`
-	PauseVersion             string `yaml:"pause_version"`
-	FlannelVersion           string `yaml:"flannel_version"`
+	Images                   map[string]string
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
@@ -51,11 +49,11 @@ type Cluster struct {
 // specified in Node.IP, these IPs should not be in the range of
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
-	MAC         string
-	Ingress     bool
-	CephMonitor bool `yaml:"ceph_monitor"`
-	KubeMaster  bool `yaml:"kube_master"`
-	EtcdMember  bool `yaml:"etcd_member"`
+	MAC          string
+	IngressLabel bool
+	CephMonitor  bool `yaml:"ceph_monitor"`
+	KubeMaster   bool `yaml:"kube_master"`
+	EtcdMember   bool `yaml:"etcd_member"`
 }
 
 // Join is defined as a method of Cluster, so can be called in
@@ -68,7 +66,7 @@ func (c Cluster) Join(s []string) string {
 func (c Cluster) GetIngressReplicas() int {
 	var cnt = 0
 	for _, n := range c.Nodes {
-		if n.Ingress {
+		if n.IngressLabel {
 			cnt++
 		}
 	}
