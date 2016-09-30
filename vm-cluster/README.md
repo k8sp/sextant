@@ -13,34 +13,7 @@
 
 ### 操作步骤
 
-１．修改 vagrantfile 中 cluster-desc.yml.template配置,如果仅仅测试使用，保持默认即可
-```
-bootstrapper: 192.168.8.101
-subnet: 192.168.8.0
-netmask: 255.255.255.0
-iplow: 192.168.8.201
-iphigh: 192.168.8.220
-routers: [192.168.8.101]
-broadcast: 192.168.8.255
-nameservers: [192.168.8.101, 8.8.8.8, 8.8.4.4]
-domainname: "k8s.baifendian.com"
-dockerdomain: "bootstrapper"
-k8s_service_cluster_ip_range:192.168.0.0/24
-k8s_cluster_dns: 192.168.0.10
-hyperkube_version: "v1.3.6"
-pause_version: "3.0"
-flannel_version: "0.5.5"
-
-nodes:
-  - mac: "08:00:27:4a:2d:a1"
-    ceph_monitor: n
-    kube_master: y
-    etcd_member: y
-
-ssh_authorized_keys: |1+
-    - "<SSH_KEY>"
-
-```
+１．修改 vagrantfile 中 cluster-desc.yml.template配置
 
 ２．启动bootstrapper
 ```
@@ -48,7 +21,7 @@ cd vm-cluster
 ./prepare_install_bootstrapper.sh
 vagrant up bootstrapper
 ```
-* 默认启动时会从 github 下载 bootstrapper 源码
+
 * 执行 bsroot.sh 脚本(下载pxe镜像,生成 pxe 的配置，dns dhcp配置，registry 配置,配置 cloudconfig server 环境,下载k8s依赖镜像）
 
 ３．启动 k8s master，安装 k8s master 节点
@@ -58,7 +31,7 @@ vagrant up　master
 ```
 启动的过程成会弹出 virtualbox 窗口，在窗口中会出现如下提示：
 ```
-Press F8 for menu.(59)
+Press F8 for menu.(5)
 ```
 按 F8 后,会出现从网络安装 CoreOS 的提示如下提示：
 ```
