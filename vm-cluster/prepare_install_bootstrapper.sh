@@ -7,14 +7,15 @@
 
 # Create a temporary directory in OS X or
 # Linux. c.f. http://unix.stackexchange.com/questions/30091/fix-or-alternative-for-mktemp-in-os-x
-local TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t '/tmp')
+TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t '/tmp')
 
 # Generate the SSH public/private key pair.
+rm -rf $TMPDIR/*
 ssh-keygen -t rsa -f $TMPDIR/id_rsa -P ''
 
 # Replace the public key into cluster-desc.yml.template and generate cluster-desc.yml
-local PUB_KEY=$(cat $TMPDIR/id_rsa.pub)
-local SEXTANT_DIR=$GOPATH/src/github.com/k8sp/sextant
+PUB_KEY=$(cat $TMPDIR/id_rsa.pub)
+SEXTANT_DIR=$GOPATH/src/github.com/k8sp/sextant
 sed -e 's#<SSH_KEY>#'"$PUB_KEY"'#' $SEXTANT_DIR/vm-cluster/cluster-desc.yml.template > $TMPDIR/cluster-desc.yml
 
 # Generate $SEXTANT_DIR/bsroot
