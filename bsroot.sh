@@ -191,6 +191,7 @@ prepare_cc_server_contents() {
     cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
     cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
     cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/dnsmasq.conf.template $BSROOT/config/dnsmasq.conf.template || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Generating install.sh ... "
