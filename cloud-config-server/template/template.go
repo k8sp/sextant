@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	tpcfg "github.com/k8sp/sextant/config"
+	tpcfg "github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 )
 
@@ -18,6 +18,7 @@ type ExecutionConfig struct {
 	CephMonitor              bool
 	KubeMaster               bool
 	EtcdMember               bool
+	IngressLabel             bool
 	InitialCluster           string
 	SSHAuthorizedKeys        string
 	EtcdEndpoints            string
@@ -30,9 +31,7 @@ type ExecutionConfig struct {
 	Dockerdomain             string
 	K8sClusterDNS            string
 	K8sServiceClusterIPRange string
-	HyperkubeVersion         string
-	PauseVersion             string
-	FlannelVersion           string
+	Images                   map[string]string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -52,6 +51,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		CephMonitor:              node.CephMonitor,
 		KubeMaster:               node.KubeMaster,
 		EtcdMember:               node.EtcdMember,
+		IngressLabel:             node.IngressLabel,
 		InitialCluster:           config.InitialEtcdCluster(),
 		SSHAuthorizedKeys:        config.SSHAuthorizedKeys,
 		MasterHostname:           config.GetMasterHostname(),
@@ -60,9 +60,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Dockerdomain:             config.Dockerdomain,
 		K8sClusterDNS:            config.K8sClusterDNS,
 		K8sServiceClusterIPRange: config.K8sServiceClusterIPRange,
-		HyperkubeVersion:         config.HyperkubeVersion,
-		PauseVersion:             config.PauseVersion,
-		FlannelVersion:           config.FlannelVersion,
+		Images: config.Images,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
 		// so insert 6*whitespace at the begging of every line

@@ -26,7 +26,7 @@ do
       -e KV_TYPE=etcd \
       -e CLUSTER=$CEPH_CLUSTER_NAME \
       -e OSD_DEVICE=${device} \
-      "$docker_hub"ceph/daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /bin/bash -x /entrypoint.sh osd
+      "$docker_hub"typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /bin/bash -x /entrypoint.sh osd
 
     # FIXME: wait utill the container finishes bootstrapping
     st=$(docker ps --format "{{.Status}} {{.Names}}"|grep $CEPH_OSD_DOCKER_NAME | awk '{print $1}')

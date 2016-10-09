@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/config"
+	"github.com/k8sp/sextant/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 )
@@ -37,7 +37,7 @@ func TestRun(t *testing.T) {
 	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
 	candy.Must(e)
 
-	clusterDesc := func() []byte { return []byte(config.ExampleYAML) }
+	clusterDesc := func() []byte { return []byte(clusterdesc.ExampleYAML) }
 	ccTemplate := func() []byte { return ccTmpl }
 
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
@@ -54,8 +54,8 @@ func TestRun(t *testing.T) {
 	candy.Must(yaml.Unmarshal(cc, yml))
 	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
 
-	c := &config.Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(config.ExampleYAML), c))
+	c := &clusterdesc.Cluster{}
+	candy.Must(yaml.Unmarshal([]byte(clusterdesc.ExampleYAML), c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
 

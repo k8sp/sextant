@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
 
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml>"
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
     exit 1
 fi
 
@@ -12,9 +12,21 @@ fi
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
+
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
 CLUSTER_DESC=$(realpath $1)
 INSTALL_CEPH_SCRIPT_DIR=$(realpath $(dirname $0)/install-ceph)
+SEXTANT_DIR=$(realpath $(dirname $0))
+
+if [[ "$#" == 2 ]]; then
+    BSROOT=$2
+else
+    BSROOT=$SEXTANT_DIR/bsroot
+fi
+
+if [[ -d $BSROOT ]]; then
+    echo "$BSROOT already exists.  Overwrite without removing it."
+fi
 
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
@@ -22,11 +34,6 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
     exit 1
 fi
 echo "Using bootstrapper server IP $BS_IP"
-
-BSROOT=$PWD/bsroot
-if [[ -d $BSROOT ]]; then
-    echo "$BSROOT already exists.  Overwrite without removing it."
-fi
 
 
 check_prerequisites() {
@@ -117,7 +124,7 @@ generate_dnsmasq_config() {
   dhcp-option=28,192.168.8.255
 
   #dhcp-option=42,0.0.0.0
-  pxe-prompt="Press F8 for menu.", 60
+  pxe-prompt="Press F8 for menu.", 5
   pxe-service=x86PC, "Install CoreOS from network server", pxelinux
   enable-tftp
   tftp-root=/bsroot/tftpboot
@@ -166,17 +173,12 @@ prepare_cc_server_contents() {
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
-    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    printf "Downloading and extracting kubernetes release ${hyperkube_version} ... "
-    wget --quiet -c -O $BSROOT/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/$hyperkube_version/kubernetes.tar.gz
-    cd $BSROOT/
-    tar xzf kubernetes.tar.gz || { echo "Failed"; exit 1; }
-    cd $BSROOT/kubernetes/server
-    tar xzf kubernetes-server-linux-amd64.tar.gz || { echo "Failed"; exit 1; }
-    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubelet $BSROOT/html/static
-    cp $BSROOT/kubernetes/server/kubernetes/server/bin/kubectl $BSROOT
-    rm -rf $BSROOT/kubernetes
+    hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+    printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
+    wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
+    wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
     chmod +x $BSROOT/html/static/kubelet
+    chmod +x $BSROOT/kubectl
     echo "Done"
 
     # setup-network-environment will fetch the default system IP infomation
@@ -188,6 +190,12 @@ prepare_cc_server_contents() {
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    printf "Copying addon templates ... "
+    cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Generating install.sh ... "
@@ -220,59 +228,62 @@ sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V c
 EOF
     echo "Done"
 
-    printf "Checking new CoreOS version and update version.txt ... "
-    # NOTE: make "current" to store version.txt
-    mkdir -p $BSROOT/html/static/current
-    cd $BSROOT/html/static/current
-    wget --quiet -P $BSROOT/html/static/current https://stable.release.core-os.net/amd64-usr/current/version.txt
+    printf "Checking new CoreOS version ... "
     VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
-      echo "Failed"; exit 1;
+        echo "Failed"; exit 1;
     fi
-      echo "Done"
+    echo "Done"
 
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
     fi
 
+    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
     wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
+    cd $BSROOT/html/static
+    ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
 
 download_k8s_images () {
-    printf "Downloading hyperkube image ... "
-    hyperkube_version=`grep "hyperkube_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    docker pull typhoon1986/hyperkube-amd64:$hyperkube_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/hyperkube-amd64:$hyperkube_version > $BSROOT/hyperkube-amd64.tar || { echo "Failed"; exit 1; }
+  # TODO: should DOCKER_IMAGES from cluster-desc
+  DOCKER_IMAGES=("hyperkube" \
+    "pause" \
+    "flannel" \
+    "ingress" \
+    "kube2sky" \
+    "healthz" \
+    "addon_manager" \
+    "skydns" \
+    "ceph");
+  cd $BSROOT
+  len=${#DOCKER_IMAGES[@]}
+  for ((i=0;i<len;i++)); do
+    DOCKER_IMAGE=`grep "${DOCKER_IMAGES[i]}:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+    printf "Downloading image ${DOCKER_IMAGE} ..."
+    docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
     echo "Done"
+  done
 
-    printf "Downloading pause image ... "
-    pause_version=`grep "pause_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    docker pull typhoon1986/pause-amd64:$pause_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/pause-amd64:$pause_version > $BSROOT/pause.tar || { echo "Failed"; exit 1; }
-    echo "Done"
-
-    printf "Downloading flannel image ... "
-    flannel_version=`grep "flannel_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    docker pull typhoon1986/flannel:$flannel_version > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    docker save typhoon1986/flannel:$flannel_version > $BSROOT/flannel.tar || { echo "Failed"; exit 1; }
-    echo "Done"
-
-    # NOTE: we need to run docker load on the bootstrapper server
-    # to load these saved images.
-}
-
-download_ceph_images() {
-  printf "Downloading ceph image ... "
-  docker pull typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-  docker save typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 > $BSROOT/ceph_daemon.tar || { echo "Failed"; exit 1; }
+  printf "Building bootstrapper image ... "
+  cd $SEXTANT_DIR/docker
+  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
   echo "Done"
+  # NOTE: we need to run docker load on the bootstrapper server
+  # to load these saved images.
+
+  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+    $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+  chmod +x $BSROOT/start_bootstrapper_container.sh
 }
 
 generate_tls_assets() {
@@ -290,12 +301,6 @@ generate_tls_assets() {
     openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
-
-    # Note: we need to run the following commands on the bootstrapper server to import ca.crt.
-    #
-    #  mkdir -p /etc/docker/certs.d/$BS_IP:5000
-    #  rm -rf /etc/docker/certs.d/$BS_IP:5000/*
-    #  cp ca.pem /etc/docker/certs.d/$BS_IP:5000/ca.crt
 }
 
 check_prerequisites
@@ -305,5 +310,4 @@ generate_dnsmasq_config
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
-download_ceph_images
 generate_tls_assets
