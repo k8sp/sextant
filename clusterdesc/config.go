@@ -26,7 +26,7 @@ type Cluster struct {
 	Routers       []string
 	Broadcast     string
 	Nameservers   []string
-	DomainName    string `yaml:"domain_name"`
+	DomainName    string `yaml:"domainname"`
 	IPLow, IPHigh string // The IP address range of woker nodes.
 	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 

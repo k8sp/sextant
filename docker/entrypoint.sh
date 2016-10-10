@@ -4,15 +4,23 @@ dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
 # run addons
 addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
   -template-file /bsroot/config/ingress.template \
-  -config-file /bsroot/html/static/ingress.yaml &
+  -config-file /bsroot/html/static/ingress.yaml || \
+  { echo 'gen ingress failed!' ; exit 1; }
 
 addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
   -template-file /bsroot/config/skydns.template \
-  -config-file /bsroot/html/static/skydns.yaml &
+  -config-file /bsroot/html/static/skydns.yaml || \
+  { echo 'gen skydns failed!' ; exit 1; }
 
 addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
     -template-file /bsroot/config/skydns-service.template \
-    -config-file /bsroot/html/static/skydns-service.yaml &
+    -config-file /bsroot/html/static/skydns-service.yaml || \
+    { echo 'gen skydns-service failed!' ; exit 1; }
+
+addons -cluster-desc-file /bsroot/config/cluster-desc.yml \
+    -template-file /bsroot/config/dnsmasq.conf.template \
+    -config-file /bsroot/config/dnsmasq.conf || \
+    { echo 'gen dnsmasq.conf failed!' ; exit 1; }
 
 # start cloud-config-server
 cloud-config-server -addr ":80" \
