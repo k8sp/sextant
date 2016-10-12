@@ -318,9 +318,6 @@ prepare_setup_kubectl() {
   echo "Done"
 }
 
-prepare_setup_kubectl
-exit 1
-
 check_prerequisites
 download_pxe_images
 generate_pxe_config
