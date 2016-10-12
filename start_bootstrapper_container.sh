@@ -51,7 +51,8 @@ DOCKER_IMAGES=("hyperkube" \
   "kube2sky" \
   "healthz" \
   "addon_manager" \
-  "skydns");
+  "skydns" \
+  "ceph");
 len=${#DOCKER_IMAGES[@]}
 for ((i=0;i<len;i++)); do
   DOCKER_IMAGE=`grep "${DOCKER_IMAGES[i]}:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`

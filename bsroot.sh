@@ -15,6 +15,7 @@ realpath() {
 
 CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
 CLUSTER_DESC=$(realpath $1)
+INSTALL_CEPH_SCRIPT_DIR=$(realpath $(dirname $0)/install-ceph)
 SEXTANT_DIR=$(realpath $(dirname $0))
 
 if [[ "$#" == 2 ]]; then
@@ -171,6 +172,10 @@ EOF
 
 
 prepare_cc_server_contents() {
+    mkdir -p $BSROOT/html/static/ceph
+    cp $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh $BSROOT/html/static/ceph/install-mon.sh
+    cp $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh $BSROOT/html/static/ceph/install-osd.sh
+
     mkdir -p $BSROOT/html/static/cloud-config
 
     # Fetch release binary tarball from github accroding to the versions
@@ -202,6 +207,19 @@ prepare_cc_server_contents() {
     printf "Generating install.sh ... "
     cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
 #!/bin/bash
+#Obtain devices
+devices=\$(lsblk -l |awk '\$6=="disk"{print \$1}')
+# Zap all devices
+# NOTICE: dd zero to device mbr will not affect parted printed table,
+#         so use parted to remove the part tables
+for d in \$devices
+do
+  for v_partition in \$(parted -s /dev/\${d} print|awk '/^ / {print \$1}')
+  do
+     parted -s /dev/\${d} rm \${v_partition}
+  done
+done
+
 # FIXME: default to install coreos on /dev/sda
 default_iface=\$(awk '\$2 == 00000000 { print \$1  }' /proc/net/route | uniq)
 
@@ -248,7 +266,8 @@ download_k8s_images () {
     "kube2sky" \
     "healthz" \
     "addon_manager" \
-    "skydns");
+    "skydns" \
+    "ceph");
   cd $BSROOT
   len=${#DOCKER_IMAGES[@]}
   for ((i=0;i<len;i++)); do
