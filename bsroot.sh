@@ -34,11 +34,18 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
 fi
 echo "Using bootstrapper server IP $BS_IP"
 
+KUBE_MASTER_HOSTNAME=`head -n $(grep -n 'kube_master\s*:\s*y' $CLUSTER_DESC | cut -d: -f1) $CLUSTER_DESC | grep mac: | tail | grep -o '..:..:..:..:..:..' | tr ':' '-'`
+if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
+  echo "The cluster-desc file should container kube-master node."
+  exit 1
+fi
+
+HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker; do
+    for tool in wget tar gpg docker tr; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
@@ -171,9 +178,7 @@ prepare_cc_server_contents() {
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    wget --quiet -c -O $BSROOT/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl
     chmod +x $BSROOT/html/static/kubelet
-    chmod +x $BSROOT/kubectl
     echo "Done"
 
     # setup-network-environment will fetch the default system IP infomation
@@ -285,6 +290,18 @@ generate_tls_assets() {
     echo "Done"
 }
 
+prepare_setup_kubectl() {
+  printf "Preparing setup kubectl ... "
+  sed "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash | \
+    sed "s/<HYPERKUBE_VERSION>/$HYPERKUBE_VERSION/g" \
+    > $BSROOT/setup_kubectl.bash 2>&1 || { echo "Prepare setup kubectl failed."; exit 1; }
+  chmod +x $BSROOT/setup_kubectl.bash
+  echo "Done"
+}
+
+prepare_setup_kubectl
+exit 1
+
 check_prerequisites
 download_pxe_images
 generate_pxe_config
@@ -293,3 +310,4 @@ generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
 generate_tls_assets
+prepare_setup_kubectl

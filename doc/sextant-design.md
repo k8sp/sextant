@@ -32,6 +32,11 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    1. root权限：bootstrapper container需要以特权模式运行，比如运行docker container
    1. 计划要自动安装CoreOS和kubernetes的机群机器要和bootstrapper所在的机器网络连通（2层连通）。
 
+1. Kubernetes client
+
+   1. 运行 Linux 或者 macOS 操作系统
+   1. 与 bootstrapper 和 Kubernetes master 网络连通。
+
 ## 使用方法
 
 
@@ -92,7 +97,23 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    1. 为了让bootstrapper service中的Docker registry service能向
       Kubernetes机群提供服务，还需要向其中push一些必须的images。这些
       images都事先由 bsroot.sh下载好，并且放进bsroot目录里了。
+
+1. 配置 Kubernetes client
+
+   1. 下载并配置 kubectl
+
+   ```bash
+   client $ mkdir ~/work && cd ~/work
+   client $ scp -r root@bootstrapper:/bsroot/kubectl .
+   client $ wget https://raw.githubusercontent.com/k8sp/sextant/master/setup-kubectl.bash
+   client $ bash ./setup-kubectl.bash ./kubectl ./kubectl
+   ```
+
+   1. 验证
  
+   ```bash
+   client $ ./kubectl/kubectl get nodes
+   ```
 
 ## 设计细节
 

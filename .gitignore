@@ -3,3 +3,4 @@
 *.test
 vm
 bsroot
+vm-cluster/.vagrant

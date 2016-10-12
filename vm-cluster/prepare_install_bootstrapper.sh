@@ -24,4 +24,3 @@ cd $SEXTANT_DIR
 
 # Put SSH keys into $SEXTANT_DIR/bsroot, which will be mounted to the bootstrapper VM.
 mv $TMPDIR/* $SEXTANT_DIR/bsroot/vm-keys
-
