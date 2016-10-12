@@ -447,7 +447,7 @@ coreos:
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local \
             --config=/etc/kubernetes/manifests \
-            --hostname-override=${DEFAULT_IPV4} \
+            --hostname-override={{ .Hostname }} \
             --api-servers=https://{{ .MasterHostname }}:443 \
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \

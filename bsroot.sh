@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
 
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml>"
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
     exit 1
 fi
 
@@ -17,6 +17,16 @@ CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/clou
 CLUSTER_DESC=$(realpath $1)
 SEXTANT_DIR=$(realpath $(dirname $0))
 
+if [[ "$#" == 2 ]]; then
+    BSROOT=$2
+else
+    BSROOT=$SEXTANT_DIR/bsroot
+fi
+
+if [[ -d $BSROOT ]]; then
+    echo "$BSROOT already exists.  Overwrite without removing it."
+fi
+
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
 if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
     echo "Failed parsing cluster-desc file $CLUSTER_DESC for bootstrapper IP".
@@ -24,11 +34,13 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
 fi
 echo "Using bootstrapper server IP $BS_IP"
 
-BSROOT=$PWD/bsroot
-if [[ -d $BSROOT ]]; then
-    echo "$BSROOT already exists.  Overwrite without removing it."
+KUBE_MASTER_HOSTNAME=`head -n $(grep -n 'kube_master\s*:\s*y' $CLUSTER_DESC | cut -d: -f1) $CLUSTER_DESC | grep mac: | tail | grep -o '..:..:..:..:..:..' | tr ':' '-'`
+if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
+  echo "The cluster-desc file should container kube-master node."
+  exit 1
 fi
 
+HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
@@ -167,7 +179,6 @@ prepare_cc_server_contents() {
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
     wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     chmod +x $BSROOT/html/static/kubelet
-    chmod +x $BSROOT/kubectl
     echo "Done"
 
     # setup-network-environment will fetch the default system IP infomation
@@ -185,6 +196,7 @@ prepare_cc_server_contents() {
     cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
     cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
     cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/addons/template/dnsmasq.conf.template $BSROOT/config/dnsmasq.conf.template || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Generating install.sh ... "
@@ -278,10 +290,17 @@ generate_tls_assets() {
     echo "Done"
 }
 
-prepare_files_for_kubectl() {
-  mkdir -p $BSROOT/kubectl
-  cp $BSROOT/config/cluster-desc.yml $BSROOT/tls/ca.pem $BSROOT/tls/ca-key.pem $BSROOT/kubectl
+prepare_setup_kubectl() {
+  printf "Preparing setup kubectl ... "
+  sed "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash | \
+    sed "s/<HYPERKUBE_VERSION>/$HYPERKUBE_VERSION/g" \
+    > $BSROOT/setup_kubectl.bash 2>&1 || { echo "Prepare setup kubectl failed."; exit 1; }
+  chmod +x $BSROOT/setup_kubectl.bash
+  echo "Done"
 }
+
+prepare_setup_kubectl
+exit 1
 
 check_prerequisites
 download_pxe_images
@@ -291,4 +310,4 @@ generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
 generate_tls_assets
-prepare_files_for_kubectl
+prepare_setup_kubectl
