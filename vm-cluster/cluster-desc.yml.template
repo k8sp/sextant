@@ -20,10 +20,11 @@ images:
   healthz: "typhoon1986/exechealthz:1.0"
   addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
   skydns: "typhoon1986/skydns:latest"
-
+  ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
+  
 nodes:
   - mac: "08:00:27:4a:2d:a1"
-    ceph_monitor: n
+    ceph_monitor: y
     kube_master: y
     etcd_member: y
     ingress_label: n

@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
      echo '192.168.8.101 bootstrapper' >> /etc/hosts
      echo "search k8s.baifendian.com" >> /etc/resolv.conf
    SHELL
-
+  
   #定义boostrapper虚拟机
   config.vm.define "bootstrapper" do |bs|
     bs.vm.box = "coreos-stable"
@@ -17,13 +17,23 @@ Vagrant.configure("2") do |config|
     #创建内部网卡，便于和其他虚拟机通信
     bs.vm.network "private_network", ip: "192.168.8.101",virtualbox__intnet: true
     #将本地目录挂载到bootstrapper虚拟机
-    bs.vm.synced_folder "./../bsroot", "/bsroot", type: "nfs"
+   # bs.vm.synced_folder "./../bsroot", "/bsroot", type: "nfs", :mount_options => ['nolock,vers=3,udp']
     #挂载的时候，需要依赖hostonly网卡
     bs.vm.network "private_network", ip: "192.168.50.4", :adapter=>3
-    bs.vm.provision "shell", path: "provision_bootstrapper_vm.sh"
+   # bs.vm.provision "shell", path: "provision_bootstrapper_vm.sh"
+   
+    # plugin conflict
+    if Vagrant.has_plugin?("vagrant-vbguest") then
+      config.vbguest.auto_update = false
+    end
+ 
     bs.vm.provider "virtualbox" do |vb|
       vb.gui = false
       vb.memory = "2048"
+      # On VirtualBox, we don't have guest additions or a functional vboxsf
+      # in CoreOS, so tell Vagrant that so it can be smarter.
+      vb.check_guest_additions = false
+      vb.functional_vboxsf     = false
     end
   end
 
@@ -35,6 +45,8 @@ Vagrant.configure("2") do |config|
       master.vm.provider "virtualbox" do |ms|
          ms.gui = true
     	 ms.memory = "1024"
+         ms.check_guest_additions = false
+         ms.functional_vboxsf     = false          
     	 ms.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--usb", "off", "--usbehci", "off"]
       end
    end
@@ -47,7 +59,16 @@ Vagrant.configure("2") do |config|
       worker.vm.provider "virtualbox" do |wk|
          wk.gui = true
          wk.memory = "1024"
+         wk.check_guest_additions = false
+         wk.functional_vboxsf     = false
          wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
-      end
+         (1..2).each do |i|
+            file_to_disk = "./extra-disk-#{i}a.vdi"
+            unless File.exist?(file_to_disk)
+              wk.customize ['createhd', '--filename', file_to_disk, '--size', '8196']
+              wk.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', i-1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            end
+         end
+     end
    end
 end
