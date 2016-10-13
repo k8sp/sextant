@@ -13,10 +13,11 @@ realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
 
-CLOUD_CONFIG_TEMPLATE=$(realpath $(dirname $0)/cloud-config-server/template/cloud-config.template)
+SEXTANT_DIR=$(dirname $(realpath $0))
+CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
+INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
-INSTALL_CEPH_SCRIPT_DIR=$(realpath $(dirname $0)/install-ceph)
-SEXTANT_DIR=$(realpath $(dirname $0))
+
 
 if [[ "$#" == 2 ]]; then
     BSROOT=$2
@@ -42,6 +43,10 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
 fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+
+
+source $SEXTANT_DIR/bsroot_lib.bash
+
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
@@ -257,27 +262,28 @@ EOF
 }
 
 
-download_k8s_images () {
-  DOCKER_IMAGES=("hyperkube" \
-    "pause" \
-    "flannel" \
-    "ingress" \
-    "kube2sky" \
-    "healthz" \
-    "addon_manager" \
-    "skydns" \
-    "ceph");
-  cd $BSROOT
-  len=${#DOCKER_IMAGES[@]}
-  for ((i=0;i<len;i++)); do
-    DOCKER_IMAGE=`grep "${DOCKER_IMAGES[i]}:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
-    printf "Downloading image ${DOCKER_IMAGE} ..."
-    docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    DOCKER_TAR_FILE=`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
-    docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
-    echo "Done"
-  done
+download_k8s_images (){
+    for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
+        # NOTE: if we updated remote image but didn't update its tag,
+        # the following lines wouldn't pull because there is a local
+        # image with the same tag.
+        if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_IMAGE > /dev/null; then
+            printf "Pulling image ${DOCKER_IMAGE} ... "
+            docker pull $DOCKER_IMAGE > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+            echo "Done"
+        fi
 
+        local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+        if [[ ! -f $DOCKER_TAR_FILE ]]; then
+            printf "Exporting $DOCKER_TAR_FILE ... "
+            docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE.progress || { echo "Failed"; exit 1; }
+            mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
+            echo "Done"
+        fi
+    done
+}
+
+build_bootstrapper_image() {
   printf "Building bootstrapper image ... "
   cd $SEXTANT_DIR/docker
   bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
@@ -318,11 +324,13 @@ prepare_setup_kubectl() {
 }
 
 check_prerequisites
+load_yaml $CLUSTER_DESC cluster_desc_
 download_pxe_images
 generate_pxe_config
 generate_dnsmasq_config
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
+build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
