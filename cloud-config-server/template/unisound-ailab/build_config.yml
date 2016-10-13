@@ -12,15 +12,15 @@ k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
 
 images:
-  - "typhoon1986/hyperkube-amd64:v1.3.6"
-  - "typhoon1986/pause-amd64:3.0"
-  - "typhoon1986/flannel:0.5.5"
-  - "yancey1989/nginx-ingress-controller:0.8.3"
-  - "yancey1989/kube2sky:1.14"
-  - "typhoon1986/exechealthz:1.0"
-  - "yancey1989/kube-addon-manager-amd64:v5.1"
-  - "typhoon1986/skydns:latest"
-  - "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
+  hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
+  pause: "typhoon1986/pause-amd64:3.0"
+  flannel: "typhoon1986/flannel:0.5.5"
+  ingress: "yancey1989/nginx-ingress-controller:0.8.3"
+  kube2sky: "yancey1989/kube2sky:1.14"
+  healthz: "typhoon1986/exechealthz:1.0"
+  addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
+  skydns: "typhoon1986/skydns:latest"
+  ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
