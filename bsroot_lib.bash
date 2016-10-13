@@ -21,7 +21,7 @@ function parse_yaml() {
 
 function load_yaml() {
     local yaml=$1
-    local prefix=$2
+    local prefix=""
     local parsedYaml=$(mktemp /tmp/bsroot-parse-yaml.XXXXX)
     parse_yaml $yaml $prefix > $parsedYaml
     source $parsedYaml
