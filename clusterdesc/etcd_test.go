@@ -29,7 +29,7 @@ func TestGetEtcdMachines(t *testing.T) {
 func TestFetchHostnameRangeWithNodeRole(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
-	ret := c.FetchHostnameRangeWithNodeRole(func(n Node) string {
+	ret := c.SelectNodes(func(n Node) string {
 		if n.KubeMaster && len(n.Hostname()) > 0 {
 			return fmt.Sprintf("http://%s", n.Hostname())
 		}

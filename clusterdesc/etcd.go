@@ -7,9 +7,9 @@ import (
 
 type nodeRoleCondition func(n Node) string
 
-// FetchHostnameRangeWithNodeRole input node role condition,
+// SelectNodes input node role condition,
 // ouptut hostname range
-func (c Cluster) FetchHostnameRangeWithNodeRole(f nodeRoleCondition) string {
+func (c Cluster) SelectNodes(f nodeRoleCondition) string {
 	var ret []string
 	for _, n := range c.Nodes {
 		t := f(n)
@@ -25,7 +25,7 @@ func (c Cluster) FetchHostnameRangeWithNodeRole(f nodeRoleCondition) string {
 // NOTE: Every node in the cluster will have a etcd daemon running --
 // either as a member or as a proxy.
 func (c Cluster) InitialEtcdCluster() string {
-	return c.FetchHostnameRangeWithNodeRole(func(n Node) string {
+	return c.SelectNodes(func(n Node) string {
 		if n.EtcdMember {
 			name := n.Hostname()
 			addr := n.Hostname()
@@ -37,7 +37,7 @@ func (c Cluster) InitialEtcdCluster() string {
 
 // GetEtcdEndpoints fetch etcd cluster endpoints
 func (c Cluster) GetEtcdEndpoints() string {
-	return c.FetchHostnameRangeWithNodeRole(func(n Node) string {
+	return c.SelectNodes(func(n Node) string {
 		if n.EtcdMember {
 			addr := n.Hostname()
 			return fmt.Sprintf("http://%s:4001", addr)
@@ -48,7 +48,7 @@ func (c Cluster) GetEtcdEndpoints() string {
 
 // GetEtcdMachines return the etcd members
 func (c Cluster) GetEtcdMachines() string {
-	return c.FetchHostnameRangeWithNodeRole(func(n Node) string {
+	return c.SelectNodes(func(n Node) string {
 		if n.EtcdMember {
 			if len(n.Hostname()) > 0 {
 				return fmt.Sprintf("http://%s:2379", n.Hostname())
