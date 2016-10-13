@@ -258,7 +258,6 @@ EOF
 
 
 download_k8s_images () {
-  # TODO: should DOCKER_IMAGES from cluster-desc
   DOCKER_IMAGES=("hyperkube" \
     "pause" \
     "flannel" \
