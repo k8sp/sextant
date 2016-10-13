@@ -262,7 +262,7 @@ EOF
 }
 
 
-download_k8s_images (){
+download_k8s_images() {
     for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
         # NOTE: if we updated remote image but didn't update its tag,
         # the following lines wouldn't pull because there is a local
