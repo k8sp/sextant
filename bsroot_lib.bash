@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Stolen from https://gist.github.com/pkuczynski/8665367 shamelessly by Yi.
 function parse_yaml() {
     local yaml=$1
     local prefix=$2
