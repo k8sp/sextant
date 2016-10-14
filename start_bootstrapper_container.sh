@@ -43,6 +43,9 @@ docker run -d --net=host \
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
 
+source $BSROOT/bsroot_lib.bash
+load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
+
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
   # Do *NOT* remove docker image path when push to bootstrapper registry.
