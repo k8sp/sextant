@@ -26,10 +26,10 @@ func TestGetEtcdMachines(t *testing.T) {
 		"http://00-25-90-c0-f7-80:2379,http://00-25-90-c0-f6-ee:2379,http://00-25-90-c0-f6-d6:2379")
 }
 
-func TestFetchHostnameRangeWithNodeRole(t *testing.T) {
+func TestSelectNodes(t *testing.T) {
 	c := &Cluster{}
 	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
-	ret := c.SelectNodes(func(n Node) string {
+	ret := c.SelectNodes(func(n *Node) string {
 		if n.KubeMaster && len(n.Hostname()) > 0 {
 			return fmt.Sprintf("http://%s", n.Hostname())
 		}
