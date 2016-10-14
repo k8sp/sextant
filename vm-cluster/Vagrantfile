@@ -1,14 +1,31 @@
 # coding: utf-8
 $update_channel = "alpha"
 $image_version = "current"
+$shared_folders = {}
 
 Vagrant.configure("2") do |config|
+   # always use Vagrants insecure key
+   config.ssh.insert_key = false
+   # forward ssh agent to easily ssh into the different machines
+   config.ssh.forward_agent = true
+   
+   config.vm.provider :virtualbox do |v|
+     # On VirtualBox, we don't have guest additions or a functional vboxsf
+     # in CoreOS, so tell Vagrant that so it can be smarter.
+     v.check_guest_additions = false
+     v.functional_vboxsf     = false
+   end
+
+   # plugin conflict
+   if Vagrant.has_plugin?("vagrant-vbguest") then
+     config.vbguest.auto_update = false
+   end
 
    config.vm.provision "shell", inline: <<-SHELL
      echo '192.168.8.101 bootstrapper' >> /etc/hosts
      echo "search k8s.baifendian.com" >> /etc/resolv.conf
    SHELL
-
+  
   #定义boostrapper虚拟机
   config.vm.define "bootstrapper" do |bs|
     bs.vm.box = "coreos-stable"
@@ -17,7 +34,10 @@ Vagrant.configure("2") do |config|
     #创建内部网卡，便于和其他虚拟机通信
     bs.vm.network "private_network", ip: "192.168.8.101",virtualbox__intnet: true
     #将本地目录挂载到bootstrapper虚拟机
-    bs.vm.synced_folder "./../bsroot", "/bsroot", type: "nfs"
+    bs.vm.synced_folder "./../bsroot", "/bsroot", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+    $shared_folders.each_with_index do |(host_folder, guest_folder), index|
+       config.vm.synced_folder host_folder.to_s, guest_folder.to_s, id: "core-share%02d" % index, nfs: true, mount_options: ['nolock,vers=3,udp']
+    end
     #挂载的时候，需要依赖hostonly网卡
     bs.vm.network "private_network", ip: "192.168.50.4", :adapter=>3
     bs.vm.provision "shell", path: "provision_bootstrapper_vm.sh"
@@ -30,7 +50,6 @@ Vagrant.configure("2") do |config|
    # 定义k8s master虚拟机
    config.vm.define "master" do |master|
       master.vm.box ="c33s/empty"
-      master.ssh.insert_key = false
       master.vm.network  "private_network", type: "dhcp", virtualbox__intnet: true, :mac => "0800274a2da1", :adapter=>1, auto_config: false
       master.vm.provider "virtualbox" do |ms|
          ms.gui = true
@@ -42,12 +61,18 @@ Vagrant.configure("2") do |config|
    #定义worker虚拟机
    config.vm.define "worker" do |worker|
       worker.vm.box ="c33s/empty"
-      worker.ssh.insert_key = false
       worker.vm.network  "private_network", type: "dhcp", virtualbox__intnet: true, :adapter=>1, auto_config: false
       worker.vm.provider "virtualbox" do |wk|
          wk.gui = true
          wk.memory = "1024"
          wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
-      end
+         (1..2).each do |i|
+            file_to_disk = "./extra-disk-#{i}.vdi"
+            unless File.exist?(file_to_disk)
+              wk.customize ['createhd', '--filename', file_to_disk, '--size', '8196']
+              wk.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', i-1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            end
+         end
+     end
    end
 end
