@@ -103,43 +103,6 @@ EOF
 }
 
 
-generate_dnsmasq_config() {
-    printf "Generating dnsmasq.conf ... "
-    mkdir -p $BSROOT/config
-    # TODO(yi): Ad-hoc domain name k8s.baifendian.com here.  Try parsing it from cluster-desc.yml.
-    # TODO(yi): Ad-hoc DHCP IP range. Try parsing it from cluster-desc.yml.
-    cat > $BSROOT/config/dnsmasq.conf <<EOF
-  interface=eth0
-  bind-interfaces
-  domain=k8s.baifendian.com
-  user=root
-  dhcp-range=192.168.8.102,192.168.8.200,255.255.255.0,12h
-  log-dhcp
-
-  dhcp-boot=pxelinux.0
-
-  dhcp-option=3,192.168.8.101
-
-  dhcp-option=6,192.168.8.101,8.8.8.8
-  no-hosts
-  expand-hosts
-  no-resolv
-
-  local=/k8s.baifendian.com/
-  domain-needed
-
-  dhcp-option=28,192.168.8.255
-
-  #dhcp-option=42,0.0.0.0
-  pxe-prompt="Press F8 for menu.", 5
-  pxe-service=x86PC, "Install CoreOS from network server", pxelinux
-  enable-tftp
-  tftp-root=/bsroot/tftpboot
-EOF
-    echo "Done"
-}
-
-
 generate_registry_config() {
     printf "Generating Docker registry config file ... "
     mkdir -p $BSROOT/registry_data
@@ -321,7 +284,6 @@ prepare_setup_kubectl() {
 check_prerequisites
 download_pxe_images
 generate_pxe_config
-generate_dnsmasq_config
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
