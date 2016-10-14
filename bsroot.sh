@@ -289,8 +289,7 @@ build_bootstrapper_image() {
 
 
     printf "Cross-compiling Docker registry ... "
-    # TODO(yi): Make go get faster
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get github.com/docker/distribution \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -u github.com/docker/distribution \
         || { echo "Failed"; exit 1; }
     echo "Done"
     
