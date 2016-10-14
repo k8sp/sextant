@@ -272,13 +272,11 @@ build_bootstrapper_image() {
     fi
 
     printf "Building bootstrapper image ... "
-    (
-        cd $SEXTANT_DIR/docker
-        docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-        docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-        # NOTE: we need to run docker load on the bootstrapper server
-        # to load these saved images.
-    )
+    cd $SEXTANT_DIR/docker
+    docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+    # NOTE: we need to run docker load on the bootstrapper server
+    # to load these saved images.
     echo "Done"
     
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
