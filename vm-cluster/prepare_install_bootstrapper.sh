@@ -23,4 +23,5 @@ cd $SEXTANT_DIR
 ./bsroot.sh $TMPDIR/cluster-desc.yml
 
 # Put SSH keys into $SEXTANT_DIR/bsroot, which will be mounted to the bootstrapper VM.
+mkdir -p $SEXTANT_DIR/bsroot/vm-keys
 mv $TMPDIR/* $SEXTANT_DIR/bsroot/vm-keys
