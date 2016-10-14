@@ -18,6 +18,13 @@ CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.tem
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
+# Check sextant dir
+if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
+    echo "GOPATH: $GOPATH"
+    echo "sextant dir: $SEXTANT_DIR"
+    echo "sextant dir: $SEXTANT_DIR should be $GOPATH/src/github.com/k8sp/sextant"
+    exit 1
+fi
 
 if [[ "$#" == 2 ]]; then
     BSROOT=$2
@@ -26,7 +33,9 @@ else
 fi
 
 if [[ -d $BSROOT ]]; then
-    echo "$BSROOT already exists.  Overwrite without removing it."
+    echo "$BSROOT already exists. Overwrite without removing it."
+else
+    mkdir -p $BSROOT
 fi
 
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
