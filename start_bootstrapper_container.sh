@@ -43,23 +43,14 @@ docker run -d --net=host \
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
 
-# TODO: should DOCKER_IMAGES from cluster-desc
-DOCKER_IMAGES=("hyperkube" \
-  "pause" \
-  "flannel" \
-  "ingress" \
-  "kube2sky" \
-  "healthz" \
-  "addon_manager" \
-  "skydns" \
-  "ceph");
-len=${#DOCKER_IMAGES[@]}
-for ((i=0;i<len;i++)); do
-  DOCKER_IMAGE=`grep "${DOCKER_IMAGES[i]}:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/ //g' | sed -e 's/^"//' -e 's/"$//'`
+source $BSROOT/bsroot_lib.bash
+load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
+
+for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
   # Do *NOT* remove docker image path when push to bootstrapper registry.
-  DOCKER_TAG_NAME=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE}`
+  LOCAL_DOCKER_URL=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE}`
   docker load < $DOCKER_TAR_FILE
-  docker tag $DOCKER_IMAGE $DOCKER_TAG_NAME
-  docker push $DOCKER_TAG_NAME
+  docker tag $DOCKER_IMAGE $LOCAL_DOCKER_URL
+  docker push $LOCAL_DOCKER_URL
 done
