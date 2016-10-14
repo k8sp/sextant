@@ -10,6 +10,8 @@ RUN mkdir -p /go/bin
 COPY cloud-config-server /go/bin/
 COPY addons              /go/bin/
 COPY registry            /go/bin/
+RUN mkdir -p /etc/docker/registry
+COPY config-dev.yml /etc/docker/registry
 
 # TODO(yi): Why do we need to create /go/static?
 RUN mkdir /go/static
