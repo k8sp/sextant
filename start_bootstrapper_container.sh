@@ -34,7 +34,6 @@ if ! grep -q "127.0.0.1 bootstrapper" /etc/hosts
 fi
 
 docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
-docker stop bootstrapper
 docker rm -f bootstrapper
 docker run -d \
        --name bootstrapper \
