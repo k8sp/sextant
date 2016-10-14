@@ -32,6 +32,8 @@ fi
 
 if [[ -d $BSROOT ]]; then
     echo "$BSROOT already exists. Overwrite without removing it."
+else
+    mkdir -p $BSROOT
 fi
 
 BS_IP=`grep "bootstrapper:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g'`
