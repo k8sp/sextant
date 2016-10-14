@@ -9,13 +9,7 @@ apk add --no-cache make git dnsmasq openssl
 RUN mkdir -p /go/bin
 COPY cloud-config-server /go/bin/
 COPY addons              /go/bin/
-
-# Install Docker registry
-RUN go get github.com/docker/distribution && \
-cd /go/src/github.com/docker/distribution && \
-make PREFIX=/go clean binaries && \
-mkdir -p /etc/docker/registry && \
-cp /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml
+COPY registry            /go/bin/
 
 # TODO(yi): Why do we need to create /go/static?
 RUN mkdir /go/static
