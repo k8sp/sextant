@@ -34,11 +34,14 @@ if ! grep -q "127.0.0.1 bootstrapper" /etc/hosts
 fi
 
 docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
-docker run -d --net=host \
-  --privileged \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v $BSROOT:/bsroot \
-  bootstrapper
+docker rm -f bootstrapper
+docker run -d \
+       --name bootstrapper \
+       --net=host \
+       --privileged \
+       -v /var/run/docker.sock:/var/run/docker.sock \
+       -v $BSROOT:/bsroot \
+       bootstrapper
 
 # Sleep 3 seconds, waitting for registry started.
 sleep 3

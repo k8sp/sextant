@@ -51,7 +51,7 @@ source $SEXTANT_DIR/bsroot_lib.bash
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker tr; do
+    for tool in wget tar gpg docker tr go; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
@@ -229,6 +229,55 @@ EOF
 }
 
 
+
+build_bootstrapper_image() {
+
+    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=')
+    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
+
+    printf "Cross-compiling Sextant Go programs ... "
+    # CGO_ENABLED=0 builds fully statically-linked
+    # programs. https://github.com/wangkuiyi/build-statically-linked-go-programs.
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
+               github.com/k8sp/sextant/cloud-config-server \
+               github.com/k8sp/sextant/addons \
+        || { echo "Failed"; exit 1; }
+    echo "Done"
+    
+    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
+        cp $GOPATH/bin/linux_amd64/{cloud-config-server,addons} $SEXTANT_DIR/docker
+    else
+        cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
+    fi
+
+
+    printf "Cross-compiling Docker registry ... "
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -u github.com/docker/distribution \
+        || { echo "Failed"; exit 1; }
+    echo "Done"
+    
+    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
+        cp $GOPATH/bin/linux_amd64/registry $SEXTANT_DIR/docker
+    else
+        cp $GOPATH/bin/registry $SEXTANT_DIR/docker
+    fi
+
+    printf "Building bootstrapper image ... "
+    (
+        cd $SEXTANT_DIR/docker
+        docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+        docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+        # NOTE: we need to run docker load on the bootstrapper server
+        # to load these saved images.
+    )
+    echo "Done"
+    
+    cp $SEXTANT_DIR/start_bootstrapper_container.sh \
+       $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+    chmod +x $BSROOT/start_bootstrapper_container.sh
+}
+
+
 download_k8s_images() {
     for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
         # NOTE: if we updated remote image but didn't update its tag,
@@ -250,19 +299,6 @@ download_k8s_images() {
     done
 }
 
-build_bootstrapper_image() {
-  printf "Building bootstrapper image ... "
-  cd $SEXTANT_DIR/docker
-  bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-  docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-  echo "Done"
-  # NOTE: we need to run docker load on the bootstrapper server
-  # to load these saved images.
-
-  cp $SEXTANT_DIR/start_bootstrapper_container.sh \
-    $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
-  chmod +x $BSROOT/start_bootstrapper_container.sh
-}
 
 generate_tls_assets() {
     mkdir -p $BSROOT/tls
