@@ -5,14 +5,12 @@ import (
 	"strings"
 )
 
-type nodeRoleCondition func(n Node) string
-
 // SelectNodes input node role condition,
 // ouptut hostname range
 func (c *Cluster) SelectNodes(f func(n *Node) string) string {
 	var ret []string
-	for _, n := range c.Nodes {
-		t := f(&n)
+	for i := range c.Nodes {
+		t := f(&(c.Nodes[i]))
 		if len(t) > 0 {
 			ret = append(ret, t)
 		}
