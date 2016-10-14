@@ -262,9 +262,12 @@ build_bootstrapper_image() {
 
     printf "Cross-compiling Docker registry ... "
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -u github.com/docker/distribution \
+        && cd /go/src/github.com/docker/distribution \
+        && make PREFIX=/go clean binaries \
         || { echo "Failed"; exit 1; }
     echo "Done"
     
+    cp $GOPATH/github.com/docker/distribution/cmd/registry/config-dev.yml $SEXTANT_DIR/docker
     if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
         cp $GOPATH/bin/linux_amd64/registry $SEXTANT_DIR/docker
     else
