@@ -245,7 +245,6 @@ build_bootstrapper_image() {
     local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
 
     printf "Cross-compiling Sextant Go programs ... "
-    rm $SEXTANT_DIR/docker/{cloud-config-server,addons}
     # CGO_ENABLED=0 builds fully statically-linked
     # programs. https://github.com/wangkuiyi/build-statically-linked-go-programs.
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
@@ -262,10 +261,9 @@ build_bootstrapper_image() {
 
 
     printf "Cross-compiling Docker registry ... "
-    rm $SEXTANT_DIR/docker/{registry,config-dev.yml}
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -u github.com/docker/distribution \
         && cd /$GOPATH/src/github.com/docker/distribution \
-        && make PREFIX=/$GOPATH clean binaries \
+        && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64 PREFIX=/$GOPATH clean binaries \
         && cp $GOPATH/src/github.com/docker/distribution/cmd/registry/config-dev.yml $SEXTANT_DIR/docker \
         || { echo "Failed"; exit 1; }
     echo "Done"
