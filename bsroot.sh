@@ -46,7 +46,7 @@ HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker tr; do
+    for tool in wget tar gpg docker tr go; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
@@ -278,7 +278,9 @@ download_k8s_images () {
     docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE || { echo "Failed"; exit 1; }
     echo "Done"
   done
+}
 
+build_bootstrapper_image() {
   printf "Building bootstrapper image ... "
   cd $SEXTANT_DIR/docker
   bash $SEXTANT_DIR/docker/build.bash > /dev/null 2>&1 || { echo "Failed"; exit 1; }
@@ -325,5 +327,6 @@ generate_dnsmasq_config
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
+build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
