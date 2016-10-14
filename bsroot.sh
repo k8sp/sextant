@@ -20,7 +20,9 @@ CLUSTER_DESC=$(realpath $1)
 
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
-    echo "sextant dir: $SEXTANT_DIR is not equal to $GOPATH/src/github.com/k8sp/sextant"
+    echo "GOPATH: $GOPATH"
+    echo "sextant dir: $SEXTANT_DIR"
+    echo "sextant dir: $SEXTANT_DIR should be $GOPATH/src/github.com/k8sp/sextant"
     exit 1
 fi
 
