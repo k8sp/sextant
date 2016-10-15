@@ -6,6 +6,7 @@ iphigh: 10.10.10.220
 routers: [10.10.10.192]
 broadcast: 10.10.10.255
 nameservers: [10.10.10.192]
+upstreamnameservers: [8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24

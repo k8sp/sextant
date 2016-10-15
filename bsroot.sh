@@ -60,7 +60,7 @@ source $SEXTANT_DIR/bsroot_lib.bash
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker tr go; do
+    for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then
@@ -177,7 +177,7 @@ prepare_cc_server_contents() {
     printf "Copying bsroot_lib.bash ... "
     cp $SEXTANT_DIR/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     printf "Copying addon templates ... "
     cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
     cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
@@ -253,7 +253,7 @@ build_bootstrapper_image() {
                github.com/k8sp/sextant/addons \
         || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
         cp $GOPATH/bin/linux_amd64/{cloud-config-server,addons} $SEXTANT_DIR/docker
     else
@@ -268,7 +268,7 @@ build_bootstrapper_image() {
         && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64 PREFIX=$GOPATH clean $GOPATH/bin/registry >/dev/null 2>&1\
         || { echo "Failed"; exit 1; }
     echo "Done"
-    
+
     if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
         cp $GOPATH/bin/linux_amd64/registry $SEXTANT_DIR/docker
     else
@@ -282,7 +282,7 @@ build_bootstrapper_image() {
     # NOTE: we need to run docker load on the bootstrapper server
     # to load these saved images.
     echo "Done"
-    
+
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
