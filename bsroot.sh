@@ -264,7 +264,6 @@ build_bootstrapper_image() {
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go get -u github.com/docker/distribution \
         && cd /$GOPATH/src/github.com/docker/distribution \
         && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64 PREFIX=/$GOPATH clean binaries \
-        && cp $GOPATH/src/github.com/docker/distribution/cmd/registry/config-dev.yml $SEXTANT_DIR/docker \
         || { echo "Failed"; exit 1; }
     echo "Done"
     
