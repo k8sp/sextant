@@ -11,8 +11,9 @@ dhcp-option=6,{{range $index, $ele := .NameServers}}{{if $index}},{{end}}{{$ele}
 no-hosts
 expand-hosts
 no-resolv
-server=8.8.8.8
-server=8.8.4.4
+{{range $index, $ele := .UpstreamNameServers}}
+server={{$ele}}
+{{end}}
 
 local=/{{ .DomainName }}/
 domain-needed

@@ -21,14 +21,15 @@ type Cluster struct {
 	// address; otherwise the node will be assigned an IP from
 	// within the range of [IPLow, IPHigh].  In practice, nodes
 	// running etcd members requires fixed IP addresses.
-	Subnet        string
-	Netmask       string
-	Routers       []string
-	Broadcast     string
-	Nameservers   []string
-	DomainName    string `yaml:"domainname"`
-	IPLow, IPHigh string // The IP address range of woker nodes.
-	Nodes         []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
+	Subnet              string
+	Netmask             string
+	Routers             []string
+	Broadcast           string
+	Nameservers         []string
+	UpstreamNameServers []string
+	DomainName          string `yaml:"domainname"`
+	IPLow, IPHigh       string // The IP address range of woker nodes.
+	Nodes               []Node // Enlist nodes that run Kubernetes/etcd/Ceph masters.
 
 	CoreOSChannel string `yaml:"coreos_channel"`
 
