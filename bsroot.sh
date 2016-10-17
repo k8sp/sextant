@@ -269,11 +269,7 @@ build_bootstrapper_image() {
         || { echo "Failed"; exit 1; }
     echo "Done"
 
-    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
-        cp $GOPATH/bin/linux_amd64/registry $SEXTANT_DIR/docker
-    else
-        cp $GOPATH/bin/registry $SEXTANT_DIR/docker
-    fi
+    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
 
     printf "Building bootstrapper image ... "
     cd $SEXTANT_DIR/docker
