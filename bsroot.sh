@@ -20,9 +20,8 @@ CLUSTER_DESC=$(realpath $1)
 
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
-    echo "GOPATH: $GOPATH"
-    echo "sextant dir: $SEXTANT_DIR"
-    echo "sextant dir: $SEXTANT_DIR should be $GOPATH/src/github.com/k8sp/sextant"
+    echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/sextant."
+    echo "Please set GOPATH environment variable and use 'go get' to retrieve sextant."
     exit 1
 fi
 
