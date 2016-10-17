@@ -15,7 +15,7 @@ setup_kubectl() {
   chmod +x ./kubectl
   # Configure kubectl
   echo $KUBE_MASTER_HOSTNAME
-  ./kubectl config set-cluster default-cluster --server=https://$KUBE_MASTER_HOSTNAME:8080
+  ./kubectl config set-cluster default-cluster --server=http://$KUBE_MASTER_HOSTNAME:8080
   ./kubectl config set-context default-system --cluster=default-cluster
   ./kubectl config use-context default-system
 }
