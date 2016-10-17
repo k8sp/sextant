@@ -60,7 +60,7 @@ source $SEXTANT_DIR/bsroot_lib.bash
 check_prerequisites() {
     printf "Checking prerequisites ... "
     err=0
-    for tool in wget tar gpg docker tr go; do
+    for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
     if [[ $err -ne 0 ]]; then

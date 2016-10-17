@@ -13,19 +13,20 @@ import (
 )
 
 type addonsConfig struct {
-	Bootstrapper    string
-	DomainName      string
-	IPLow           string
-	IPHigh          string
-	Netmask         string
-	Routers         []string
-	NameServers     []string
-	Broadcast       string
-	IngressReplicas int
-	Dockerdomain    string
-	K8sClusterDNS   string
-	EtcdEndpoint    string
-	Images          map[string]string
+	Bootstrapper        string
+	DomainName          string
+	IPLow               string
+	IPHigh              string
+	Netmask             string
+	Routers             []string
+	NameServers         []string
+	UpstreamNameServers []string
+	Broadcast           string
+	IngressReplicas     int
+	Dockerdomain        string
+	K8sClusterDNS       string
+	EtcdEndpoint        string
+	Images              map[string]string
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -35,19 +36,20 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 	tmpl := template.Must(template.New("").Parse(string(d)))
 
 	ac := addonsConfig{
-		Bootstrapper:    config.Bootstrapper,
-		DomainName:      config.DomainName,
-		IPLow:           config.IPLow,
-		IPHigh:          config.IPHigh,
-		Netmask:         config.Netmask,
-		Routers:         config.Routers,
-		NameServers:     config.Nameservers,
-		Broadcast:       config.Broadcast,
-		IngressReplicas: config.GetIngressReplicas(),
-		Dockerdomain:    config.Dockerdomain,
-		K8sClusterDNS:   config.K8sClusterDNS,
-		EtcdEndpoint:    strings.Split(config.GetEtcdEndpoints(), ",")[0],
-		Images:          config.Images,
+		Bootstrapper:        config.Bootstrapper,
+		DomainName:          config.DomainName,
+		IPLow:               config.IPLow,
+		IPHigh:              config.IPHigh,
+		Netmask:             config.Netmask,
+		Routers:             config.Routers,
+		NameServers:         config.Nameservers,
+		UpstreamNameServers: config.UpstreamNameServers,
+		Broadcast:           config.Broadcast,
+		IngressReplicas:     config.GetIngressReplicas(),
+		Dockerdomain:        config.Dockerdomain,
+		K8sClusterDNS:       config.K8sClusterDNS,
+		EtcdEndpoint:        strings.Split(config.GetEtcdEndpoints(), ",")[0],
+		Images:              config.Images,
 	}
 	candy.Must(tmpl.Execute(w, ac))
 }
