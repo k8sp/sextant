@@ -24,7 +24,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    1. docker：用于docker pull各种Kubernetes机群需要的images，比如pause。
    1. wget：用于下载各种文件
    1. ssh/scp：
-   
+
 1. bootstrapper server
 
    1. 静态IP：dnsmasq运行PXE 和 DNS service的时候需要
@@ -41,7 +41,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
 
 
 1. 在*笔记本*或者vm-cluster的*host*上的准备工作流程如下：
-   
+
    1. 配置 Go 环境
 
       ```
@@ -110,14 +110,14 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
    ```
 
    1. 验证
- 
+
    ```bash
    client $ ./kubectl/kubectl get nodes
    ```
 
 ## 设计细节
 
-1. 规划机群，并且把规划描述成[ClusterDesc配置文件](https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/unisound-ailab/build_config.yml)，比如如哪个机器作为master，哪些机器作为etcd机群，哪些作为worker。每台机器通过MAC地址唯一标识。
+1. 规划机群，并且把规划描述成[ClusterDesc配置文件](https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/cluster-desc.sample.yaml)，比如如哪个机器作为master，哪些机器作为etcd机群，哪些作为worker。每台机器通过MAC地址唯一标识。
 
 1. 管理员在一台预先规划好的的机器上，下载／上传bootstrapper的docker image，并通过docker run启动bootstrapper。启动成功后，bootstrapper会提供DHCP, DNS(服务于物理节点), PXE, tftp, cloud-config HTTP服务, CoreOS镜像自动更新服务。
 
@@ -126,7 +126,7 @@ Sextant是一套软件系统，简化Kubernetes机群的自动部署。Sextant�
 1. 每启动一台新的机器（网络引导），先从DHCP获取一个IP地址，DHCP server将启动引导指向PXE server，然后由PXE server提供启动镜像（保存在tftpserver），至此，新的机器可以完成内存中的CoreOS引导，为CoreOS操作系统安装提供环境。
 
 1. 由于PXE server配置了initrd参数，指定了install.sh的cloud-config文件（网络引导cloud-config），PXE引导启动后，将使用HTTP访问cloud-config-server，获得到这个install.sh。install.sh执行coreos-install命令，把CoreOS系统安装到当前机器并reboot。安装命令coreos-install 也可以指定一个cloud-config文件(系统安装cloud-config)，这个文件是cloud-config-server自动生成生成的，这个cloud-config文件将本机安装成为对应的kubernetes机群节点（由之前的ClusterDesc指定的角色）。
- 
+
 1. 机器重启后，由于已经安装了系统，磁盘上有MBR，则使用磁盘引导。磁盘上的CoreOS启动后，会根据之前coreos-install指定的cloud-config文件完成配置，此时kubernetes的相关组件也完成了启动并把本机的hostname汇报给kubernetes master(hostname用mac地址生成)。
 
 1. 网络配置统一都使用了DHCP，由dnsmasq统一管理和分配。在IP地址租期之内，DHCP会分配给本机一个相对稳定的IP地址。如果超过了租期，物理节点就会获得一个不同的IP，但由于kubernetes worker是根据mac地址生成的hostname上报给master的，之前给这个node打的标签也不会丢失。***所以在配置的时候需要着重考虑租期的配置***
