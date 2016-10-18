@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
    config.ssh.insert_key = false
    # forward ssh agent to easily ssh into the different machines
    config.ssh.forward_agent = true
-   
+
    config.vm.provider :virtualbox do |v|
      # On VirtualBox, we don't have guest additions or a functional vboxsf
      # in CoreOS, so tell Vagrant that so it can be smarter.
@@ -21,11 +21,6 @@ Vagrant.configure("2") do |config|
      config.vbguest.auto_update = false
    end
 
-   config.vm.provision "shell", inline: <<-SHELL
-     echo '192.168.8.101 bootstrapper' >> /etc/hosts
-     echo "search k8s.baifendian.com" >> /etc/resolv.conf
-   SHELL
-  
   #定义boostrapper虚拟机
   config.vm.define "bootstrapper" do |bs|
     bs.vm.box = "coreos-stable"

@@ -11,3 +11,5 @@ sed -i '/interface=eth0/,/bind-interfaces/d' /bsroot/config/dnsmasq.conf
 
 cd /bsroot
 ./start_bootstrapper_container.sh /bsroot
+echo "nameserver 192.168.8.101" > /etc/resolv.conf
+echo "domain k8s.baifendian.com" >> /etc/resolv.conf
