@@ -48,12 +48,7 @@ load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
-  # NOTE: It is more precise if we use $cluster_desc_bootstrapper in
-  # the following line than the constant string "bootstrapper", but
-  # the later allows use to add entry "bootstrapper 127.0.0.1" into
-  # /etc/hosts of our work computer and run this script locally as a
-  # test.
-  LOCAL_DOCKER_URL=bootstrapper:5000/${DOCKER_IMAGE}
+  LOCAL_DOCKER_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
   docker load < $DOCKER_TAR_FILE
   docker tag $DOCKER_IMAGE $LOCAL_DOCKER_URL
   docker push $LOCAL_DOCKER_URL
