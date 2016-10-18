@@ -433,9 +433,11 @@ coreos:
             --hostname-override={{ .MasterHostname }} \
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local \
-            --logtostderr=true \
             {{ if .IngressLabel }}
-            --node-labels=role=ingress \
+            --logtostderr=true \
+            --node-labels=role=ingress
+            {{ else }}
+            --logtostderr=true
             {{ end }}
             Restart=always
             RestartSec=10
