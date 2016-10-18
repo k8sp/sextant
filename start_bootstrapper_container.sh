@@ -21,9 +21,6 @@ if [[ $BSROOT != /* ]]; then
   exit 1
 fi
 
-# push k8s images to registry from bsroot
-BOOTATRAPPER_DOMAIN=`grep "dockerdomain:" $BSROOT/config/cluster-desc.yml | awk '{print $2}' | sed 's/"//g' | sed 's/ //g'`
-
 # Config Registry tls
 mkdir -p /etc/docker/certs.d/bootstrapper:5000
 rm -rf /etc/docker/certs.d/bootstrapper:5000/*
@@ -41,7 +38,7 @@ docker run -d \
        --privileged \
        -v /var/run/docker.sock:/var/run/docker.sock \
        -v $BSROOT:/bsroot \
-       bootstrapper
+       bootstrapper || { echo "Failed"; exit -1; }
 
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
@@ -51,8 +48,7 @@ load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
-  # Do *NOT* remove docker image path when push to bootstrapper registry.
-  LOCAL_DOCKER_URL=`echo $BOOTATRAPPER_DOMAIN:5000/${DOCKER_IMAGE}`
+  LOCAL_DOCKER_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
   docker load < $DOCKER_TAR_FILE
   docker tag $DOCKER_IMAGE $LOCAL_DOCKER_URL
   docker push $LOCAL_DOCKER_URL
