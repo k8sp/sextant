@@ -10,13 +10,6 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 1. bootstrapper server是一台安装有docker daemon(***1.11以上版本***)的Linux服务器
 1. 拥有bootstrapper server的root权限
 1. 配置bootstrapper server的/etc/hosts文件，增加hostname的解析：```127.0.0.1  bootstrapper```
-1. 配置bootstrapper server的docker daemon，默认信任本地的docker registry，增加docker daemon启动的参数```--insecure-registry bootstrapper:5000```
-    * systemd配置此参数，通常需要通过drop-in文件定义：
-    ```
-    [Service]
-    Environment=DOCKER_OPTS='--insecure-registry="10.0.1.0/24"'
-    ```
-    * 注：centos7的配置方法会有些区别，参考：https://docs.docker.com/engine/admin/#/configuring-docker-1
 
 ## 初始化配置和准备bootstrapper需要的镜像文件
 ***在能访问互联网的一台机器上完成下面的准备环境，配置，创建Docker镜像的步骤***
@@ -28,40 +21,29 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 ```
 git clone https://github.com/k8sp/sextant.git
 vim cloud-config-server/template/unisound-ailab/build_config.yml
-cd sextant/bootstrapper
-./bsroot.sh
+./bsroot.sh cloud-config-server/template/unisound-ailab/build_config.yml
 ```
 
 ## 配置
 根据实际环境配置下面的文件：
 ```
-/bsroot/config/dnsmasq.conf
-/bsroot/config/registry.yml
-```
-## 构建Docker镜像
-在bootstrapper或本地执行下面的命令构建bootstrapper的docker镜像：
-```
-docker build -t bootstrapper .
+./bsroot/config/dnsmasq.conf
+./bsroot/config/registry.yml
 ```
 
 ## 上传到集群内部的bootstrapper机器
 如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
 
-1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz /bsroot```
-1. 导出编译好的docker镜像：```docker save bootstrapper > bootstrapper.tar```
-1. 将bsroot.tar.gz和bootstrapper.tar上传到你的bootstrapper机器上（使用scp或ftp等工具）
-1. 在bootstrapper机器上解压bsroot.tar.gz到/目录，然后加载docker镜像：```docker load < bootstrapper.tar```
+1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz ./bsroot```
+1. 将bsroot.tar.gz上传到你的bootstrapper机器上（使用scp或ftp等工具）
+1. 在bootstrapper机器上解压bsroot.tar.gz到/目录
 
-## 使用docker启动bootstrapper
-执行下面的命令启动bootstrapper的相关组件，包括了dnsmasq, cloud-config-server, docker registry
+## 启动bootstrapper
 ```
-docker run -d --net=host \
-  --privileged \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /bsroot:/bsroot \
-  bootstrapper
+ssh root@bootstrapper
+cd /bsroot
+./start_bootstrapper_container.sh /bsroot
 ```
-由于dnsmasq需要运行在特权模式，需要参数：--privileged
 
 ## 通过bootstrapper来初始化您的kubernetes集群
 ***只需要设置kubernetes节点通过PXE网络引导，并开机(和bootstrapper网络联通)，就可以自动完成kubernetes和ceph安装***
@@ -78,18 +60,9 @@ docker run -d --net=host \
   * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
 
 ### 配置kubectl客户端
-* 替换 ${MASTER_HOST} 到百分点云中心的kubernetes服务地址:```k8s.bfdcloud.com```
-* 和管理员申请分配一个你自己的帐号，并获取对应的key文件，包括ca.pem, user-key.pem和user.pem
-* 替换 ${CA_CERT} 为获取到的ca.pem文件的绝对路径，如```/home/core/.kube/ca.pem```
-* 替换 ${ADMIN_KEY} 为获取到的user-key.pem的路径，如```/home/core/.kube/admin-key.pem```
-* 替换 ${ADMIN_CERT} 为获取到的user.pem的路径，如```/home/core/.kube/admin.pem```
-* 替换 ${NAMESPACE} 为管理员分配给你的namespace（字符串）
-然后执行下面的命令完成对kubectl客户端对的配置
 ```
-$ kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
-$ kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
-$ kubectl config set-context default-system --cluster=default-cluster --user=default-admin --namespace=${NAMESPACE}
-$ kubectl config use-context default-system
+scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
+./setup-kubectl.bash
 ```
 
 ### 测试kubectl客户端可用
