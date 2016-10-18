@@ -23,11 +23,11 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 * 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper server
 
 获取sextant代码后，根据要初始化的整体集群规划，
-编辑cloud-config-server/template/unisound-ailab/build_config.yml文件完成配置
+编辑cloud-config-server/template/cluster-desc.sample.yaml文件完成配置
 然后下载bootstrapper用到的文件到/bsroot目录下
 ```
 git clone https://github.com/k8sp/sextant.git
-vim cloud-config-server/template/unisound-ailab/build_config.yml
+vim cloud-config-server/template/cluster-desc.sample.yaml
 cd sextant/bootstrapper
 ./bsroot.sh
 ```

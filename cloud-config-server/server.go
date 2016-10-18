@@ -32,7 +32,7 @@ import (
 
 func main() {
 	clusterDescURL := flag.String("cluster-desc-url",
-		"https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/unisound-ailab/build_config.yml",
+		"https://raw.githubusercontent.com/k8sp/sextant/master/cloud-config-server/template/cluster-desc.sample.yaml",
 		"URL to remote cluster description YAML file.")
 	clusterDescFile := flag.String("cluster-desc-file", "./cluster-desc.yml", "Local copy of cluster description YAML file.")
 
