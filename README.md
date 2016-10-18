@@ -24,13 +24,6 @@ vim cloud-config-server/template/unisound-ailab/build_config.yml
 ./bsroot.sh cloud-config-server/template/unisound-ailab/build_config.yml
 ```
 
-## 配置
-根据实际环境配置下面的文件：
-```
-./bsroot/config/dnsmasq.conf
-./bsroot/config/registry.yml
-```
-
 ## 上传到集群内部的bootstrapper机器
 如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
 
