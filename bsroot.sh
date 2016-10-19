@@ -148,9 +148,20 @@ EOF
 
 
 prepare_cc_server_contents() {
+    printf "Generating ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
-    cp $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh $BSROOT/html/static/ceph/install-mon.sh
-    cp $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh $BSROOT/html/static/ceph/install-osd.sh
+    # update install-mon.sh and set OSD_JOURNAL_SIZE
+    OSD_JOURNAL_SIZE=`grep "ceph_osd_journal_size:" $CLUSTER_DESC | awk '{print $2}'`
+    # update ceph install scripts to use image configured in cluster-desc.yml
+    CEPH_DAEMON_IMAGE=$(set | grep '^cluster_desc_images_ceph' | grep -o '".*"' | sed 's/"//g' | sed -e 's/[\/&]/\\&/g')
+    printf "$CEPH_DAEMON_IMAGE..."
+    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
+        sed "s/OSD_JOURNAL_SIZE=100/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \
+        > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
+
+    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
+        > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
+    echo "Done"
 
     mkdir -p $BSROOT/html/static/cloud-config
 
@@ -185,7 +196,10 @@ prepare_cc_server_contents() {
     echo "Done"
 
     printf "Generating install.sh ... "
-    cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
+    echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
+    grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null
+    if [ $? -eq 0 ]; then
+    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
 #!/bin/bash
 #Obtain devices
 devices=\$(lsblk -l |awk '\$6=="disk"{print \$1}')
@@ -199,7 +213,9 @@ do
      parted -s /dev/\${d} rm \${v_partition}
   done
 done
-
+EOF
+    fi
+    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
 # FIXME: default to install coreos on /dev/sda
 default_iface=\$(awk '\$2 == 00000000 { print \$1  }' /proc/net/route | uniq)
 

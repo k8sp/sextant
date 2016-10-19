@@ -29,7 +29,8 @@ if [ $? -ne 0 ]; then
     -e KV_IP=127.0.0.1 \
     -e KV_PORT=2379 \
     -e OSD_JOURNAL_SIZE=100 \
-    "$docker_hub"typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh populate_kvstore
+    --entrypoint=/entrypoint.sh \
+    "$docker_hub"ceph/daemon populate_kvstore
 fi
 
 # MON
@@ -47,7 +48,8 @@ else
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
     -e CEPH_PUBLIC_NETWORK=$net_mask \
-    "$docker_hub"typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh mon
+    --entrypoint=/entrypoint.sh \
+    "$docker_hub"ceph/daemon mon
 fi
 
 # MDS
@@ -62,5 +64,6 @@ else
     -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e CEPHFS_CREATE=1 \
     -e KV_TYPE=etcd \
-    "$docker_hub"typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370 /entrypoint.sh mds
+    --entrypoint=/entrypoint.sh \
+    "$docker_hub"ceph/daemon mds
 fi

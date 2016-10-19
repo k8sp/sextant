@@ -363,6 +363,7 @@ coreos:
             Type=oneshot
         {{- end }}
 
+        {{- if .ZapAndStartOSD }}
         - name: "ceph-osd.service"
           command: start
           content: |
@@ -379,6 +380,7 @@ coreos:
             ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
+          {{- end}}
 
         - name: docker.service
           runtime: true

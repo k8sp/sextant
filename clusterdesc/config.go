@@ -39,6 +39,7 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
+	ZapAndStartOSD           bool   `yaml:"zap_and_start_osd"`
 	Images                   map[string]string
 }
 

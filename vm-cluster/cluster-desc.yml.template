@@ -5,11 +5,14 @@ iplow: 192.168.8.201
 iphigh: 192.168.8.220
 routers: [192.168.8.101]
 broadcast: 192.168.8.255
-nameservers: [192.168.8.101, 8.8.8.8, 8.8.4.4]
+nameservers: [192.168.8.101]
+upstreamnameservers: [8.8.8.8, 8.8.4.4]
 domainname: "k8s.baifendian.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 192.168.0.0/24
 k8s_cluster_dns: 192.168.0.10
+zap_and_start_osd: y
+ceph_osd_journal_size: 100
 
 images:
   hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
@@ -21,7 +24,7 @@ images:
   addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
   skydns: "typhoon1986/skydns:latest"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
-  
+
 nodes:
   - mac: "08:00:27:4a:2d:a1"
     ceph_monitor: y
@@ -31,4 +34,3 @@ nodes:
 
 ssh_authorized_keys: |1+
     - "<SSH_KEY>"
-
