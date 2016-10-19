@@ -3,7 +3,10 @@
 // file, which is used by config-bootstrapper and cloud-config-server.
 package clusterdesc
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
@@ -40,6 +43,7 @@ type Cluster struct {
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
 	Images                   map[string]string
+	FlannelBackend           string `yaml:"flannel_backend"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
@@ -74,6 +78,14 @@ func (c Cluster) GetIngressReplicas() int {
 	return cnt
 }
 
+// Validation validate cluster configuration.
+func (c Cluster) Validation() error {
+	if c.FlannelBackend != "host-gw" && c.FlannelBackend != "udp" {
+		return errors.New("flannel_backend should be host-gw or udp. ")
+	}
+	return nil
+}
+
 // Hostname is defined as a method of Node, so can be call in
 // template.  For more details, refer to const tmplDHCPConf.
 func (n Node) Hostname() string {
@@ -102,6 +114,7 @@ routers: [10.0.2.15]
 broadcast: 10.0.2.255
 nameservers: [10.0.2.15, 8.8.8.8, 8.8.4.4]
 domain_name: company.com
+flannel_backend: udp
 
 nginx_root_dir: /usr/share/nginx/html
 
