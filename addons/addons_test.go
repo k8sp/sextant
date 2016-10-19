@@ -13,7 +13,7 @@ import (
 )
 
 func TestExecute(t *testing.T) {
-	config := candy.WithOpened("../cloud-config-server/template/unisound-ailab/build_config.yml", func(r io.Reader) interface{} {
+	config := candy.WithOpened("../cloud-config-server/template/cluster-desc.sample.yaml", func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
 
