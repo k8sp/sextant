@@ -16,18 +16,19 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 * 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到boostrapper server
 
 获取sextant代码后，根据要初始化的整体集群规划，
-编辑cloud-config-server/template/unisound-ailab/build_config.yml文件完成配置
+编辑cloud-config-server/template/cluster-desc.sample.yaml文件完成配置
 然后下载bootstrapper用到的文件到/bsroot目录下
 ```
-git clone https://github.com/k8sp/sextant.git
-vim cloud-config-server/template/unisound-ailab/build_config.yml
-./bsroot.sh cloud-config-server/template/unisound-ailab/build_config.yml
+go get -u -d github.com/k8sp/sextant
+cd $GOPATH/src/github.com/k8sp/sextant
+vim cloud-config-server/template/cluster-desc.sample.yaml
+./bsroot.sh cloud-config-server/template/cluster-desc.sample.yaml
 ```
 
 ## 上传到集群内部的bootstrapper机器
 如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
 
-1. 手动打包/bsroot目录：```tar czf bsroot.tar.gz ./bsroot```
+1. 手动打包./bsroot目录：```tar czf bsroot.tar.gz ./bsroot```
 1. 将bsroot.tar.gz上传到你的bootstrapper机器上（使用scp或ftp等工具）
 1. 在bootstrapper机器上解压bsroot.tar.gz到/目录
 
@@ -42,15 +43,6 @@ cd /bsroot
 ***只需要设置kubernetes节点通过PXE网络引导，并开机(和bootstrapper网络联通)，就可以自动完成kubernetes和ceph安装***
 
 ## 使用集群
-### 下载和配置kubectl
-可以选择从以下链接下载对应的版本
-
-* OSX
-  * [官方v1.2.4](https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/darwin/amd64/kubectl)
-  * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
-* Linux
-  * [官方v1.2.4](https://storage.googleapis.com/kubernetes-release/release/v1.2.4/bin/linux/amd64/kubectl)
-  * [百分点镜像v1.2.4](http://127.0.0.1/更新这个链接)
 
 ### 配置kubectl客户端
 ```
@@ -61,9 +53,9 @@ scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
 ### 测试kubectl客户端可用
 执行下面的命令，观察返回结果是否正常，判断是否译璟完成客户端的正确配置：
 ```
-$ kubectl get po
-NAME                             READY     STATUS    RESTARTS   AGE
-my-test-server-rkvw7             1/1       Running   5          2d
+$ kubectl get nodes
+NAME            STATUS                     AGE
+192.168.8.205   Ready,SchedulingDisabled   2d
 ```
 
 ### 使用ceph集群

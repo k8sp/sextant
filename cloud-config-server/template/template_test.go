@@ -26,7 +26,7 @@ func TestExecute(t *testing.T) {
 	}()
 	caKey, caCrt := certgen.GenerateRootCA(out)
 
-	config := candy.WithOpened("./unisound-ailab/build_config.yml", func(r io.Reader) interface{} {
+	config := candy.WithOpened("./cluster-desc.sample.yaml", func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
 
