@@ -51,11 +51,11 @@ scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
 ```
 
 ### 测试kubectl客户端可用
-执行下面的命令，观察返回结果是否正常，判断是否译璟完成客户端的正确配置：
+执行下面的命令，观察返回结果是否正常，判断是否已经成客户端的正确配置：
 ```
-$ kubectl get nodes
-NAME            STATUS                     AGE
-192.168.8.205   Ready,SchedulingDisabled   2d
+bootstrapper ~ # ./kubectl get nodes
+NAME                STATUS                     AGE
+08-00-27-4a-2d-a1   Ready,SchedulingDisabled   1m
 ```
 
 ### 使用ceph集群
