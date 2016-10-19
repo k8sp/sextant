@@ -28,7 +28,7 @@ if [ $? -ne 0 ]; then
     -e KV_TYPE=etcd \
     -e KV_IP=127.0.0.1 \
     -e KV_PORT=2379 \
-    -e OSD_JOURNAL_SIZE=100 \
+    -e OSD_JOURNAL_SIZE=<JOURNAL_SIZE> \
     --entrypoint=/entrypoint.sh \
     "$docker_hub"ceph/daemon populate_kvstore
 fi

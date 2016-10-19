@@ -156,7 +156,7 @@ prepare_cc_server_contents() {
     CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
     printf "$CEPH_DAEMON_IMAGE..."
     sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
-        sed "s/OSD_JOURNAL_SIZE=100/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \
+        sed "s/OSD_JOURNAL_SIZE=<JOURNAL_SIZE>/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \
         > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
 
     sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
