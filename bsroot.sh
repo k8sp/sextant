@@ -177,13 +177,6 @@ prepare_cc_server_contents() {
     cp $SEXTANT_DIR/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying addon templates ... "
-    cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/dnsmasq.conf.template $BSROOT/config/dnsmasq.conf.template || { echo "Failed"; exit 1; }
-    echo "Done"
-
     printf "Generating install.sh ... "
     cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
 #!/bin/bash
@@ -244,19 +237,18 @@ build_bootstrapper_image() {
     local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
 
     printf "Cross-compiling Sextant Go programs ... "
-    rm -f $SEXTANT_DIR/docker/{cloud-config-server,addons} >/dev/null 2>&1
+    rm -f $SEXTANT_DIR/docker/cloud-config-server >/dev/null 2>&1
     # CGO_ENABLED=0 builds fully statically-linked
     # programs. https://github.com/wangkuiyi/build-statically-linked-go-programs.
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
                github.com/k8sp/sextant/cloud-config-server \
-               github.com/k8sp/sextant/addons \
         || { echo "Failed"; exit 1; }
     echo "Done"
 
     if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
-        cp $GOPATH/bin/linux_amd64/{cloud-config-server,addons} $SEXTANT_DIR/docker
+        cp $GOPATH/bin/linux_amd64/cloud-config-server $SEXTANT_DIR/docker
     else
-        cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
+        cp $GOPATH/bin/cloud-config-server $SEXTANT_DIR/docker
     fi
 
 
@@ -332,6 +324,35 @@ prepare_setup_kubectl() {
   echo "Done"
 }
 
+generate_addons_config() {
+    printf "Building addons..."
+    rm $GOPATH/bin/addons >/dev/null 2>&1
+    go install github.com/k8sp/sextant/addons || { echo "Failed"; exit 1; }
+    echo "Done"
+    printf "Generating configuration files ..."
+    $GOPATH/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR/addons/template/ingress.template \
+        -config-file $BSROOT/html/static/ingress.yaml || \
+        { echo 'Failed to generate ingress.yaml !' ; exit 1; }
+
+    $GOPATH/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR/addons/template/skydns.template \
+        -config-file $BSROOT/html/static/skydns.yaml || \
+        { echo 'Failed to generate skydns.yaml !' ; exit 1; }
+
+    $GOPATH/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR/addons/template/skydns-service.template \
+        -config-file $BSROOT/html/static/skydns-service.yaml || \
+        { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
+
+    $GOPATH/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR/addons/template/dnsmasq.conf.template \
+        -config-file $BSROOT/config/dnsmasq.conf || \
+        { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
+
+    echo "Done"
+}
+
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 download_pxe_images
@@ -342,3 +363,4 @@ download_k8s_images
 build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
+generate_addons_config
