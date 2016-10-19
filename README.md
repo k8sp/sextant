@@ -19,7 +19,7 @@ bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，�
 编辑cloud-config-server/template/cluster-desc.sample.yaml文件完成配置
 然后下载bootstrapper用到的文件到/bsroot目录下
 ```
-go get -u -d github.com/k8sp/sextant
+go get -u -d github.com/k8sp/sextant/...
 cd $GOPATH/src/github.com/k8sp/sextant
 vim cloud-config-server/template/cluster-desc.sample.yaml
 ./bsroot.sh cloud-config-server/template/cluster-desc.sample.yaml
