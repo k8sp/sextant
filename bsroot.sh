@@ -151,7 +151,7 @@ prepare_cc_server_contents() {
     printf "Generating ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
     # update install-mon.sh and set OSD_JOURNAL_SIZE
-    OSD_JOURNAL_SIZE=`grep "ceph_osd_journal_size:" $CLUSTER_DESC | awk '{print $2}'`
+    OSD_JOURNAL_SIZE=$cluster_desc_ceph_ceph_osd_journal_size
     # update ceph install scripts to use image configured in cluster-desc.yml
     CEPH_DAEMON_IMAGE=$(set | grep '^cluster_desc_images_ceph' | grep -o '".*"' | sed 's/"//g' | sed -e 's/[\/&]/\\&/g')
     printf "$CEPH_DAEMON_IMAGE..."
@@ -197,10 +197,8 @@ prepare_cc_server_contents() {
 
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
-    grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null
-    if [ $? -eq 0 ]; then
+    if grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null; then
     cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
-#!/bin/bash
 #Obtain devices
 devices=\$(lsblk -l |awk '\$6=="disk"{print \$1}')
 # Zap all devices
