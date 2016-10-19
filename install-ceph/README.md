@@ -111,7 +111,7 @@ This file describes the content of your pod:
                     "image": "nginx",
                     "user": "lgk8s",
                     "secretRef": {
-                        "name": "ceph-secret-lugu-wuyi"
+                        "name": "ceph-secret"
                     },
                     "fsType": "ext4",
                     "readOnly": true
@@ -121,6 +121,19 @@ This file describes the content of your pod:
         }
       }
 ```
+Several explains:
+
+* define your rbd image mount in the section "volumes", and use it in pod spec.
+* in pod spec "volumeMounts" section, define "mountPath" for rbd mount point
+  in your pod, and "name" is the volume name defined in "volumes" section.
+* rbd volume defination must contain:
+  * monitors: a list of ceph monitors address, eg. ["192.168.119.150:6789"]
+  * pool: which ceph pool your image in
+  * image: rbd image name created by ceph
+  * user/secretRef: user and the keyring for auth
+  * fsType: ext4 or xfs etc.
+  * readOnly: true of false
+
 Now it’s time to fire it up your pod:
 ```
 kubectl create -f rbd-with-secret.json
@@ -128,3 +141,5 @@ kubectl get pods
 NAME      READY     REASON    RESTARTS   AGE
 rbd2      1/1       Running   0          1m
 ```
+
+After that your pod can access rbd data from your mountPath(eg. /mnt/rbd)
