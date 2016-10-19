@@ -148,12 +148,12 @@ EOF
 
 
 prepare_cc_server_contents() {
-    printf "Generating ceph installation scripts..."
+    printf "Generating Ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
     # update install-mon.sh and set OSD_JOURNAL_SIZE
-    OSD_JOURNAL_SIZE=$cluster_desc_ceph_ceph_osd_journal_size
+    OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
     # update ceph install scripts to use image configured in cluster-desc.yml
-    CEPH_DAEMON_IMAGE=$(set | grep '^cluster_desc_images_ceph' | grep -o '".*"' | sed 's/"//g' | sed -e 's/[\/&]/\\&/g')
+    CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
     printf "$CEPH_DAEMON_IMAGE..."
     sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
         sed "s/OSD_JOURNAL_SIZE=100/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \

@@ -14,7 +14,7 @@ k8s_cluster_dns: 10.100.0.10
 
 ceph:
   zap_and_start_osd: y
-  ceph_osd_journal_size: 100
+  osd_journal_size: 100
 
 images:
   hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
