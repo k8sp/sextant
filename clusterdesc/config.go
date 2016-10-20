@@ -39,8 +39,14 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
-	ZapAndStartOSD           bool   `yaml:"zap_and_start_osd"`
+	Ceph                     Ceph
 	Images                   map[string]string
+}
+
+// Ceph consists configs for ceph deploy
+type Ceph struct {
+	ZapAndStartOSD bool `yaml:"zap_and_start_osd"`
+	OSDJournalSize int  `yaml:"osd_journal_size"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
