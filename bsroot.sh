@@ -247,34 +247,23 @@ EOF
 
 build_bootstrapper_image() {
 
-    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=')
-    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
-
-    printf "Cross-compiling Sextant Go programs ... "
-    rm -f $SEXTANT_DIR/docker/cloud-config-server >/dev/null 2>&1
-    # CGO_ENABLED=0 builds fully statically-linked
-    # programs. https://github.com/wangkuiyi/build-statically-linked-go-programs.
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
-               github.com/k8sp/sextant/cloud-config-server \
-        || { echo "Failed"; exit 1; }
+    printf "Building sextant_build_image..."
+    docker build -t sextant_build_image $SEXTANT_DIR/build/build_image > /dev/null 2>&1 \
+      || { echo "build sextant_build_image failed"; exit 1;}
     echo "Done"
 
-    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
-        cp $GOPATH/bin/linux_amd64/cloud-config-server $SEXTANT_DIR/docker
-    else
-        cp $GOPATH/bin/cloud-config-server $SEXTANT_DIR/docker
-    fi
+    docker rm sextant_build > /dev/null 2>&1
 
+    docker run -it --name=sextant_build \
+            --volume $SEXTANT_DIR:/go/src/github.com/k8sp/sextant \
+            sextant_build_image \
+            /bin/bash /go/src/github.com/k8sp/sextant/build/build_binaries.sh \
+            || { echo "build failed..."; exit 1; }
 
-    printf "Cross-compiling Docker registry ... "
-    rm -f $SEXTANT_DIR/docker/registry >/dev/null 2>&1
-    go get -u -d github.com/docker/distribution/cmd/registry \
-        && cd $GOPATH/src/github.com/docker/distribution \
-        && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64 PREFIX=$GOPATH clean $GOPATH/bin/registry >/dev/null 2>&1\
-        || { echo "Failed"; exit 1; }
-    echo "Done"
-
-    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
+    docker cp sextant_build:/go/bin/cloud-config-server $SEXTANT_DIR/docker/
+    docker cp sextant_build:/go/bin/addons $SEXTANT_DIR/docker/
+    docker cp sextant_build:/go/bin/registry $SEXTANT_DIR/docker/
+    docker rm sextant_build > /dev/null 2>&1
 
     printf "Building bootstrapper image ... "
     cd $SEXTANT_DIR/docker
