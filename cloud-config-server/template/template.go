@@ -31,6 +31,7 @@ type ExecutionConfig struct {
 	Dockerdomain             string
 	K8sClusterDNS            string
 	K8sServiceClusterIPRange string
+	ZapAndStartOSD           bool
 	Images                   map[string]string
 }
 
@@ -60,7 +61,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Dockerdomain:             config.Dockerdomain,
 		K8sClusterDNS:            config.K8sClusterDNS,
 		K8sServiceClusterIPRange: config.K8sServiceClusterIPRange,
-		Images: config.Images,
+		ZapAndStartOSD:           config.ZapAndStartOSD,
+		Images:                   config.Images,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
 		// so insert 6*whitespace at the begging of every line
