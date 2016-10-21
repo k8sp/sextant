@@ -254,16 +254,29 @@ build_bootstrapper_image() {
 
     docker rm sextant_build > /dev/null 2>&1
 
-    docker run -it --name=sextant_build \
+    docker run --name=sextant_build \
             --volume $SEXTANT_DIR:/go/src/github.com/k8sp/sextant \
-            sextant_build_image \
-            /bin/bash /go/src/github.com/k8sp/sextant/build/build_binaries.sh \
-            || { echo "build failed..."; exit 1; }
-
-    docker cp sextant_build:/go/bin/cloud-config-server $SEXTANT_DIR/docker/
-    docker cp sextant_build:/go/bin/addons $SEXTANT_DIR/docker/
-    docker cp sextant_build:/go/bin/registry $SEXTANT_DIR/docker/
+            --volume $SEXTANT_DIR/docker:/go/bin \
+            -e CGO_ENABLED=0 \
+            -e GOOS=linux \
+            -e GOARCH=amd64 \
+            golang:wheezy \
+            go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+            || { echo "Build sextant failed..."; exit 1; }
     docker rm sextant_build > /dev/null 2>&1
+
+    docker rm registry_build > /dev/null 2>&1
+    docker run --name=registry_build \
+            --volume $SEXTANT_DIR/docker:/go/bin \
+            -e CGO_ENABLED=0 \
+            -e GOOS=linux \
+            -e GOARCH=amd64 \
+            golang:wheezy \
+            sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
+            || { echo "go get registry failed..."; exit 1; }
+
+    docker stop registry_build
+    docker rm registry_build > /dev/null 2>&1
 
     printf "Building bootstrapper image ... "
     cd $SEXTANT_DIR/docker
