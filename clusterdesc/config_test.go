@@ -1,6 +1,8 @@
 package clusterdesc
 
 import (
+	"io/ioutil"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +12,9 @@ import (
 
 func TestDefaultValues(t *testing.T) {
 	c := &Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(ExampleYAML), c))
+	clusterDescExample, e := ioutil.ReadFile(path.Join(candy.GoPath(), clusterDescExampleFile))
+	candy.Must(e)
+	candy.Must(yaml.Unmarshal([]byte(clusterDescExample), c))
 
 	assert.False(t, c.Nodes[1].KubeMaster)
 	assert.False(t, c.Nodes[2].KubeMaster)
