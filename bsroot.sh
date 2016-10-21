@@ -246,8 +246,8 @@ EOF
 
 
 build_bootstrapper_image() {
-    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=')
-    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
+    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=' | sed 's/"//g')
+    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=' | sed 's/"//g')
 
     # target binary arch is amd64, and build in docker image will always amd64
     printf "Cross-compiling Sextant Go programs ... "
@@ -266,7 +266,7 @@ build_bootstrapper_image() {
 
     # FIXME: build addon for this arch, only support MacOS and linux
     printf "Compiling addons for local machine ... "
-    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
+    if [[ $THIS_OS == '"linux"' && $THIS_ARCH == '"amd64"' ]]; then
       ADDONS=$SEXTANT_DIR/docker/addons
     else
       docker run --name=sextant_build \
@@ -278,7 +278,7 @@ build_bootstrapper_image() {
               golang:wheezy \
               go get github.com/k8sp/sextant/addons \
               || { echo "Build addon for local arch failed..."; exit 1; }
-      ADDONS=$SEXTANT_DIR/docker/$THIS_OS_$THIS_ARCH/addons
+      ADDONS=$SEXTANT_DIR/docker/${THIS_OS}_${THIS_ARCH}/addons
     fi
     echo "Done"
 
