@@ -42,7 +42,6 @@ func TestRun(t *testing.T) {
 	candy.Must(e)
 
 	clusterDesc := func() []byte { return clusterDescExample }
-
 	ccTemplate := func() []byte { return ccTmpl }
 
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.

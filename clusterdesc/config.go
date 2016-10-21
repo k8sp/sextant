@@ -3,10 +3,7 @@
 // file, which is used by config-bootstrapper and cloud-config-server.
 package clusterdesc
 
-import (
-	"errors"
-	"strings"
-)
+import "strings"
 
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
@@ -76,14 +73,6 @@ func (c Cluster) GetIngressReplicas() int {
 		}
 	}
 	return cnt
-}
-
-// Validation validate cluster configuration.
-func (c Cluster) Validation() error {
-	if c.FlannelBackend != "host-gw" && c.FlannelBackend != "udp" {
-		return errors.New("flannel_backend should be host-gw or udp. ")
-	}
-	return nil
 }
 
 // Hostname is defined as a method of Node, so can be call in

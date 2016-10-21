@@ -77,7 +77,6 @@ func run(clusterDesc func() []byte, ccTemplate func() []byte, ln net.Listener, c
 			c := &clusterdesc.Cluster{}
 			candy.Must(yaml.Unmarshal(clusterDesc(), c))
 			candy.Must(cctemplate.Execute(tmpl, c, mac, caKey, caCrt, w))
-			candy.Must(c.Validation())
 		}))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
 
