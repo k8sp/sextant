@@ -61,7 +61,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Dockerdomain:             config.Dockerdomain,
 		K8sClusterDNS:            config.K8sClusterDNS,
 		K8sServiceClusterIPRange: config.K8sServiceClusterIPRange,
-		ZapAndStartOSD:           config.ZapAndStartOSD,
+		ZapAndStartOSD:           config.Ceph.ZapAndStartOSD,
 		Images:                   config.Images,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
