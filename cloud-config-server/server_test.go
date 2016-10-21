@@ -20,7 +20,7 @@ import (
 
 const (
 	tmplFile               = "src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template"
-	clusterDescExampleFile = "src/github.com/k8sp/sextant/template/cluster-desc.samlple.yaml"
+	clusterDescExampleFile = "src/github.com/k8sp/sextant/cloud-config-server/template/cluster-desc.sample.yaml"
 	loadTimeout            = 15 * time.Second
 )
 

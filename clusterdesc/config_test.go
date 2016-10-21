@@ -19,6 +19,6 @@ func TestDefaultValues(t *testing.T) {
 	assert.False(t, c.Nodes[1].KubeMaster)
 	assert.False(t, c.Nodes[2].KubeMaster)
 	assert.False(t, c.Nodes[3].KubeMaster)
-	assert.False(t, c.Nodes[3].EtcdMember)
+	assert.False(t, c.Nodes[3].IngressLabel)
 	assert.False(t, c.Nodes[3].CephMonitor)
 }
