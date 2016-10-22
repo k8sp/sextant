@@ -251,35 +251,14 @@ build_bootstrapper_image() {
 
     # target binary arch is amd64, and build in docker image will always amd64
     printf "Cross-compiling Sextant Go programs ... "
-    docker rm sextant_build > /dev/null 2>&1
-    docker run --name=sextant_build \
-            --volume $SEXTANT_DIR:/go/src/github.com/k8sp/sextant \
-            --volume $SEXTANT_DIR/docker:/go/bin \
+    docker run --rm -it \
+            --volume $GOPATH:/go \
             -e CGO_ENABLED=0 \
             -e GOOS=linux \
             -e GOARCH=amd64 \
             golang:wheezy \
             go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
             || { echo "Build sextant failed..."; exit 1; }
-    docker rm sextant_build > /dev/null 2>&1
-    echo "Done"
-
-    # FIXME: build addon for this arch, only support MacOS and linux
-    printf "Compiling addons for local machine ... "
-    if [[ $THIS_OS == '"linux"' && $THIS_ARCH == '"amd64"' ]]; then
-      ADDONS=$SEXTANT_DIR/docker/addons
-    else
-      docker run --name=sextant_build \
-              --volume $SEXTANT_DIR:/go/src/github.com/k8sp/sextant \
-              --volume $SEXTANT_DIR/docker:/go/bin \
-              -e CGO_ENABLED=0 \
-              -e GOOS=$THIS_OS \
-              -e GOARCH=$THIS_ARCH \
-              golang:wheezy \
-              go get github.com/k8sp/sextant/addons \
-              || { echo "Build addon for local arch failed..."; exit 1; }
-      ADDONS=$SEXTANT_DIR/docker/${THIS_OS}_${THIS_ARCH}/addons
-    fi
     echo "Done"
 
     printf "Cross-compiling Docker registry ... "
@@ -359,24 +338,53 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
-    $ADDONS -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR/addons/template/ingress.template \
-        -config-file $BSROOT/html/static/ingress.yaml || \
+    QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
+    SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
+    BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+            -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
+            -config-file $BSROOT_IN/html/static/ingress.yaml || \
+            { echo 'Failed to generate ingress.yaml !' ; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
+        -config-file $BSROOT_IN/html/static/ingress.yaml || \
         { echo 'Failed to generate ingress.yaml !' ; exit 1; }
 
-    $ADDONS -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR/addons/template/skydns.template \
-        -config-file $BSROOT/html/static/skydns.yaml || \
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
+        -config-file $BSROOT_IN/html/static/skydns.yaml || \
         { echo 'Failed to generate skydns.yaml !' ; exit 1; }
 
-    $ADDONS -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR/addons/template/skydns-service.template \
-        -config-file $BSROOT/html/static/skydns-service.yaml || \
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
+        -config-file $BSROOT_IN/html/static/skydns-service.yaml || \
         { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
 
-    $ADDONS -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR/addons/template/dnsmasq.conf.template \
-        -config-file $BSROOT/config/dnsmasq.conf || \
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
+        -config-file $BSROOT_IN/config/dnsmasq.conf || \
         { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
 
     echo "Done"
