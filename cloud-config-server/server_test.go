@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	tmplFile    = "src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template"
-	loadTimeout = 15 * time.Second
+	tmplFile               = "src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template"
+	clusterDescExampleFile = "src/github.com/k8sp/sextant/cloud-config-server/template/cluster-desc.sample.yaml"
+	loadTimeout            = 15 * time.Second
 )
 
 func TestRun(t *testing.T) {
@@ -37,7 +38,10 @@ func TestRun(t *testing.T) {
 	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
 	candy.Must(e)
 
-	clusterDesc := func() []byte { return []byte(clusterdesc.ExampleYAML) }
+	clusterDescExample, e := ioutil.ReadFile(path.Join(candy.GoPath(), clusterDescExampleFile))
+	candy.Must(e)
+
+	clusterDesc := func() []byte { return clusterDescExample }
 	ccTemplate := func() []byte { return ccTmpl }
 
 	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
@@ -55,7 +59,7 @@ func TestRun(t *testing.T) {
 	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
 
 	c := &clusterdesc.Cluster{}
-	candy.Must(yaml.Unmarshal([]byte(clusterdesc.ExampleYAML), c))
+	candy.Must(yaml.Unmarshal(clusterDescExample, c))
 
 	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
 

@@ -33,6 +33,7 @@ type ExecutionConfig struct {
 	K8sServiceClusterIPRange string
 	ZapAndStartOSD           bool
 	Images                   map[string]string
+	FlannelBackend           string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -66,9 +67,10 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
 		// so insert 6*whitespace at the begging of every line
-		CaCrt: strings.Join(strings.Split(string(ca), "\n"), "\n      "),
-		Crt:   strings.Join(strings.Split(string(c), "\n"), "\n      "),
-		Key:   strings.Join(strings.Split(string(k), "\n"), "\n      "),
+		CaCrt:          strings.Join(strings.Split(string(ca), "\n"), "\n      "),
+		Crt:            strings.Join(strings.Split(string(c), "\n"), "\n      "),
+		Key:            strings.Join(strings.Split(string(k), "\n"), "\n      "),
+		FlannelBackend: config.FlannelBackend,
 	}
 	return tmpl.Execute(w, ec)
 }
