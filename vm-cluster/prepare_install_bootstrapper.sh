@@ -16,11 +16,11 @@ ssh-keygen -t rsa -f $TMPDIR/id_rsa -P ''
 # Replace the public key into cluster-desc.yml.template and generate cluster-desc.yml
 PUB_KEY=$(cat $TMPDIR/id_rsa.pub)
 SEXTANT_DIR=$GOPATH/src/github.com/k8sp/sextant
-sed -e 's#<SSH_KEY>#'"$PUB_KEY"'#' $SEXTANT_DIR/vm-cluster/cluster-desc.yml.template > $TMPDIR/cluster-desc.yml
+sed -e 's#<SSH_KEY>#'"$PUB_KEY"'#' $SEXTANT_DIR/vm-cluster/cluster-desc.yml.template > $SEXTANT_DIR/cluster-desc.yml
 
 # Generate $SEXTANT_DIR/bsroot
 cd $SEXTANT_DIR
-./bsroot.sh $TMPDIR/cluster-desc.yml
+./bsroot.sh $SEXTANT_DIR/cluster-desc.yml
 
 # Put SSH keys into $SEXTANT_DIR/bsroot, which will be mounted to the bootstrapper VM.
 mkdir -p $SEXTANT_DIR/bsroot/vm-keys
