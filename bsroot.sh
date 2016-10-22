@@ -246,9 +246,6 @@ EOF
 
 
 build_bootstrapper_image() {
-    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=' | sed 's/"//g')
-    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=' | sed 's/"//g')
-
     # target binary arch is amd64, and build in docker image will always amd64
     printf "Cross-compiling Sextant Go programs ... "
     docker run --rm -it \
