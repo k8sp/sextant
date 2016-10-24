@@ -243,19 +243,20 @@ build_bootstrapper_image() {
             golang:wheezy \
             go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
             || { echo "Build sextant failed..."; exit 1; }
+    # Copy built binaries
+    cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
     echo "Done"
 
     printf "Cross-compiling Docker registry ... "
-    docker rm registry_build > /dev/null 2>&1
-    docker run --name=registry_build \
-            --volume $SEXTANT_DIR/docker:/go/bin \
+    docker run --rm -it --name=registry_build \
+            --volume $GOPATH:/go \
             -e CGO_ENABLED=0 \
             -e GOOS=linux \
             -e GOARCH=amd64 \
             golang:wheezy \
             sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
             || { echo "Complie Docker registry failed..."; exit 1; }
-    docker rm registry_build > /dev/null 2>&1
+    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
     echo "Done"
 
     printf "Building bootstrapper image ... "
