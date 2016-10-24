@@ -295,7 +295,7 @@ coreos:
             ExecStartPre=/usr/bin/mkdir -p ${ETCD_SSL_DIR}
             ExecStartPre=-/usr/bin/touch ${FLANNEL_ENV_FILE}
             {{- if .KubeMaster }}
-            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" "Backend": {"Type": "{{ .FlannelBackend }}"}}'
             {{ end }}
 
             ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
@@ -363,6 +363,7 @@ coreos:
             Type=oneshot
         {{- end }}
 
+        {{- if .ZapAndStartOSD }}
         - name: "ceph-osd.service"
           command: start
           content: |
@@ -379,6 +380,7 @@ coreos:
             ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
+          {{- end}}
 
         - name: docker.service
           runtime: true

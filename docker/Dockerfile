@@ -3,12 +3,11 @@ FROM golang:alpine
 # Install required software packages.
 RUN set -ex && \
 apk update && \
-apk add --no-cache make git dnsmasq openssl
+apk add --no-cache dnsmasq openssl
 
 # Upload Sextant Go programs and retrieve dependencies.
 RUN mkdir -p /go/bin
 COPY cloud-config-server /
-COPY addons              /
 COPY registry            /
 
 # TODO(yi): Why do we need to create /go/static?

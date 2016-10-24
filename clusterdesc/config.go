@@ -39,7 +39,15 @@ type Cluster struct {
 	Dockerdomain             string
 	K8sClusterDNS            string `yaml:"k8s_cluster_dns"`
 	K8sServiceClusterIPRange string `yaml:"k8s_service_cluster_ip_range"`
+	Ceph                     Ceph
 	Images                   map[string]string
+	FlannelBackend           string `yaml:"flannel_backend"`
+}
+
+// Ceph consists configs for ceph deploy
+type Ceph struct {
+	ZapAndStartOSD bool `yaml:"zap_and_start_osd"`
+	OSDJournalSize int  `yaml:"osd_journal_size"`
 }
 
 // Node defines properties of some nodes in the cluster.  For example,
@@ -85,36 +93,3 @@ func (n Node) Hostname() string {
 func (n Node) Mac() string {
 	return strings.ToLower(n.MAC)
 }
-
-// ExampleYAML shows an example of YAML-encoded Cluster description.
-// It is also used for unit testing.  The IP addresses and subnet used
-// in this example are in accordance with Vagrant VM's default subnet,
-// so unit tests on DHCP can starts DHCP services correctly
-// (c.f. https://github.com/k8sp/sextant/issues/52).
-const ExampleYAML = `
-bootstrapper: 10.0.2.15
-
-subnet: 10.0.2.0
-netmask: 255.255.255.0
-iplow: 10.0.2.100
-iphigh: 10.0.2.200
-routers: [10.0.2.15]
-broadcast: 10.0.2.255
-nameservers: [10.0.2.15, 8.8.8.8, 8.8.4.4]
-domain_name: company.com
-
-nginx_root_dir: /usr/share/nginx/html
-
-nodes:
-  - mac: "00:25:90:c0:f7:80"
-    ceph_monitor: y
-    kube_master: y
-    etcd_member: y
-  - mac: "00:25:90:c0:f6:ee"
-    ceph_monitor: y
-    etcd_member: y
-  - mac: "00:25:90:c0:f6:d6"
-    ceph_monitor: y
-    etcd_member: y
-  - mac: "00:25:90:c0:f7:ac"
-`

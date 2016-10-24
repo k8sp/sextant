@@ -60,7 +60,7 @@ download_pxe_images() {
     mkdir -p $BSROOT/tftpboot
 
     printf "Downloading syslinux ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     tar xzf syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
     cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
@@ -70,20 +70,20 @@ download_pxe_images() {
     echo "Done"
 
     printf "Importing CoreOS signing key ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc || { echo "Failed"; exit 1; }
     gpg --import --keyid-format LONG $BSROOT/tftpboot/CoreOS_Image_Signing_Key.asc > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CoreOS PXE vmlinuz image ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CoreOS PXE CPIO image ... "
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
-    wget --quiet -c -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
     gpg --verify coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -135,9 +135,20 @@ EOF
 
 
 prepare_cc_server_contents() {
+    printf "Generating Ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
-    cp $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh $BSROOT/html/static/ceph/install-mon.sh
-    cp $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh $BSROOT/html/static/ceph/install-osd.sh
+    # update install-mon.sh and set OSD_JOURNAL_SIZE
+    OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
+    # update ceph install scripts to use image configured in cluster-desc.yml
+    CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
+    printf "$CEPH_DAEMON_IMAGE..."
+    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
+        sed "s/OSD_JOURNAL_SIZE=<JOURNAL_SIZE>/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \
+        > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
+
+    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
+        > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
+    echo "Done"
 
     mkdir -p $BSROOT/html/static/cloud-config
 
@@ -145,14 +156,14 @@ prepare_cc_server_contents() {
     # defined in "cluster-desc.yml"
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
-    wget --quiet -c -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     chmod +x $BSROOT/html/static/kubelet
     echo "Done"
 
     # setup-network-environment will fetch the default system IP infomation
     # when using cloud-config file to initiate a kubernetes cluster node
     printf "Downloading setup-network-environment file ... "
-    wget --quiet -c -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
@@ -164,16 +175,10 @@ prepare_cc_server_contents() {
     cp $SEXTANT_DIR/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying addon templates ... "
-    cp $SEXTANT_DIR/addons/template/ingress.template $BSROOT/config/ingress.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/skydns.template $BSROOT/config/skydns.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/skydns-service.template $BSROOT/config/skydns-service.template || { echo "Failed"; exit 1; }
-    cp $SEXTANT_DIR/addons/template/dnsmasq.conf.template $BSROOT/config/dnsmasq.conf.template || { echo "Failed"; exit 1; }
-    echo "Done"
-
     printf "Generating install.sh ... "
-    cat > $BSROOT/html/static/cloud-config/install.sh <<EOF
-#!/bin/bash
+    echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
+    if grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null; then
+    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
 #Obtain devices
 devices=\$(lsblk -l |awk '\$6=="disk"{print \$1}')
 # Zap all devices
@@ -186,7 +191,9 @@ do
      parted -s /dev/\${d} rm \${v_partition}
   done
 done
-
+EOF
+    fi
+    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
 # FIXME: default to install coreos on /dev/sda
 default_iface=\$(awk '\$2 == 00000000 { print \$1  }' /proc/net/route | uniq)
 
@@ -213,9 +220,9 @@ EOF
         mkdir -p $BSROOT/html/static/$VERSION
     fi
 
-    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
-    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
-    wget --quiet -c -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static
@@ -226,36 +233,30 @@ EOF
 
 
 build_bootstrapper_image() {
-
-    local THIS_OS=$(go env | grep 'GOOS=' | cut -f 2 -d '=')
-    local THIS_ARCH=$(go env | grep 'GOARCH=' | cut -f 2 -d '=')
-
+    # target binary arch is amd64, and build in docker image will always amd64
     printf "Cross-compiling Sextant Go programs ... "
-    rm -f $SEXTANT_DIR/docker/{cloud-config-server,addons} >/dev/null 2>&1
-    # CGO_ENABLED=0 builds fully statically-linked
-    # programs. https://github.com/wangkuiyi/build-statically-linked-go-programs.
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
-               github.com/k8sp/sextant/cloud-config-server \
-               github.com/k8sp/sextant/addons \
-        || { echo "Failed"; exit 1; }
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            -e CGO_ENABLED=0 \
+            -e GOOS=linux \
+            -e GOARCH=amd64 \
+            golang:wheezy \
+            go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+            || { echo "Build sextant failed..."; exit 1; }
     echo "Done"
-
-    if [[ $THIS_OS != '"linux"' || $THIS_ARCH != '"amd64"' ]]; then
-        cp $GOPATH/bin/linux_amd64/{cloud-config-server,addons} $SEXTANT_DIR/docker
-    else
-        cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
-    fi
-
 
     printf "Cross-compiling Docker registry ... "
-    rm -f $SEXTANT_DIR/docker/registry >/dev/null 2>&1
-    go get -u -d github.com/docker/distribution/cmd/registry \
-        && cd $GOPATH/src/github.com/docker/distribution \
-        && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64 PREFIX=$GOPATH clean $GOPATH/bin/registry >/dev/null 2>&1\
-        || { echo "Failed"; exit 1; }
+    docker rm registry_build > /dev/null 2>&1
+    docker run --name=registry_build \
+            --volume $SEXTANT_DIR/docker:/go/bin \
+            -e CGO_ENABLED=0 \
+            -e GOOS=linux \
+            -e GOARCH=amd64 \
+            golang:wheezy \
+            sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
+            || { echo "Complie Docker registry failed..."; exit 1; }
+    docker rm registry_build > /dev/null 2>&1
     echo "Done"
-
-    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
 
     printf "Building bootstrapper image ... "
     cd $SEXTANT_DIR/docker
@@ -319,6 +320,60 @@ prepare_setup_kubectl() {
   echo "Done"
 }
 
+generate_addons_config() {
+    printf "Generating configuration files ..."
+    QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
+    SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
+    BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+            -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
+            -config-file $BSROOT_IN/html/static/ingress.yaml || \
+            { echo 'Failed to generate ingress.yaml !' ; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
+        -config-file $BSROOT_IN/html/static/ingress.yaml || \
+        { echo 'Failed to generate ingress.yaml !' ; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
+        -config-file $BSROOT_IN/html/static/skydns.yaml || \
+        { echo 'Failed to generate skydns.yaml !' ; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
+        -config-file $BSROOT_IN/html/static/skydns-service.yaml || \
+        { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+        -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
+        -config-file $BSROOT_IN/config/dnsmasq.conf || \
+        { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
+
+    echo "Done"
+}
+
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 download_pxe_images
@@ -329,3 +384,4 @@ download_k8s_images
 build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
+generate_addons_config

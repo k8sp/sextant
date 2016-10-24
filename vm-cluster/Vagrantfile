@@ -61,11 +61,13 @@ Vagrant.configure("2") do |config|
          wk.gui = true
          wk.memory = "1024"
          wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
-         (1..2).each do |i|
+         wk.customize ["storagectl", :id, "--name", "SATA", "--remove"]
+         wk.customize ["storagectl", :id, "--name", "SATA Controller", "--add", "sata"]
+         (1..3).each do |i|
             file_to_disk = "./extra-disk-#{i}.vdi"
             unless File.exist?(file_to_disk)
               wk.customize ['createhd', '--filename', file_to_disk, '--size', '8196']
-              wk.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', i-1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+              wk.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', i-1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
             end
          end
      end
