@@ -203,6 +203,8 @@ do
   do
      parted -s /dev/\${d} rm \${v_partition}
   done
+  # make sure to wipe out the GPT infomation, let ceph uses gdisk to init
+  dd if=/dev/zero of=/dev/\${d} bs=512 count=2
 done
 EOF
     fi
