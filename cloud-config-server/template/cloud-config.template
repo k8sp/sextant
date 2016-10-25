@@ -295,7 +295,7 @@ coreos:
             ExecStartPre=/usr/bin/mkdir -p ${ETCD_SSL_DIR}
             ExecStartPre=-/usr/bin/touch ${FLANNEL_ENV_FILE}
             {{- if .KubeMaster }}
-            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" "Backend": {"Type": "{{ .FlannelBackend }}"}}'
+            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ .FlannelBackend }}"}}'
             {{ end }}
 
             ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
