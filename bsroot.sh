@@ -276,16 +276,16 @@ build_bootstrapper_image() {
     docker run --rm \
         --volume $SEXTANT_DIR/bsroot:/bsroot \
         --entrypoint "/bin/sh" \
-        bootstrapper \
-        -c "/cloud-config-server -addr \":80\" \
+        bootstrapper -c \
+          "/cloud-config-server -addr :80 \
           -dir /bsroot/html/static \
           -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url "" \
+          -cc-template-url \"\" \
           -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url "" \
+          -cluster-desc-url \"\" \
           -ca-crt /bsroot/tls/ca.pem \
           -ca-key /bsroot/tls/ca-key.pem \
-          -validate true " || { echo "Failed"; exit 1; }
+          -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
