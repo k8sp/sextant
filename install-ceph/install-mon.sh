@@ -17,9 +17,9 @@ CEPH_IMG_TAG=tag-build-master-jewel-ubuntu-14.04-fix370
 # cephx enabled ?
 etcdctl get /ceph-config/$CEPH_CLUSTER_NAME/auth/cephx
 # populate kvstore
-# FIXME: define -e OSD_JOURNAL_SIZE=100 for vm testing
+# NOTICE: put OSD_JOURNAL_SIZE settings in a default file
+# as of: https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/entrypoint.sh#L173
 # NOTICE: use docker run --rm to ensure container is deleted after execution
-# FIXME: ceph image not configuable
 if [ $? -ne 0 ]; then
   echo "Enable cephx."
   docker run --rm --net=host \
@@ -29,8 +29,8 @@ if [ $? -ne 0 ]; then
     -e KV_IP=127.0.0.1 \
     -e KV_PORT=2379 \
     -e OSD_JOURNAL_SIZE=<JOURNAL_SIZE> \
-    --entrypoint=/entrypoint.sh \
-    "$docker_hub"ceph/daemon populate_kvstore
+    --entrypoint=/bin/bash \
+    "$docker_hub"ceph/daemon -c "sed -i.bak \"/^\/osd\/osd_journal_size/d\" /ceph.defaults && echo \"/osd/osd_journal_size <JOURNAL_SIZE>\" >>  /ceph.defaults && /entrypoint.sh populate_kvstore"
 fi
 
 # MON
