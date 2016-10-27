@@ -1,0 +1,27 @@
+domain={{ .DomainName }}
+user=root
+dhcp-range={{ .IPLow }},{{ .IPHigh }},{{ .Netmask }},12h
+log-dhcp
+
+
+dhcp-option=28,{{ .Broadcast }}
+dhcp-option=3,{{range $index, $ele := .Routers}}{{if $index}},{{end}}{{$ele}}{{end}}
+dhcp-option=6,{{range $index, $ele := .NameServers}}{{if $index}},{{end}}{{$ele}}{{end}}
+
+no-hosts
+expand-hosts
+no-resolv
+{{range $index, $ele := .UpstreamNameServers}}
+server={{$ele}}
+{{end}}
+
+local=/{{ .DomainName }}/
+domain-needed
+
+
+# FIXME: should add NTP time server
+dhcp-boot=pxelinux.0
+pxe-prompt="Press F8 for menu.", 5
+pxe-service=x86PC, "Install CoreOS from network server", pxelinux
+enable-tftp
+tftp-root=/bsroot/tftpboot

@@ -1,70 +1,69 @@
 #!/bin/bash
 
-# This function converts a net mask to an CIDR.
-# To start a Ceph monitor by running the docker container ceph/daemon, an
-# environment variable CEPH_PUBLIC_NETWORK is needed in the form of
-# <IP address><CIDR>. We can get the IP address and net mask by some command
-# line tools, but we can't directly get the CIDR, so we provide this function to
-# convert the net mask to CIDR.
-function netmask_to_cidr {
-  local netmask=$1
-  declare -A convert_table=( \
-    ["255.255.255.255"]="/32" \
-    ["255.255.255.254"]="/31" \
-    ["255.255.255.252"]="/30" \
-    ["255.255.255.248"]="/29" \
-    ["255.255.255.240"]="/28" \
-    ["255.255.255.224"]="/27" \
-    ["255.255.255.192"]="/26" \
-    ["255.255.255.128"]="/25" \
-    ["255.255.255.0"]="/24" \
-    ["255.255.254.0"]="/23" \
-    ["255.255.252.0"]="/22" \
-    ["255.255.248.0"]="/21" \
-    ["255.255.240.0"]="/20" \
-    ["255.255.224.0"]="/19" \
-    ["255.255.192.0"]="/18" \
-    ["255.255.128.0"]="/17" \
-    ["255.255.0.0"]="/16" \
-    ["255.254.0.0"]="/15" \
-    ["255.252.0.0"]="/14" \
-    ["255.248.0.0"]="/13" \
-    ["255.240.0.0"]="/12" \
-    ["255.224.0.0"]="/11" \
-    ["255.192.0.0"]="/10" \
-    ["255.128.0.0"]="/9" \
-    ["255.0.0.0"]="/8" \
-    ["254.0.0.0"]="/7" \
-    ["252.0.0.0"]="/6" \
-    ["248.0.0.0"]="/5" \
-    ["240.0.0.0"]="/4" \
-    ["224.0.0.0"]="/3" \
-    ["192.0.0.0"]="/2" \
-    ["128.0.0.0"]="/1" \
-    ["0.0.0.0"]="/0" \
-    )
-  echo "${convert_table[$netmask]}"
-}
+docker_hub=$1
+if [[ ! -z $docker_hub ]]; then
+  docker_hub=$docker_hub"/"
+fi
 
 interface=$(ip route | grep default | awk '{print $5}')
-ip_addr=$(ifconfig $interface | grep '\binet\b' | awk '{print $2}')
-net_mask=$(ifconfig $interface | grep '\binet\b' | awk '{print $4}')
+net_mask=$(ip a show $interface | grep '\binet\b' | awk '{print $2}');
+ip_addr=${net_mask%%/*}
 
+CEPH_CLUSTER_NAME=ceph
 CEPH_MON_DOCKER_NAME=ceph_mon
+CEPH_MDS_DOCKER_NAME=ceph_mds
+CEPH_IMG_TAG=tag-build-master-jewel-ubuntu-14.04-fix370
 
+# cephx enabled ?
+etcdctl get /ceph-config/$CEPH_CLUSTER_NAME/auth/cephx
+# populate kvstore
+# NOTICE: put OSD_JOURNAL_SIZE settings in a default file
+# as of: https://github.com/ceph/ceph-docker/blob/master/ceph-releases/jewel/ubuntu/14.04/daemon/entrypoint.sh#L173
+# NOTICE: use docker run --rm to ensure container is deleted after execution
+if [ $? -ne 0 ]; then
+  echo "Enable cephx."
+  docker run --rm --net=host \
+    --name ceph_kvstore \
+    -e CLUSTER=$CEPH_CLUSTER_NAME \
+    -e KV_TYPE=etcd \
+    -e KV_IP=127.0.0.1 \
+    -e KV_PORT=2379 \
+    -e OSD_JOURNAL_SIZE=<JOURNAL_SIZE> \
+    --entrypoint=/bin/bash \
+    "$docker_hub"ceph/daemon -c "sed -i.bak \"/^\/osd\/osd_journal_size/d\" /ceph.defaults && echo \"/osd/osd_journal_size <JOURNAL_SIZE>\" >>  /ceph.defaults && /entrypoint.sh populate_kvstore"
+fi
+
+# MON
 if docker ps -a | grep -q $CEPH_MON_DOCKER_NAME ; then
   echo "docker container $CEPH_MON_DOCKER_NAME exists, start it now"
   docker start $CEPH_MON_DOCKER_NAME
 else
   # Start the ceph monitor
   echo "docker container $CEPH_MON_DOCKER_NAME doesn't exist, run it now"
-  docker run -d --net=host \
+  docker run -d --restart=on-failure --net=host \
     --name $CEPH_MON_DOCKER_NAME \
     -v /etc/ceph:/etc/ceph \
     -v /var/lib/ceph/:/var/lib/ceph \
+    -e CLUSTER=$CEPH_CLUSTER_NAME \
     -e KV_TYPE=etcd \
     -e MON_IP=$ip_addr \
-    -e CEPH_PUBLIC_NETWORK=$ip_addr$(netmask_to_cidr $net_mask) \
-    ceph/daemon mon
+    -e CEPH_PUBLIC_NETWORK=$net_mask \
+    --entrypoint=/entrypoint.sh \
+    "$docker_hub"ceph/daemon mon
 fi
 
+# MDS
+if docker ps -a | grep -q $CEPH_MDS_DOCKER_NAME ; then
+  echo "docker container $CEPH_MDS_DOCKER_NAME exists, start it now"
+  docker start $CEPH_MDS_DOCKER_NAME
+else
+  # Start the ceph monitor
+  echo "docker container $CEPH_MDS_DOCKER_NAME doesn't exist, run it now"
+  docker run -d --restart=on-failure --net=host \
+    --name ceph_mds \
+    -e CLUSTER=$CEPH_CLUSTER_NAME \
+    -e CEPHFS_CREATE=1 \
+    -e KV_TYPE=etcd \
+    --entrypoint=/entrypoint.sh \
+    "$docker_hub"ceph/daemon mds
+fi

@@ -6,28 +6,34 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
-	tpcfg "github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/cloud-config-server/certgen"
+	tpcfg "github.com/k8sp/sextant/clusterdesc"
 	"github.com/topicai/candy"
 )
 
 // ExecutionConfig struct config a Coreos's cloud config file which use for installing Coreos in k8s cluster.
 type ExecutionConfig struct {
-	Hostname          string
-	IP                string
-	CephMonitor       bool
-	KubeMaster        bool
-	EtcdMember        bool
-	InitialCluster    string
-	SSHAuthorizedKeys string
-	EtcdEndpoints     string
-	MasterIP          string
-	MasterHostname    string
-	BootstrapperIP    string
-	CaCrt             string
-	Crt               string
-	Key               string
-	Dockerdomain      string
+	Hostname                 string
+	IP                       string
+	CephMonitor              bool
+	KubeMaster               bool
+	EtcdMember               bool
+	IngressLabel             bool
+	InitialCluster           string
+	SSHAuthorizedKeys        string
+	EtcdEndpoints            string
+	MasterIP                 string
+	MasterHostname           string
+	BootstrapperIP           string
+	CaCrt                    string
+	Crt                      string
+	Key                      string
+	Dockerdomain             string
+	K8sClusterDNS            string
+	K8sServiceClusterIPRange string
+	ZapAndStartOSD           bool
+	Images                   map[string]string
+	FlannelBackend           string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -43,22 +49,28 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 	}
 
 	ec := ExecutionConfig{
-		Hostname:          node.Hostname(),
-		CephMonitor:       node.CephMonitor,
-		KubeMaster:        node.KubeMaster,
-		EtcdMember:        node.EtcdMember,
-		InitialCluster:    config.InitialEtcdCluster(),
-		SSHAuthorizedKeys: config.SSHAuthorizedKeys,
-		MasterHostname:    config.GetMasterHostname(),
-		EtcdEndpoints:     config.GetEtcdEndpoints(),
-		BootstrapperIP:    config.Bootstrapper,
-		Dockerdomain:      config.Dockerdomain,
+		Hostname:                 node.Hostname(),
+		CephMonitor:              node.CephMonitor,
+		KubeMaster:               node.KubeMaster,
+		EtcdMember:               node.EtcdMember,
+		IngressLabel:             node.IngressLabel,
+		InitialCluster:           config.InitialEtcdCluster(),
+		SSHAuthorizedKeys:        config.SSHAuthorizedKeys,
+		MasterHostname:           config.GetMasterHostname(),
+		EtcdEndpoints:            config.GetEtcdEndpoints(),
+		BootstrapperIP:           config.Bootstrapper,
+		Dockerdomain:             config.Dockerdomain,
+		K8sClusterDNS:            config.K8sClusterDNS,
+		K8sServiceClusterIPRange: config.K8sServiceClusterIPRange,
+		ZapAndStartOSD:           config.Ceph.ZapAndStartOSD,
+		Images:                   config.Images,
 		// Mulit-line context in yaml should keep the indent,
 		// there is no good idea for templaet package to auto keep the indent so far,
 		// so insert 6*whitespace at the begging of every line
-		CaCrt: strings.Join(strings.Split(string(ca), "\n"), "\n      "),
-		Crt:   strings.Join(strings.Split(string(c), "\n"), "\n      "),
-		Key:   strings.Join(strings.Split(string(k), "\n"), "\n      "),
+		CaCrt:          strings.Join(strings.Split(string(ca), "\n"), "\n      "),
+		Crt:            strings.Join(strings.Split(string(c), "\n"), "\n      "),
+		Key:            strings.Join(strings.Split(string(k), "\n"), "\n      "),
+		FlannelBackend: config.FlannelBackend,
 	}
 	return tmpl.Execute(w, ec)
 }

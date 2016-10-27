@@ -9,8 +9,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/k8sp/auto-install/cloud-config-server/certgen"
-	tpcfg "github.com/k8sp/auto-install/config"
+	"github.com/k8sp/sextant/cloud-config-server/certgen"
+	"github.com/k8sp/sextant/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
@@ -26,14 +26,14 @@ func TestExecute(t *testing.T) {
 	}()
 	caKey, caCrt := certgen.GenerateRootCA(out)
 
-	config := candy.WithOpened("./unisound-ailab/build_config.yml", func(r io.Reader) interface{} {
+	config := candy.WithOpened("./cluster-desc.sample.yaml", func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
 
-		c := &tpcfg.Cluster{}
+		c := &clusterdesc.Cluster{}
 		assert.Nil(t, yaml.Unmarshal(b, &c))
 		return c
-	}).(*tpcfg.Cluster)
+	}).(*clusterdesc.Cluster)
 
 	tmpl, e := template.ParseFiles("cloud-config.template")
 	candy.Must(e)
