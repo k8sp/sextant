@@ -242,7 +242,8 @@ EOF
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static
-    rm -fr current
+    # Never change 'current' to 'current/', I beg you. 
+    rm -rf current > /dev/null 2>&1 
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
