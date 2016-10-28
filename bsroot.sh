@@ -242,6 +242,7 @@ EOF
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static
+    rm -fr current
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -346,15 +347,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-            -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
-            -config-file $BSROOT_IN/html/static/ingress.yaml || \
-            { echo 'Failed to generate ingress.yaml !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT_IN:$BSROOT_IN \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
@@ -364,6 +357,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT_IN:$BSROOT_IN \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
@@ -373,6 +367,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT_IN:$BSROOT_IN \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
@@ -382,6 +377,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT_IN:$BSROOT_IN \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
