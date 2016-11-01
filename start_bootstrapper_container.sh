@@ -3,7 +3,7 @@
 # start_bootstrapper_container.sh load docker image from bsroot and
 # then push them to registry
 if [[ "$#" -gt 1 ]]; then
-    echo "Usage: start_bootstrapper_contaienr.sh [bsroot-path]"
+    echo "Usage: start_bootstrapper_container.sh [bsroot-path]"
     exit 1
 elif [[ "$#" -ne 1 ]]; then
     BSROOT=/bsroot
