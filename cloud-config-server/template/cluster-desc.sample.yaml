@@ -13,9 +13,10 @@ k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
 # Flannel backend only support host-gw and udp for now.
 flannel_backend: "host-gw"
-# coreos_version can be configured as stable, alpha, beta, or a special version: 1120,
-# You can configurate coreos_version
-coreos_version: "stable"
+# coreos_channel can be configured as stable, alpha, beta
+coreos_channel: "stable"
+# coreos_version can be configured as the special version num or "current"
+coreos_version: "current"
 
 ceph:
   zap_and_start_osd: y
