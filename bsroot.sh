@@ -354,7 +354,6 @@ generate_addons_config() {
     [ ! -d $BSROOT/dnsmasq ] && mkdir  -p $BSROOT/dnsmasq
     QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
     SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
-    #BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
 
     docker run --rm -it \
             --volume $GOPATH:/go \
