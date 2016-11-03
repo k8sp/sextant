@@ -242,8 +242,8 @@ EOF
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static
-    # Never change 'current' to 'current/', I beg you. 
-    rm -rf current > /dev/null 2>&1 
+    # Never change 'current' to 'current/', I beg you.
+    rm -rf current > /dev/null 2>&1
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -341,6 +341,7 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
+    [ ! -d $BSROOT/dnsmasq ] && mkdir  -p $BSROOT/dnsmasq
     QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
     SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
     BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
