@@ -359,10 +359,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-<<<<<<< HEAD
             --volume $BSROOT:/bsroot \
-=======
->>>>>>> 46085f482e029b615273f9b3c8d4002772f0193f
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
@@ -372,10 +369,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-<<<<<<< HEAD
             --volume $BSROOT:/bsroot \
-=======
->>>>>>> 46085f482e029b615273f9b3c8d4002772f0193f
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
@@ -385,10 +379,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-<<<<<<< HEAD
             --volume $BSROOT:/bsroot \
-=======
->>>>>>> 46085f482e029b615273f9b3c8d4002772f0193f
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
@@ -398,10 +389,7 @@ generate_addons_config() {
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-<<<<<<< HEAD
             --volume $BSROOT:/bsroot \
-=======
->>>>>>> 46085f482e029b615273f9b3c8d4002772f0193f
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
