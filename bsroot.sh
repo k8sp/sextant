@@ -344,46 +344,46 @@ generate_addons_config() {
     [ ! -d $BSROOT/dnsmasq ] && mkdir  -p $BSROOT/dnsmasq
     QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
     SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
-    BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
+    #BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT_IN:$BSROOT_IN \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
-        -config-file $BSROOT_IN/html/static/ingress.yaml || \
+        -config-file /bsroot/html/static/ingress.yaml || \
         { echo 'Failed to generate ingress.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT_IN:$BSROOT_IN \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
-        -config-file $BSROOT_IN/html/static/skydns.yaml || \
+        -config-file /bsroot/html/static/skydns.yaml || \
         { echo 'Failed to generate skydns.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT_IN:$BSROOT_IN \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
-        -config-file $BSROOT_IN/html/static/skydns-service.yaml || \
+        -config-file /bsroot/html/static/skydns-service.yaml || \
         { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT_IN:$BSROOT_IN \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
-        -config-file $BSROOT_IN/config/dnsmasq.conf || \
+        -config-file /bsroot/config/dnsmasq.conf || \
         { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
 
     echo "Done"
