@@ -12,6 +12,8 @@ dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.10/24
 k8s_cluster_dns: 10.100.0.10
 flannel_backend: "host-gw"
+coreos_channel: "stable"
+coreos_version: "current"
 
 ceph:
   zap_and_start_osd: y
