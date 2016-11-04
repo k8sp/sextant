@@ -71,7 +71,6 @@ check_prerequisites() {
 
 download_pxe_images() {
     mkdir -p $BSROOT/tftpboot
-
     printf "Downloading syslinux ... "
     wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
@@ -88,15 +87,25 @@ download_pxe_images() {
     echo "Done"
 
     printf "Downloading CoreOS PXE vmlinuz image ... "
-    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
+    rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
+    rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz.sig $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CoreOS PXE CPIO image ... "
-    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot https://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
+    rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
+    rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz.sig $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     gpg --verify coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -146,6 +155,14 @@ EOF
     echo "Done"
 }
 
+check_coreos_version () {
+    printf "Checking the CoreOS version ... "
+    VERSION=$(curl -s https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
+    if [[ $VERSION == "" ]]; then
+        echo "Failed"; exit 1;
+    fi
+    echo "Done with coreos channel: " $cluster_desc_coreos_channel "version: " $VERSION
+}
 
 prepare_cc_server_contents() {
     printf "Generating Ceph installation scripts..."
@@ -156,7 +173,7 @@ prepare_cc_server_contents() {
     CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
     printf "$CEPH_DAEMON_IMAGE..."
     sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
-        sed "s/OSD_JOURNAL_SIZE=<JOURNAL_SIZE>/OSD_JOURNAL_SIZE=$OSD_JOURNAL_SIZE/g" \
+        sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
         > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
 
     sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
@@ -203,6 +220,9 @@ do
   do
      parted -s /dev/\${d} rm \${v_partition}
   done
+  # make sure to wipe out the GPT infomation, let ceph uses gdisk to init
+  dd if=/dev/zero of=/dev/\${d} bs=512 count=2
+  parted -s /dev/\${d} mklabel gpt
 done
 EOF
     fi
@@ -221,24 +241,19 @@ sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V c
 EOF
     echo "Done"
 
-    printf "Checking new CoreOS version ... "
-    VERSION=$(curl -s https://stable.release.core-os.net/amd64-usr/current/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
-    if [[ $VERSION == "" ]]; then
-        echo "Failed"; exit 1;
-    fi
-    echo "Done"
-
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
     fi
 
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/version.txt
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://stable.release.core-os.net/amd64-usr/current/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static/$VERSION
     gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/html/static
+    # Never change 'current' to 'current/', I beg you.
+    rm -rf current > /dev/null 2>&1
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -353,53 +368,48 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
+    [ ! -d $BSROOT/dnsmasq ] && mkdir  -p $BSROOT/dnsmasq
     QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
     SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
-    BSROOT_IN=$(echo $BSROOT | sed "s/$QUOTE_GOPATH/\/go/g")
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-            -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
-            -config-file $BSROOT_IN/html/static/ingress.yaml || \
-            { echo 'Failed to generate ingress.yaml !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
-        -config-file $BSROOT_IN/html/static/ingress.yaml || \
+        -config-file /bsroot/html/static/ingress.yaml || \
         { echo 'Failed to generate ingress.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
-        -config-file $BSROOT_IN/html/static/skydns.yaml || \
+        -config-file /bsroot/html/static/skydns.yaml || \
         { echo 'Failed to generate skydns.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
-        -config-file $BSROOT_IN/html/static/skydns-service.yaml || \
+        -config-file /bsroot/html/static/skydns-service.yaml || \
         { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
 
     docker run --rm -it \
             --volume $GOPATH:/go \
             --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
         -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
-        -config-file $BSROOT_IN/config/dnsmasq.conf || \
+        -config-file /bsroot/config/dnsmasq.conf || \
         { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
 
     echo "Done"
@@ -407,6 +417,7 @@ generate_addons_config() {
 
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
+check_coreos_version
 download_pxe_images
 generate_pxe_config
 generate_registry_config

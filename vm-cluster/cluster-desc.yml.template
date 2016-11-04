@@ -9,11 +9,15 @@ nameservers: [192.168.8.101]
 upstreamnameservers: [8.8.8.8, 8.8.4.4]
 domainname: "k8s.baifendian.com"
 dockerdomain: "bootstrapper"
-k8s_service_cluster_ip_range: 192.168.0.0/24
-k8s_cluster_dns: 192.168.0.10
+k8s_service_cluster_ip_range: 10.100.0.10/24
+k8s_cluster_dns: 10.100.0.10
+flannel_backend: "host-gw"
+coreos_channel: "stable"
+coreos_version: "current"
+
 ceph:
   zap_and_start_osd: y
-  osd_journal_size: 100
+  osd_journal_size: 500
 
 images:
   hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
