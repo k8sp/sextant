@@ -302,7 +302,7 @@ build_bootstrapper_image() {
     # Check cluster-desc file
     printf "Checking cluster description file ..."
     docker run --rm \
-        --volume $SEXTANT_DIR/bsroot:/bsroot \
+        --volume $BSROOT:/bsroot \
         --entrypoint "/bin/sh" \
         bootstrapper -c \
           "/cloud-config-server -addr :80 \
