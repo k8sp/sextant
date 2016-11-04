@@ -96,27 +96,46 @@ func validation(clusterDescFile string, ccTemplateFile string, caKey, caCrt, dir
 	}
 
 	// flannel backend only support host-gw and udp for now
-	if c.FlannelBackend != "host-gw" && c.FlannelBackend != "udp" {
+	if c.FlannelBackend != "host-gw" && c.FlannelBackend != "udp" && c.FlannelBackend != "vxlan" {
 		return errors.New("Flannl backend should be host-gw or udp.")
 	}
 
-	var ccTmpl bytes.Buffer
+	// Inlucde one master and one etcd member at least
+	countEtcdMember := 0
+	countKubeMaster := 0
+	for _, node := range c.Nodes {
+		if node.EtcdMember {
+			countEtcdMember++
+		}
+		if node.KubeMaster {
+			countKubeMaster++
+		}
+	}
+	if countEtcdMember == 0 || countKubeMaster == 0 {
+		return errors.New("Cluster description yaml should include one master and one etcd member at least.")
+	}
+
+	if len(c.SSHAuthorizedKeys) == 0 {
+		return errors.New("Cluster description yaml should include one ssh key.")
+	}
+
+	var ccTmplBuffer bytes.Buffer
 	var macList []string
 	macList = append(macList, "00:00:00:00:00:00")
 	for _, n := range c.Nodes {
 		macList = append(macList, n.Mac())
 	}
 	for _, mac := range macList {
-		err = cctemplate.Execute(tmpl, c, mac, caKey, caCrt, &ccTmpl)
+		err = cctemplate.Execute(tmpl, c, mac, caKey, caCrt, &ccTmplBuffer)
 		if err != nil {
 			return errors.New("Generate cloud-config failed with mac: " + mac + "\n" + err.Error())
 		}
 		yml := make(map[interface{}]interface{})
-		err = yaml.Unmarshal(ccTmpl.Bytes(), yml)
+		err = yaml.Unmarshal(ccTmplBuffer.Bytes(), yml)
 		if err != nil {
 			return errors.New("Generate cloud-config format failed with mac: " + mac + "\n" + err.Error())
 		}
-		ccTmpl.Reset()
+		ccTmplBuffer.Reset()
 	}
 	return nil
 }
