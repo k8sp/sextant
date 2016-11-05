@@ -34,6 +34,7 @@ type ExecutionConfig struct {
 	ZapAndStartOSD           bool
 	Images                   map[string]string
 	FlannelBackend           string
+	CoreOSUpdate             bool
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -71,6 +72,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Crt:            strings.Join(strings.Split(string(c), "\n"), "\n      "),
 		Key:            strings.Join(strings.Split(string(k), "\n"), "\n      "),
 		FlannelBackend: config.FlannelBackend,
+		CoreOSUpdate:   config.CoreOSUpdate,
 	}
 	return tmpl.Execute(w, ec)
 }
