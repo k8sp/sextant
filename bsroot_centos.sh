@@ -140,7 +140,7 @@ printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
 
 hostname_str=${mac_addr//:/-}
 
-echo "HOSTNAME=$hostname_str" >> /etc/sysconfig/network
+hostnamectl set-hostname $hostname_str
 EOF
     echo "Done"
 }
