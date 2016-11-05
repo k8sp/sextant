@@ -52,10 +52,77 @@ EOF
     echo "Done"
 }
 
+generate_kickstart_config() {
+    printf "Generating kickstart config ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/ks.cfg <<EOF
+#platform=x86, AMD64, or Intel EM64T
+#version=DEVEL
+# Install OS instead of upgrade
+install
+# Keyboard layouts
+keyboard 'us'
+# Root password
+rootpw --plaintext atlas
+# System timezone
+timezone Asia/Shanghai
+# Use network installation
+url --url="http://$BS_IP/static/CentOS7/dvd_content"
+# System language
+lang en_US
+# Firewall configuration
+firewall --disabled
+# System authorization information
+auth  --useshadow  --passalgo=sha512
+# Use text mode install
+text
+firstboot --disable
+# SELinux configuration
+selinux --disabled
+# Do not configure the X Window System
+skipx
+
+# Halt after installation
+reboot
+# System bootloader configuration
+bootloader --location=mbr
+# Clear the Master Boot Record
+zerombr
+# Partition clearing information
+clearpart --all
+# Disk partitioning information
+part / --fstype="xfs" --grow --ondisk=sda --size=1
+part /home --fstype="xfs" --ondisk=sda --size=40000
+part swap --fstype="swap" --ondisk=sda --size=30000
+
+repo --name=base --baseurl="http://mirrors.163.com/centos/7/os/x86_64/"
+network --onboot on --bootproto dhcp --noipv6
+
+%packages --ignoremissing
+@Base
+@Core
+%end
+
+
+%pre
+
+%end
+
+%post
+wget http://$BS_IP/static/CentOS7/provision.sh
+bash -x ./provision.sh | tee provision.log
+
+%end
+EOF
+    echo "Done"
+}
+
+
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 download_centos_images
 generate_pxe_centos_config
+generate_kickstart_config
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
