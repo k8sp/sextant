@@ -37,7 +37,6 @@ download_centos_images() {
 }
 
 
-
 generate_pxe_centos_config() {
     printf "Generating pxelinux.cfg ... "
     mkdir -p $BSROOT/tftpboot/pxelinux.cfg
@@ -51,6 +50,7 @@ label CentOS7
 EOF
     echo "Done"
 }
+
 
 generate_kickstart_config() {
     printf "Generating kickstart config ... "
@@ -118,11 +118,40 @@ EOF
 }
 
 
+generate_provision_script() {
+    printf "Generating provision script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/provision.sh <<EOF
+#!/bin/bash
+#Obtain devices
+devices=$(lsblk -l |awk '$6=="disk"{print $1}')
+# Zap all devices
+# NOTICE: dd zero to device mbr will not affect parted printed table,
+#         so use parted to remove the part tables
+
+default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
+
+printf "Default interface: ${default_iface}\n"
+default_iface=`echo ${default_iface} | awk '{ print $1 }'`
+
+mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
+printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
+
+hostname_str=${mac_addr//:/-}
+
+echo "HOSTNAME=$hostname_str" >> /etc/sysconfig/network
+EOF
+    echo "Done"
+}
+
+
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 download_centos_images
 generate_pxe_centos_config
 generate_kickstart_config
+generate_provision_script
+
 generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
