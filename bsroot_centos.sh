@@ -22,32 +22,17 @@ download_centos_images() {
     rm -rf syslinux-6.03 || { echo "Failed"; exit 1; } # Clean the untarred.
     echo "Done"
 
-    printf "Importing CoreOS signing key ... "
-    wget --quiet -c -N -P $BSROOT/tftpboot https://coreos.com/security/image-signing-key/CoreOS_Image_Signing_Key.asc || { echo "Failed"; exit 1; }
-    gpg --import --keyid-format LONG $BSROOT/tftpboot/CoreOS_Image_Signing_Key.asc > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
 
-    printf "Downloading CoreOS PXE vmlinuz image ... "
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
-    rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
-    rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz.sig $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    printf "Downloading CentOS 7 PXE vmlinuz image ... "
     cd $BSROOT/tftpboot
-    gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    mkdir -p $BSROOT/tftpboot/CentOS7
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.2.1511/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.2.1511/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Downloading CoreOS PXE CPIO image ... "
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
-    rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
-    rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz.sig $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    gpg --verify coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    printf "Downloading CentOS 7 ISO ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
@@ -57,11 +42,12 @@ generate_pxe_centos_config() {
     printf "Generating pxelinux.cfg ... "
     mkdir -p $BSROOT/tftpboot/pxelinux.cfg
     cat > $BSROOT/tftpboot/pxelinux.cfg/default <<EOF
-default coreos
+default CentOS7
 
-label coreos
-  kernel coreos_production_pxe.vmlinuz
-  append initrd=coreos_production_pxe_image.cpio.gz cloud-config-url=http://$BS_IP/static/cloud-config/install.sh coreos.autologin
+label CentOS7
+  menu label ^Install CentOS 7
+  kernel CentOS7/vmlinuz
+  append initrd=CentOS7/initrd.img ks=http://$BS_IP/static/CentOS7/ks.cfg
 EOF
     echo "Done"
 }
