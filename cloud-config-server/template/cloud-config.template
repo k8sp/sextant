@@ -245,11 +245,16 @@ coreos:
         {{- end }}
     flannel:
       etcd_endpoints: "{{ .EtcdEndpoints }}"
+    {{- if .CoreOSUpdate }}
     update:
         reboot-strategy: "etcd-lock"
     locksmith:
         window_start: "03:00"
         window_length: "3h"
+    {{- else }}
+    update:
+        reboot-strategy: "off"
+    {{- end }}
     units:
         - name: 00-eth0.network
           runtime: true
