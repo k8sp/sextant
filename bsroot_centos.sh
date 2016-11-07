@@ -8,7 +8,7 @@ if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
     exit 1
 fi
 
-source $SEXTANT_DIR/bsroot_common.sh
+source $(cd `dirname $0`; pwd)/bsroot_common.sh
 
 download_centos_images() {
     mkdir -p $BSROOT/tftpboot
@@ -33,6 +33,8 @@ download_centos_images() {
     printf "Downloading CentOS 7 ISO ... "
     mkdir -p $BSROOT/html/static/CentOS7
     wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso || { echo "Failed"; exit 1; }
+    mkdir -p $BSROOT/html/static/CentOS7/dvd_content
+    sudo umount $BSROOT/html/static/CentOS7/dvd_content
     sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -122,7 +124,7 @@ EOF
 generate_provision_script() {
     printf "Generating provision script ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/provision.sh <<EOF
+    cat > $BSROOT/html/static/CentOS7/provision.sh <<'EOF'
 #!/bin/bash
 #Obtain devices
 devices=$(lsblk -l |awk '$6=="disk"{print $1}')
