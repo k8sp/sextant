@@ -1,11 +1,11 @@
-bootstrapper: 10.10.10.192
-subnet: 10.10.10.0
+bootstrapper: 192.168.8.101
+subnet: 192.168.8.0
 netmask: 255.255.255.0
-iplow: 10.10.10.201
-iphigh: 10.10.10.220
-routers: [10.10.10.192]
-broadcast: 10.10.10.255
-nameservers: [10.10.10.192]
+iplow: 192.168.8.100
+iphigh: 192.168.8.220
+routers: [192.168.8.101]
+broadcast: 192.168.8.255
+nameservers: [192.168.8.192]
 upstreamnameservers: [8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
 dockerdomain: "bootstrapper"
@@ -19,8 +19,8 @@ coreos_channel: "stable"
 coreos_version: "current"
 # Coreos_update can configured as special status for os updated .
 # The default switch is shut, but you can be configured to opened,
-# Such as:  coreos_update: y/n
-coreos_update: n
+# Such as:  coreos_update: "etcd-lock"/"off"
+coreos_update: "off"
 
 ceph:
   zap_and_start_osd: y

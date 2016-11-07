@@ -34,7 +34,7 @@ type ExecutionConfig struct {
 	ZapAndStartOSD           bool
 	Images                   map[string]string
 	FlannelBackend           string
-	CoreOSUpdate             bool
+	CoreOSUpdate             string
 }
 
 // Execute returns the executed cloud-config template for a node with

@@ -42,7 +42,7 @@ type Cluster struct {
 	Ceph                     Ceph
 	Images                   map[string]string
 	FlannelBackend           string `yaml:"flannel_backend"`
-	CoreOSUpdate             bool   `yaml:"coreos_update"`
+	CoreOSUpdate             string `yaml:"coreos_update"`
 }
 
 // Ceph consists configs for ceph deploy

@@ -245,7 +245,7 @@ coreos:
         {{- end }}
     flannel:
       etcd_endpoints: "{{ .EtcdEndpoints }}"
-    {{- if .CoreOSUpdate }}
+    {{- if ne.CoreOSUpdate  "off" }}
     update:
         reboot-strategy: "etcd-lock"
     locksmith:
