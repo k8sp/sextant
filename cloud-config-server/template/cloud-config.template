@@ -32,7 +32,7 @@ write_files:
     owner: root
     permissions: 0600
     content: |
-      FLANNELD_IFACE=${DEFAULT_IPV4}
+      FLANNELD_IFACE={{ .FlannelIface }}
       FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
 
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
@@ -155,6 +155,12 @@ write_files:
               name: ssl-certs-host
               readOnly: true
   {{- else }}
+  - path: /run/flannel/options.env
+    owner: root
+    permissions: 0600
+    content: |
+      FLANNELD_IFACE={{ .FlannelIface }}
+      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
   - path: /etc/kubernetes/ssl/worker.pem
     owner: root
     permissions: 0600
@@ -442,12 +448,6 @@ coreos:
             --hostname-override={{ .MasterHostname }} \
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local \
-            {{ if .IngressLabel }}
-            --logtostderr=true \
-            --node-labels=role=ingress
-            {{ else }}
-            --logtostderr=true
-            {{ end }}
             Restart=always
             RestartSec=10
             [Install]
@@ -479,7 +479,12 @@ coreos:
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+            {{ if .IngressLabel }}
             --logtostderr=true \
+            --node-labels=role=ingress
+            {{ else }}
+            --logtostderr=true
+            {{ end }}
             --network-plugin= \
             --network-plugin-dir=/etc/cni/net.d
             Restart=always

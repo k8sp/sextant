@@ -47,11 +47,12 @@ type Cluster struct {
 
 // Coreos defines the system related operations, such as: system updates.
 type CoreOS struct {
-         OsUpdate        string  `yaml:"os_update"`
-         RebootStrategy  string  `yaml:"reboot_strategy"`
-         StartTime       string  `yaml:"start_time"`
-         TimeLength      string  `yaml:"time_length"`
+	OsUpdate       string `yaml:"os_update"`
+	RebootStrategy string `yaml:"reboot_strategy"`
+	StartTime      string `yaml:"start_time"`
+	TimeLength     string `yaml:"time_length"`
 }
+
 // Ceph consists configs for ceph deploy
 type Ceph struct {
 	ZapAndStartOSD bool `yaml:"zap_and_start_osd"`
@@ -68,9 +69,10 @@ type Ceph struct {
 type Node struct {
 	MAC          string
 	IngressLabel bool
-	CephMonitor  bool `yaml:"ceph_monitor"`
-	KubeMaster   bool `yaml:"kube_master"`
-	EtcdMember   bool `yaml:"etcd_member"`
+	CephMonitor  bool   `yaml:"ceph_monitor"`
+	KubeMaster   bool   `yaml:"kube_master"`
+	EtcdMember   bool   `yaml:"etcd_member"`
+	FlannelIface string `yaml:"flannel_iface"`
 }
 
 // Join is defined as a method of Cluster, so can be called in

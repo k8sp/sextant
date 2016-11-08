@@ -19,6 +19,7 @@ type ExecutionConfig struct {
 	KubeMaster               bool
 	EtcdMember               bool
 	IngressLabel             bool
+	FlannelIface             string
 	InitialCluster           string
 	SSHAuthorizedKeys        string
 	EtcdEndpoints            string
@@ -58,6 +59,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		KubeMaster:               node.KubeMaster,
 		EtcdMember:               node.EtcdMember,
 		IngressLabel:             node.IngressLabel,
+		FlannelIface:             node.FlannelIface,
 		InitialCluster:           config.InitialEtcdCluster(),
 		SSHAuthorizedKeys:        config.SSHAuthorizedKeys,
 		MasterHostname:           config.GetMasterHostname(),
