@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 
-# Stolen from https://gist.github.com/pkuczynski/8665367 shamelessly by Yi.
+# check_prerequisites checks for required software packages.
+function check_prerequisites() {
+    printf "Checking prerequisites ... "
+    local err=0
+    for tool in wget tar gpg docker tr go make; do
+        command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
+    done
+    if [[ $err -ne 0 ]]; then
+        exit 1
+    fi
+    echo "Done"
+}
+
+# parse_yaml was shamelessly stolen from
+# https://gist.github.com/pkuczynski/8665367.  It encapsulates a AWK
+# script which converts a .yaml file into a .bash file, where each
+# bash variable corresponds to a key-value pair in the .yaml file.
+# 
+# For example, the following invocation generates parseResult.bash,
+# where every bash variable's name is composed of the prefix,
+# cluster_desc_, and the key name (including all its ancestor keys).
+# 
+#    parse_yaml example.yaml "cluster_desc_" > parseResult.bash
+# 
 function parse_yaml() {
     local yaml=$1
     local prefix=$2
@@ -20,6 +43,14 @@ function parse_yaml() {
     }' | sed 's/_=/+=/g'
 }
 
+# load_yaml calls parse_yaml to convert a .yaml file into a temporary
+# .bash file, run the temporary .bash file, and delete it.  So we will
+# have bash variables defined and whose values are values in the .yaml
+# file.  For example, the following invocation creates some bash
+# variables, each corresponds to a key-value pair in the .yaml file.
+#
+#   load_yaml example.yaml "cluster_desc_"
+# 
 function load_yaml() {
     local yaml=$1
     local prefix=$2
