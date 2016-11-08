@@ -245,14 +245,14 @@ coreos:
         {{- end }}
     flannel:
       etcd_endpoints: "{{ .EtcdEndpoints }}"
-    {{- if eq .OSUpdate  "on" }}
+    {{- if eq .OsUpdate  "on" }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
     locksmith:
         window_start: {{ .StartTime }}
         window_length: {{ .TimeLength }}
     {{- else }}
-    {{- if ne .OSUpdate  "off" }}
+    {{- if ne .OsUpdate  "off" }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
     {{- end }}
