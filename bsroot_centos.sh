@@ -11,6 +11,7 @@ fi
 source $(cd `dirname $0`; pwd)/bsroot_common.sh
 
 download_centos_images() {
+    VERSION=CentOS7
     mkdir -p $BSROOT/tftpboot
     printf "Downloading syslinux ... "
     wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
@@ -33,9 +34,6 @@ download_centos_images() {
     printf "Downloading CentOS 7 ISO ... "
     mkdir -p $BSROOT/html/static/CentOS7
     wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso || { echo "Failed"; exit 1; }
-    mkdir -p $BSROOT/html/static/CentOS7/dvd_content
-    sudo umount $BSROOT/html/static/CentOS7/dvd_content
-    sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Failed"; exit 1; }
     echo "Done"
 }
 

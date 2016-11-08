@@ -21,6 +21,12 @@ if [[ $BSROOT != /* ]]; then
   exit 1
 fi
 
+if [[ -e "$BSROOT/html/static/current/CentOS-7-x86_64-DVD-1511.iso" ]]; then
+    mkdir -p $BSROOT/html/static/CentOS7/dvd_content
+    sudo umount $BSROOT/html/static/CentOS7/dvd_content
+    sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
+fi
+
 # Config Registry tls
 mkdir -p /etc/docker/certs.d/bootstrapper:5000
 rm -rf /etc/docker/certs.d/bootstrapper:5000/*
