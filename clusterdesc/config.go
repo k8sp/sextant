@@ -42,7 +42,7 @@ type Cluster struct {
 	Ceph                     Ceph
 	Images                   map[string]string
 	FlannelBackend           string `yaml:"flannel_backend"`
-	CoreOS                   []CoreOS
+	CoreOS                   CoreOS
 }
 
 // Coreos defines the system related operations, such as: system updates.
