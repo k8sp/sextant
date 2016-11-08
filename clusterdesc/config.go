@@ -42,9 +42,16 @@ type Cluster struct {
 	Ceph                     Ceph
 	Images                   map[string]string
 	FlannelBackend           string `yaml:"flannel_backend"`
-	CoreOSUpdate             string `yaml:"coreos_update"`
+	CoreOS                   []CoreOS
 }
 
+// Coreos defines the system related operations, such as: system updates.
+type CoreOS struct {
+         OsUpdate        string  `yaml:"os_update"`
+         RebootStrategy  string  `yaml:"reboot_strategy"`
+         StartTime       string  `yaml:"start_time"`
+         TimeLength      string  `yaml:"time_length"`
+}
 // Ceph consists configs for ceph deploy
 type Ceph struct {
 	ZapAndStartOSD bool `yaml:"zap_and_start_osd"`

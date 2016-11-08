@@ -17,11 +17,17 @@ flannel_backend: "host-gw"
 coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "current"
-# Coreos_update can configured as special status for os updated .
-# The default switch is shut, but you can be configured to opened,
-# Such as:  coreos_update: "etcd-lock"/"off"
-coreos_update: "off"
 
+coreos:
+  - os_update: "on"
+    reboot_strategy: "etcd-lock"
+    start_time: "03:00"
+    time_length: "3h"
+  # - os_update: "off"
+  #   reboot_strategy: "off"
+  #   start_time: "off"
+  #   time_length: "off"
+      
 ceph:
   zap_and_start_osd: y
   osd_journal_size: 100

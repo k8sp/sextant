@@ -20,7 +20,7 @@ sed -e 's#<SSH_KEY>#'"$PUB_KEY"'#' $SEXTANT_DIR/vm-cluster/cluster-desc.yml.temp
 
 # Generate $SEXTANT_DIR/bsroot
 cd $SEXTANT_DIR
-./bsroot.sh $SEXTANT_DIR/cluster-desc.yml
+./bsroot.sh $SEXTANT_DIR/cluster-desc.yml ~/broot
 
 # Put SSH keys into $SEXTANT_DIR/bsroot, which will be mounted to the bootstrapper VM.
 mkdir -p $SEXTANT_DIR/bsroot/vm-keys
