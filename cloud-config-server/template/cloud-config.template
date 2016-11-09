@@ -32,8 +32,13 @@ write_files:
     owner: root
     permissions: 0600
     content: |
+      {{- if .FlannelIface }}
       FLANNELD_IFACE={{ .FlannelIface }}
       FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- else }}
+      FLANNELD_IFACE=${DEFAULT_IPV4}
+      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- end }}
 
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
     owner: root
@@ -159,8 +164,13 @@ write_files:
     owner: root
     permissions: 0600
     content: |
-      FLANNELD_IFACE={{ .FlannelIface }}
-      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+    {{- if .FlannelIface }}
+    FLANNELD_IFACE={{ .FlannelIface }}
+    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+    {{- else }}
+    FLANNELD_IFACE=${DEFAULT_IPV4}
+    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+    {{- end }}
   - path: /etc/kubernetes/ssl/worker.pem
     owner: root
     permissions: 0600
@@ -251,14 +261,14 @@ coreos:
         {{- end }}
     flannel:
       etcd_endpoints: "{{ .EtcdEndpoints }}"
-    {{- if eq .OsUpdate  "on" }}
+    {{- if eq .OSUpdate  "on" }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
     locksmith:
         window_start: {{ .StartTime }}
         window_length: {{ .TimeLength }}
     {{- else }}
-    {{- if ne .OsUpdate  "off" }}
+    {{- if ne .OSUpdate  "off" }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
     {{- end }}
@@ -481,9 +491,9 @@ coreos:
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
             {{ if .IngressLabel }}
             --logtostderr=true \
-            --node-labels=role=ingress
+            --node-labels=role=ingress \
             {{ else }}
-            --logtostderr=true
+            --logtostderr=true \
             {{ end }}
             --network-plugin= \
             --network-plugin-dir=/etc/cni/net.d

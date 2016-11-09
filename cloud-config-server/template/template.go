@@ -35,7 +35,7 @@ type ExecutionConfig struct {
 	ZapAndStartOSD           bool
 	Images                   map[string]string
 	FlannelBackend           string
-	OsUpdate                 string
+	OSUpdate                 string
 	RebootStrategy           string
 	StartTime                string
 	TimeLength               string
@@ -77,7 +77,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		Crt:            strings.Join(strings.Split(string(c), "\n"), "\n      "),
 		Key:            strings.Join(strings.Split(string(k), "\n"), "\n      "),
 		FlannelBackend: config.FlannelBackend,
-		OsUpdate:       config.CoreOS.OsUpdate,
+		OSUpdate:       config.CoreOS.OSUpdate,
 		RebootStrategy: config.CoreOS.RebootStrategy,
 		StartTime:      config.CoreOS.StartTime,
 		TimeLength:     config.CoreOS.TimeLength,
