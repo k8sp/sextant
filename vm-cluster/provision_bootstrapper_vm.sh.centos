@@ -14,9 +14,7 @@ cd /bsroot
 echo "nameserver 192.168.8.101" > /etc/resolv.conf
 echo "domain k8s.baifendian.com" >> /etc/resolv.conf
 
-mkdir -p /var/pxe/CentOS7
 mount -t iso9660 -o loop /bsroot/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso /bsroot/html/static/CentOS7/dvd_content
 
-cp /var/pxe/CentOS7/images/pxeboot/vmlinuz /bsroot/tftpboot/CentOS7
-cp /var/pxe/CentOS7/images/pxeboot/initrd.img /bsroot/tftpboot/CentOS7
-cp /usr/share/syslinux/menu.c32 /bsroot/tftpboot
+cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/vmlinuz /bsroot/tftpboot/CentOS7
+cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/initrd.img /bsroot/tftpboot/CentOS7
