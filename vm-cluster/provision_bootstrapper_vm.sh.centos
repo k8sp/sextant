@@ -8,13 +8,12 @@ cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
 #修复无法找到pxe　server的异常
 sed -i '/interface=eth0/,/bind-interfaces/d' /bsroot/config/dnsmasq.conf
+mount -t iso9660 -o loop /bsroot/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso /bsroot/html/static/CentOS7/dvd_content
+
+cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/vmlinuz /bsroot/tftpboot/CentOS7
+cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/initrd.img /bsroot/tftpboot/CentOS7
 
 cd /bsroot
 ./start_bootstrapper_container.sh /bsroot
 echo "nameserver 192.168.8.101" > /etc/resolv.conf
 echo "domain k8s.baifendian.com" >> /etc/resolv.conf
-
-mount -t iso9660 -o loop /bsroot/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso /bsroot/html/static/CentOS7/dvd_content
-
-cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/vmlinuz /bsroot/tftpboot/CentOS7
-cp /bsroot/html/static/CentOS7/dvd_content/images/pxeboot/initrd.img /bsroot/tftpboot/CentOS7
