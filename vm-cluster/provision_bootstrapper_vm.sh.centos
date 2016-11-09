@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Copy VM keys out from /bsroot/vm-keys.
+mkdir -p /root/.ssh
+rm -rf /root/.ssh/*
+cp /bsroot/vm-keys/* /root/.ssh
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
+#修复无法找到pxe　server的异常
+sed -i '/interface=eth0/,/bind-interfaces/d' /bsroot/config/dnsmasq.conf
+
+cd /bsroot
+./start_bootstrapper_container.sh /bsroot
+echo "nameserver 192.168.8.101" > /etc/resolv.conf
+echo "domain k8s.baifendian.com" >> /etc/resolv.conf
+
+mkdir -p /var/pxe/CentOS7
+mount -t iso9660 -o loop /bsroot/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso /bsroot/html/static/CentOS7/dvd_content
+
+cp /var/pxe/CentOS7/images/pxeboot/vmlinuz /bsroot/tftpboot/CentOS7
+cp /var/pxe/CentOS7/images/pxeboot/initrd.img /bsroot/tftpboot/CentOS7
+cp /usr/share/syslinux/menu.c32 /bsroot/tftpboot
