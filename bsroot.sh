@@ -144,9 +144,7 @@ EOF
 
 check_coreos_version () {
     printf "Checking the CoreOS version ... "
-    VERSION=1185.3.0
-    echo "$VERSION"
-    #VERSION=$(curl -s https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
+    VERSION=$(curl -s https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt | grep 'COREOS_VERSION=' | cut -f 2 -d '=')
     if [[ $VERSION == "" ]]; then
         echo "Failed"; exit 1;
     fi
