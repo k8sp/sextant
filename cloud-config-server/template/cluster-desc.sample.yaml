@@ -1,11 +1,11 @@
-bootstrapper: 10.10.10.192
-subnet: 10.10.10.0
+bootstrapper: 192.168.8.101
+subnet: 192.168.8.0
 netmask: 255.255.255.0
-iplow: 10.10.10.201
-iphigh: 10.10.10.220
-routers: [10.10.10.192]
-broadcast: 10.10.10.255
-nameservers: [10.10.10.192]
+iplow: 192.168.8.100
+iphigh: 192.168.8.220
+routers: [192.168.8.101]
+broadcast: 192.168.8.255
+nameservers: [192.168.8.192]
 upstreamnameservers: [8.8.8.8, 8.8.4.4]
 domainname: "ailab.unisound.com"
 dockerdomain: "bootstrapper"
@@ -17,10 +17,16 @@ flannel_backend: "host-gw"
 coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "current"
-# Coreos_update can configured as special status for os updated .
-# The default switch is shut, but you can be configured to opened,
-# Such as:  coreos_update: y/n
-coreos_update: n
+
+coreos:
+  os_update: "on"
+  reboot_strategy: "etcd-lock"
+  start_time: "03:00"
+  time_length: "3h"
+  # os_update: "off"
+  # reboot_strategy: "off"
+  # start_time: "off"
+  # time_length: "off"
 
 ceph:
   zap_and_start_osd: y
@@ -43,26 +49,31 @@ nodes:
     kube_master: y
     etcd_member: y
     ingress_label: n
+    #flannel_iface: "eth0"
   - mac: "00:25:90:c0:f6:ee"
     ceph_monitor: y
     kube_master: n
     etcd_member: y
     ingress_label: n
+    flannel_iface: "eth0"
   - mac: "00:25:90:c0:f6:d6"
     ceph_monitor: y
     kube_master: n
     etcd_member: y
     ingress_label: n
+    flannel_iface: "eth0"
   - mac: "00:25:90:c0:f7:ac"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: n
+    flannel_iface: "eth0"
   - mac: "00:25:90:c0:f7:7e"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: y
+    flannel_iface: "eth0"
 
 ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"

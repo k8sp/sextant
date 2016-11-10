@@ -32,8 +32,13 @@ write_files:
     owner: root
     permissions: 0600
     content: |
+      {{- if .FlannelIface }}
+      FLANNELD_IFACE={{ .FlannelIface }}
+      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- else }}
       FLANNELD_IFACE=${DEFAULT_IPV4}
       FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- end }}
 
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
     owner: root
@@ -155,6 +160,17 @@ write_files:
               name: ssl-certs-host
               readOnly: true
   {{- else }}
+  - path: /run/flannel/options.env
+    owner: root
+    permissions: 0600
+    content: |
+    {{- if .FlannelIface }}
+    FLANNELD_IFACE={{ .FlannelIface }}
+    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+    {{- else }}
+    FLANNELD_IFACE=${DEFAULT_IPV4}
+    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+    {{- end }}
   - path: /etc/kubernetes/ssl/worker.pem
     owner: root
     permissions: 0600
@@ -245,15 +261,17 @@ coreos:
         {{- end }}
     flannel:
       etcd_endpoints: "{{ .EtcdEndpoints }}"
-    {{- if .CoreOSUpdate }}
+    {{- if eq .OSUpdate  "on" }}
     update:
-        reboot-strategy: "etcd-lock"
+        reboot-strategy: {{ .RebootStrategy }}
     locksmith:
-        window_start: "03:00"
-        window_length: "3h"
+        window_start: {{ .StartTime }}
+        window_length: {{ .TimeLength }}
     {{- else }}
+    {{- if ne .OSUpdate  "off" }}
     update:
-        reboot-strategy: "off"
+        reboot-strategy: {{ .RebootStrategy }}
+    {{- end }}
     {{- end }}
     units:
         - name: 00-eth0.network
@@ -440,12 +458,6 @@ coreos:
             --hostname-override={{ .MasterHostname }} \
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local \
-            {{ if .IngressLabel }}
-            --logtostderr=true \
-            --node-labels=role=ingress
-            {{ else }}
-            --logtostderr=true
-            {{ end }}
             Restart=always
             RestartSec=10
             [Install]
@@ -477,7 +489,12 @@ coreos:
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+            {{ if .IngressLabel }}
             --logtostderr=true \
+            --node-labels=role=ingress \
+            {{ else }}
+            --logtostderr=true \
+            {{ end }}
             --network-plugin= \
             --network-plugin-dir=/etc/cni/net.d
             Restart=always
