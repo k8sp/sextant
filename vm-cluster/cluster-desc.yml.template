@@ -23,10 +23,6 @@ coreos:
   reboot_strategy: "etcd-lock"
   start_time: "03:00"
   time_length: "3h"
-  # os_update: "off"
-  # reboot_strategy: "off"
-  # start_time: "off"
-  # time_length: "off"
 
 ceph:
   zap_and_start_osd: y
@@ -49,7 +45,7 @@ nodes:
     kube_master: y
     etcd_member: y
     ingress_label: n
-    #flannel_iface: "eth0"
+    flannel_iface: "eth0"
   - mac: "00:25:90:c0:f6:ee"
     ceph_monitor: y
     kube_master: n

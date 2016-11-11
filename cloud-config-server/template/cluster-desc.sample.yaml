@@ -23,14 +23,10 @@ coreos:
   reboot_strategy: "etcd-lock"
   start_time: "03:00"
   time_length: "3h"
-  # os_update: "off"
-  # reboot_strategy: "off"
-  # start_time: "off"
-  # time_length: "off"
 
 ceph:
   zap_and_start_osd: y
-  osd_journal_size: 100
+  osd_journal_size: 500
 
 images:
   hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"

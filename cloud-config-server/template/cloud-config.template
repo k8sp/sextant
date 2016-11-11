@@ -17,6 +17,17 @@ write_files:
     content: |
       127.0.0.1 localhost
       {{ .BootstrapperIP }} {{ .Dockerdomain }}
+  - path: /run/flannel/options.env
+    owner: root
+    permissions: 0600
+    content: |
+      {{- if .FlannelIface }}
+        FLANNELD_IFACE={{ .FlannelIface }}
+        FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- else }}
+        FLANNELD_IFACE=${DEFAULT_IPV4}
+        FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
+      {{- end }}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem
     owner: core
@@ -28,18 +39,6 @@ write_files:
     permissions: 0600
     content: |
       {{ .Key }}
-  - path: /run/flannel/options.env
-    owner: root
-    permissions: 0600
-    content: |
-      {{- if .FlannelIface }}
-      FLANNELD_IFACE={{ .FlannelIface }}
-      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
-      {{- else }}
-      FLANNELD_IFACE=${DEFAULT_IPV4}
-      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
-      {{- end }}
-
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
     owner: root
     permissions: 0644
@@ -160,17 +159,6 @@ write_files:
               name: ssl-certs-host
               readOnly: true
   {{- else }}
-  - path: /run/flannel/options.env
-    owner: root
-    permissions: 0600
-    content: |
-    {{- if .FlannelIface }}
-    FLANNELD_IFACE={{ .FlannelIface }}
-    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
-    {{- else }}
-    FLANNELD_IFACE=${DEFAULT_IPV4}
-    FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
-    {{- end }}
   - path: /etc/kubernetes/ssl/worker.pem
     owner: root
     permissions: 0600
@@ -268,10 +256,8 @@ coreos:
         window_start: {{ .StartTime }}
         window_length: {{ .TimeLength }}
     {{- else }}
-    {{- if ne .OSUpdate  "off" }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
-    {{- end }}
     {{- end }}
     units:
         - name: 00-eth0.network
