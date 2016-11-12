@@ -28,13 +28,6 @@ write_files:
     permissions: 0600
     content: |
       {{ .Key }}
-  - path: /run/flannel/options.env
-    owner: root
-    permissions: 0600
-    content: |
-      FLANNELD_IFACE=${DEFAULT_IPV4}
-      FLANNELD_ETCD_ENDPOINTS={{ .EtcdEndpoints }}
-
   - path: /etc/kubernetes/manifests/kubernetes_master.manifest
     owner: root
     permissions: 0644
@@ -244,16 +237,22 @@ coreos:
         proxy: on
         {{- end }}
     flannel:
-      etcd_endpoints: "{{ .EtcdEndpoints }}"
-    {{- if .CoreOSUpdate }}
+    {{- if .FlannelIface }}
+        interface: "{{ .FlannelIface }}"
+        etcd_endpoints: "{{ .EtcdEndpoints }}"
+    {{- else }}
+        interface: "${DEFAULT_IPV4}"
+        etcd_endpoints: "{{ .EtcdEndpoints }}"
+    {{- end }}
+    {{- if eq .OSUpdate  "on" }}
     update:
-        reboot-strategy: "etcd-lock"
+        reboot-strategy: {{ .RebootStrategy }}
     locksmith:
-        window_start: "03:00"
-        window_length: "3h"
+        window_start: {{ .StartTime }}
+        window_length: {{ .TimeLength }}
     {{- else }}
     update:
-        reboot-strategy: "off"
+        reboot-strategy: {{ .RebootStrategy }}
     {{- end }}
     units:
         - name: 00-eth0.network
@@ -440,12 +439,6 @@ coreos:
             --hostname-override={{ .MasterHostname }} \
             --cluster-dns={{ .K8sClusterDNS }} \
             --cluster-domain=cluster.local \
-            {{ if .IngressLabel }}
-            --logtostderr=true \
-            --node-labels=role=ingress
-            {{ else }}
-            --logtostderr=true
-            {{ end }}
             Restart=always
             RestartSec=10
             [Install]
@@ -477,7 +470,12 @@ coreos:
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+            {{ if .IngressLabel }}
             --logtostderr=true \
+            --node-labels=role=ingress \
+            {{ else }}
+            --logtostderr=true \
+            {{ end }}
             --network-plugin= \
             --network-plugin-dir=/etc/cni/net.d
             Restart=always
