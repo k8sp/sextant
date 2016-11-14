@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # start dnsmasq
-dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf
+dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf \
+  --dhcp-leasefile=/bsroot/dnsmasq/dnsmasq.leases
 
 # start cloud-config-server
 /cloud-config-server -addr ":80" \
