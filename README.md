@@ -2,7 +2,7 @@
 
 # sextant
 sextant 提供了可以通过PXE全自动化安装初始化一个CoreOS+kubernetes集群。
-![logo](logo/Sextant.png =250x "Sextant Logo")
+<img src="logo/Sextant.png" width="250">
 
 ## 环境准备
 bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，满足以下的几个要求：
