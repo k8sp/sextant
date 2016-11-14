@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/k8sp/sextant.svg?branch=master)](https://travis-ci.org/k8sp/sextant.svg?branch=master)
 
 # sextant
-sextant 提供了可以通过PXE全自动化安装初始化一个CoreOS+kubernetes集群。
 <img src="logo/Sextant.png" width="250">
+
+sextant 提供了可以通过PXE全自动化安装初始化一个CoreOS+kubernetes集群。
 
 ## 环境准备
 bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，满足以下的几个要求：
