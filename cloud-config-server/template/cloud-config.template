@@ -244,15 +244,15 @@ coreos:
         interface: "${DEFAULT_IPV4}"
         etcd_endpoints: "{{ .EtcdEndpoints }}"
     {{- end }}
-    {{- if eq .OSUpdate  "on" }}
+    {{- if eq .RebootStrategy "off" }}
+    update:
+        reboot-strategy: {{ .RebootStrategy }}
+    {{- else }}
     update:
         reboot-strategy: {{ .RebootStrategy }}
     locksmith:
         window_start: {{ .StartTime }}
         window_length: {{ .TimeLength }}
-    {{- else }}
-    update:
-        reboot-strategy: {{ .RebootStrategy }}
     {{- end }}
     units:
         - name: 00-eth0.network
