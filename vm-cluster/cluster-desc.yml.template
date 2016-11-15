@@ -1,7 +1,7 @@
 bootstrapper: 192.168.8.101
 subnet: 192.168.8.0
 netmask: 255.255.255.0
-iplow: 192.168.8.100
+iplow: 192.168.8.110
 iphigh: 192.168.8.220
 routers: [192.168.8.101]
 broadcast: 192.168.8.255
