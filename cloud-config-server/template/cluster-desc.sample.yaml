@@ -19,7 +19,6 @@ coreos_channel: "stable"
 coreos_version: "current"
 
 coreos:
-  os_update: "on"
   reboot_strategy: "etcd-lock"
   start_time: "03:00"
   time_length: "3h"

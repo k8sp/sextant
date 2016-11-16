@@ -45,9 +45,8 @@ type Cluster struct {
 	CoreOS                   CoreOS
 }
 
-// Coreos defines the system related operations, such as: system updates.
+// CoreOS defines the system related operations, such as: system updates.
 type CoreOS struct {
-	OSUpdate       string `yaml:"os_update"`
 	RebootStrategy string `yaml:"reboot_strategy"`
 	StartTime      string `yaml:"start_time"`
 	TimeLength     string `yaml:"time_length"`
