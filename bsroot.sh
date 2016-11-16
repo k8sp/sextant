@@ -2,7 +2,6 @@
 
 # bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
 # scp-ed to the bootstrapper server as /bsroot.
-
 if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
     echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
     exit 1
@@ -74,13 +73,14 @@ download_pxe_images() {
     echo "Done"
 
     printf "Downloading CoreOS PXE vmlinuz image ... "
+    cd $BSROOT/tftpboot/
     wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz || { echo "Failed"; exit 1; }
     rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz $BSROOT/tftpboot/coreos_production_pxe.vmlinuz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s ../html/static/$VERSION/coreos_production_pxe.vmlinuz ./ > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 
     wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe.vmlinuz.sig || { echo "Failed"; exit 1; }
     rm -f $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe.vmlinuz.sig $BSROOT/tftpboot/coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s ../html/static/$VERSION/coreos_production_pxe.vmlinuz.sig ./ > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     gpg --verify coreos_production_pxe.vmlinuz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
@@ -88,11 +88,11 @@ download_pxe_images() {
     printf "Downloading CoreOS PXE CPIO image ... "
     wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz || { echo "Failed"; exit 1; }
     rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s ../html/static/$VERSION/coreos_production_pxe_image.cpio.gz ./  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
 
     wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$VERSION/coreos_production_pxe_image.cpio.gz.sig || { echo "Failed"; exit 1; }
     rm -f $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    ln -s $BSROOT/html/static/$VERSION/coreos_production_pxe_image.cpio.gz.sig $BSROOT/tftpboot/coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    ln -s ../html/static/$VERSION/coreos_production_pxe_image.cpio.gz.sig ./ > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     gpg --verify coreos_production_pxe_image.cpio.gz.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }

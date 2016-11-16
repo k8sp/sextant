@@ -1,4 +1,5 @@
-FROM golang:alpine
+FROM alpine
+#FROM golang:alpine
 
 # Install required software packages.
 RUN set -ex && \
