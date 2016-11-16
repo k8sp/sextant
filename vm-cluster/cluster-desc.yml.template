@@ -44,7 +44,6 @@ nodes:
     kube_master: y
     etcd_member: y
     ingress_label: n
-    flannel_iface: "eth0"
 
 ssh_authorized_keys: |1+
     - "<SSH_KEY>"

@@ -241,7 +241,6 @@ coreos:
         interface: "{{ .FlannelIface }}"
         etcd_endpoints: "{{ .EtcdEndpoints }}"
     {{- else }}
-        interface: "${DEFAULT_IPV4}"
         etcd_endpoints: "{{ .EtcdEndpoints }}"
     {{- end }}
     {{- if eq .RebootStrategy "off" }}
