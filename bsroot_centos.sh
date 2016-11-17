@@ -93,7 +93,6 @@ zerombr
 clearpart --all
 # Disk partitioning information
 part / --fstype="xfs" --grow --ondisk=sda --size=1
-part /home --fstype="xfs" --ondisk=sda --size=40000
 part swap --fstype="swap" --ondisk=sda --size=30000
 
 repo --name=base --baseurl="http://mirrors.163.com/centos/7/os/x86_64/"
@@ -109,20 +108,35 @@ network --onboot on --bootproto dhcp --noipv6
 
 %end
 
-%post
-wget http://$BS_IP/static/CentOS7/provision.sh
-bash -x ./provision.sh | tee provision.log
-
+%post --log=/root/ks-post-provision.log
+wget -P /root http://$BS_IP/static/CentOS7/post_provision.sh
+bash -x /root/post_provision.sh
 %end
+
+%post --nochroot
+wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
+bash -x ./post_nochroot_provision.sh
+%end
+
 EOF
     echo "Done"
 }
 
 
-generate_provision_script() {
-    printf "Generating provision script ... "
+generate_post_provision_script() {
+    printf "Generating post provision script ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/provision.sh <<'EOF'
+    cat > $BSROOT/html/static/CentOS7/post_provision.sh <<'EOF'
+#!/bin/bash
+EOF
+    echo "Done"
+}
+
+
+generate_post_nochroot_provision_script() {
+    printf "Generating post nochroot provision script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
 #!/bin/bash
 #Obtain devices
 devices=$(lsblk -l |awk '$6=="disk"{print $1}')
@@ -151,7 +165,8 @@ load_yaml $CLUSTER_DESC cluster_desc_
 download_centos_images
 generate_pxe_centos_config
 generate_kickstart_config
-generate_provision_script
+generate_post_provision_script
+generate_post_nochroot_provision_script
 
 generate_registry_config
 prepare_cc_server_contents
