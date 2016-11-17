@@ -14,15 +14,15 @@ realpath() {
 
 SEXTANT_DIR=$(dirname $(realpath $0))
 
-source $SEXTANT_DIR/scripts/common.sh
 
-source $SEXTANT_DIR/scripts/lib.sh
+source $SEXTANT_DIR/scripts/common.sh
+source $SEXTANT_DIR/scripts/bsroot_lib.bash
+load_yaml $CLUSTER_DESC cluster_desc_
 
 
 check_prerequisites
-load_yaml $CLUSTER_DESC cluster_desc_
 
-printf "Install OS: ${cluster_desc_os_name}\n"
+echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
 
     source $SEXTANT_DIR/scripts/centos.sh

@@ -127,7 +127,7 @@ prepare_cc_server_contents() {
     echo "Done"
 
     printf "Copying bsroot_lib.bash ... "
-    cp $SEXTANT_DIR/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
+    cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Generating install.sh ... "
