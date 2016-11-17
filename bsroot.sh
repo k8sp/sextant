@@ -16,14 +16,14 @@ SEXTANT_DIR=$(dirname $(realpath $0))
 
 source $SEXTANT_DIR/scripts/common.sh
 
-source $SEXTANT_DIR/scripts/lib.bash
+source $SEXTANT_DIR/scripts/lib.sh
 
 
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 
-printf "Install OS: ${cluster_desc_os_name}"
-if [[ $cluster_desc_os_name == "CentOS"]]; then
+printf "Install OS: ${cluster_desc_os_name}\n"
+if [[ $cluster_desc_os_name == "CentOS" ]]; then
 
     source $SEXTANT_DIR/scripts/centos.sh
     download_centos_images
@@ -32,7 +32,7 @@ if [[ $cluster_desc_os_name == "CentOS"]]; then
     generate_post_provision_script
     generate_post_nochroot_provision_script
 
-elif [[ $cluster_desc_os_name == "CoreOS"]]; then
+elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
 
     source $SEXTANT_DIR/scripts/coreos.sh
     check_coreos_version

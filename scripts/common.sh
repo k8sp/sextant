@@ -18,7 +18,7 @@ if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
 fi
 
 if [[ "$#" == 2 ]]; then
-    BSROOT=$2
+    BSROOT=$(realpath $2)
 else
     BSROOT=$SEXTANT_DIR/bsroot
 fi
