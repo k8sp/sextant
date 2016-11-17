@@ -384,7 +384,28 @@ generate_addons_config() {
 
     echo "Done"
 }
+generate_rpmrepo_config() {
+  printf "Generating rpm repo configuration files ..."
+  [ ! -d $BSROOT/html/static/CentOS7/repo/cloudinit ] && mkdir  -p $BSROOT/html/static/CentOS7/repo/cloudinit
+  cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
+[Cloud-init]
+name=Cloud init Packages for Enterprise Linux 7
+baseurl=http://$BS_IP/CentOS7/repo/cloudinit/
+enabled=1
+gpgcheck=0
+EOF
+  docker run --rm -it \
+             --volume $BSROOT:/bsroot \
+             centos:7.2.1511\
+             sh -c  '/usr/bin/yum -y install epel-release yum-utils createrepo  && \
+             /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
+             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init &&  \
+             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
+             { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
+  echo "Done"
+
+}
 check_prerequisites
 load_yaml $CLUSTER_DESC cluster_desc_
 check_coreos_version
@@ -397,3 +418,4 @@ build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config
+generate_rpmrepo_config
