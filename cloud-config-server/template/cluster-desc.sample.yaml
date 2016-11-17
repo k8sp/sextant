@@ -17,8 +17,10 @@ flannel_backend: "host-gw"
 coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "current"
+# coreos gpu drivers version
+coreos_gpu_drivers_version: 367.35
 
-#OS type: CentOS or CoreOS
+# OS type: CentOS or CoreOS
 os_name: "CentOS"
 
 coreos:
