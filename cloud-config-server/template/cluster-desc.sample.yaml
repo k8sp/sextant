@@ -18,6 +18,9 @@ coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "current"
 
+#OS type: CentOS or CoreOS
+os_name: "CentOS"
+
 coreos:
   reboot_strategy: "etcd-lock"
   start_time: "03:00"
