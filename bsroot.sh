@@ -386,11 +386,11 @@ generate_addons_config() {
 }
 generate_rpmrepo_config() {
   printf "Generating rpm repo configuration files ..."
-  [ ! -d $BSROOT/html/static/CentOS7/repo/cloudinit ] && mkdir  -p $BSROOT/html/static/CentOS7/repo/cloudinit
+  [ ! -d $BSROOT/html/static/CentOS7/repo ] && mkdir  -p $BSROOT/html/static/CentOS7/repo
   cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
 [Cloud-init]
 name=Cloud init Packages for Enterprise Linux 7
-baseurl=http://$BS_IP/CentOS7/repo/cloudinit/
+baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 enabled=1
 gpgcheck=0
 EOF
