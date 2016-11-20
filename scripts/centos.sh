@@ -117,18 +117,8 @@ generate_post_provision_script() {
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_provision.sh <<'EOF'
 #!/bin/bash
-EOF
-    echo "Done"
-}
-
-
-generate_post_nochroot_provision_script() {
-    printf "Generating post nochroot provision script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
-#!/bin/bash
 #Obtain devices
-devices=$(lsblk -l |awk '$6=="disk"{print $1}')
+#devices=$(lsblk -l |awk '$6=="disk"{print $1}')
 # Zap all devices
 # NOTICE: dd zero to device mbr will not affect parted printed table,
 #         so use parted to remove the part tables
@@ -142,8 +132,19 @@ mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
 printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
 
 hostname_str=${mac_addr//:/-}
+echo ${hostname_str} >/etc/hostname
 
-hostnamectl set-hostname $hostname_str
+EOF
+    echo "Done"
+}
+
+
+generate_post_nochroot_provision_script() {
+    printf "Generating post nochroot provision script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
+#!/bin/bash
+
 EOF
     echo "Done"
 }
