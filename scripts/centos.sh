@@ -84,12 +84,13 @@ clearpart --all
 part / --fstype="xfs" --grow --ondisk=sda --size=1
 part swap --fstype="swap" --ondisk=sda --size=30000
 
-repo --name=base --baseurl="http://mirrors.163.com/centos/7/os/x86_64/"
+repo --name=cloud-init --baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 network --onboot on --bootproto dhcp --noipv6
 
 %packages --ignoremissing
 @Base
 @Core
+cloud-init
 %end
 
 
