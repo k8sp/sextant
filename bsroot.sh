@@ -51,7 +51,7 @@ generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
+
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config
-generate_rpmrepo_config
