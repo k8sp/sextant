@@ -84,12 +84,13 @@ clearpart --all
 part / --fstype="xfs" --grow --ondisk=sda --size=1
 part swap --fstype="swap" --ondisk=sda --size=30000
 
-repo --name=base --baseurl="http://mirrors.163.com/centos/7/os/x86_64/"
+repo --name=cloud-init --baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 network --onboot on --bootproto dhcp --noipv6
 
-%packages --ignoremissing
+%packages # --ignoremissing
 @Base
 @Core
+cloud-init
 %end
 
 
@@ -117,18 +118,8 @@ generate_post_provision_script() {
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_provision.sh <<'EOF'
 #!/bin/bash
-EOF
-    echo "Done"
-}
-
-
-generate_post_nochroot_provision_script() {
-    printf "Generating post nochroot provision script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
-#!/bin/bash
 #Obtain devices
-devices=$(lsblk -l |awk '$6=="disk"{print $1}')
+#devices=$(lsblk -l |awk '$6=="disk"{print $1}')
 # Zap all devices
 # NOTICE: dd zero to device mbr will not affect parted printed table,
 #         so use parted to remove the part tables
@@ -142,8 +133,43 @@ mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
 printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
 
 hostname_str=${mac_addr//:/-}
+echo ${hostname_str} >/etc/hostname
 
-hostnamectl set-hostname $hostname_str
 EOF
     echo "Done"
+}
+
+
+generate_post_nochroot_provision_script() {
+    printf "Generating post nochroot provision script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
+#!/bin/bash
+
+EOF
+    echo "Done"
+}
+
+
+generate_rpmrepo_config() {
+  printf "Generating rpm repo configuration files ..."
+  [ ! -d $BSROOT/html/static/CentOS7/repo ] && mkdir  -p $BSROOT/html/static/CentOS7/repo
+  cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
+[Cloud-init]
+name=Cloud init Packages for Enterprise Linux 7
+baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
+enabled=1
+gpgcheck=0
+EOF
+  docker run --rm -it \
+             --volume $BSROOT:/bsroot \
+             centos:7.2.1511\
+             sh -c  '/usr/bin/yum -y install epel-release yum-utils createrepo  && \
+             /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
+             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init &&  \
+             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
+             { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
+
+  echo "Done"
+
 }
