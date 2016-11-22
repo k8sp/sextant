@@ -42,6 +42,7 @@ type Cluster struct {
 	Ceph                     Ceph
 	Images                   map[string]string
 	FlannelBackend           string `yaml:"flannel_backend"`
+	IngressHostNetwork       bool   `yaml:"ingress_hostnetwork"`
 	CoreOS                   CoreOS
 }
 
