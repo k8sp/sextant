@@ -68,12 +68,10 @@ EOF
 }
 
 
-build_nvidia_gpu_drivers(){
+build_coreos_nvidia_gpu_drivers(){
     printf "Generating CoreOS Nvidia GPU drivers ... "
-    mkdir -p $BSROOT/coreos_gpu_drivers
-    cd $BSROOT/coreos_gpu_drivers
-
-    bash +x $SEXTANT_DIR/scripts/coreos_gpu/build.sh $cluster_desc_coreos_version $cluster_desc_coreos_channel $cluster_desc_coreos_gpu_drivers_version
+    bash +x $SEXTANT_DIR/scripts/coreos_gpu/build.sh $SEXTANT_DIR/scripts/coreos_gpu $BSROOT/html/static/coreos_gpu_drivers \
+        $cluster_desc_coreos_gpu_drivers_version $cluster_desc_coreos_channel $cluster_desc_coreos_version
 
     echo "Done"
 
