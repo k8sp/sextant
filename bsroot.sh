@@ -56,19 +56,6 @@ HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"
 source $SEXTANT_DIR/bsroot_lib.bash
 
 
-check_prerequisites() {
-    printf "Checking prerequisites ... "
-    err=0
-    for tool in wget tar gpg docker tr go make; do
-        command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
-    done
-    if [[ $err -ne 0 ]]; then
-        exit 1
-    fi
-    echo "Done"
-}
-
-
 download_pxe_images() {
     mkdir -p $BSROOT/tftpboot
 
@@ -286,8 +273,24 @@ build_bootstrapper_image() {
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
-}
 
+    # Check cluster-desc file
+    printf "Checking cluster description file ..."
+    docker run --rm \
+        --volume $SEXTANT_DIR/bsroot:/bsroot \
+        --entrypoint "/bin/sh" \
+        bootstrapper -c \
+          "/cloud-config-server -addr :80 \
+          -dir /bsroot/html/static \
+          -cc-template-file /bsroot/config/cloud-config.template \
+          -cc-template-url \"\" \
+          -cluster-desc-file /bsroot/config/cluster-desc.yml \
+          -cluster-desc-url \"\" \
+          -ca-crt /bsroot/tls/ca.pem \
+          -ca-key /bsroot/tls/ca-key.pem \
+          -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
+}
 
 download_k8s_images() {
     for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
