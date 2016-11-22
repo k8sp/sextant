@@ -27,6 +27,8 @@ type addonsConfig struct {
 	K8sClusterDNS       string
 	EtcdEndpoint        string
 	Images              map[string]string
+	IngressHostNetwork  bool
+	MasterHostname      string
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -50,6 +52,8 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 		K8sClusterDNS:       config.K8sClusterDNS,
 		EtcdEndpoint:        strings.Split(config.GetEtcdEndpoints(), ",")[0],
 		Images:              config.Images,
+		IngressHostNetwork:  config.IngressHostNetwork,
+		MasterHostname:      config.GetMasterHostname(),
 	}
 	candy.Must(tmpl.Execute(w, ac))
 }

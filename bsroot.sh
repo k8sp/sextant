@@ -42,7 +42,7 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
 
 else
 
-    printf "Unsupport OS: ${cluster_desc_os_name}"
+    echo "Unsupport OS: ${cluster_desc_os_name}"
     exit -1
 
 fi
