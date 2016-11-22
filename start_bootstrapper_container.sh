@@ -6,7 +6,7 @@ if [[ "$#" -gt 1 ]]; then
     echo "Usage: start_bootstrapper_container.sh [bsroot-path]"
     exit 1
 elif [[ "$#" -ne 1 ]]; then
-    BSROOT=/bsroot
+    BSROOT=$(cd `dirname $0`; pwd)
 else
     BSROOT=$1
 fi
