@@ -43,7 +43,7 @@ wget -c -N http://${SITE}/${DRIVER_VERSION}/${DRIVER_ARCHIVE}.run \
 
 rm -Rf ${WORK_DIR}/tmp
 mkdir -p ${WORK_DIR}/tmp ${PKG_DIR}
-cp -ul ${DRIVER_ARCHIVE_PATH}/${DRIVER_ARCHIVE}.run ${PKG_DIR}
+cp ${DRIVER_ARCHIVE_PATH}/${DRIVER_ARCHIVE}.run ${PKG_DIR}
 
 pushd ${PKG_DIR}
 chmod +x ${DRIVER_ARCHIVE}.run
@@ -51,10 +51,12 @@ rm -Rf ./${DRIVER_ARCHIVE}
 ./${DRIVER_ARCHIVE}.run -x -s
 popd
 
+type systemd-nspawn >/dev/null 2>&1 \
+    || { echo "systemd-nspawn is required, but it's not installed.  Aborting."; exit -1; }
 
 echo "sudo systemd-nspawn -i ${DEV_CONTAINER} --share-system \
   --bind=${WORK_DIR}/_container_build.sh:/_container_build.sh \
-  --bind=${WORK_DIR}/${PKG_DIR}:/nvidia_installers \
+  --bind=${PKG_DIR}:/nvidia_installers \
   /bin/bash -x /_container_build.sh ${DRIVER_VERSION}"
 
 sudo systemd-nspawn -i ${DEV_CONTAINER} --share-system \
