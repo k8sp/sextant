@@ -91,6 +91,10 @@ network --onboot on --bootproto dhcp --noipv6
 @Base
 @Core
 cloud-init
+make
+kernel-devel
+gcc
+wget
 %end
 
 
@@ -107,6 +111,12 @@ bash -x /root/post_provision.sh
 wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
 bash -x ./post_nochroot_provision.sh
 %end
+
+%post --nochroot
+wget http://$BS_IP/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh
+bash -x ./build_centos_gpu_drivers.sh
+%end
+
 
 EOF
     echo "Done"
@@ -193,117 +203,115 @@ download_centos_gpu_drivers() {
   fi
   echo "Done"
   printf "Generating CentOS GPU drivers build script ...\n"
-  cat > $BSROOT/html/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh <<EOF
+  cat > $BSROOT/html/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh <<'EOF'
 #!/bin/bash
 #
 # Build NVIDIA drivers on CentOS
 #
-DRIVER_VERSION=${DRIVER_VERSION}
-CENTOS_VERSION=${CENTOS_VERSION}
+DRIVER_VERSION=$1
+CENTOS_VERSION=$2
+DOWNLOAD_IP=$3
 
-DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-\${DRIVER_VERSION}
-DRIVER_ARCHIVE_PATH=\${PWD}/nvidia_installers/\${DRIVER_ARCHIVE}.run
-WORK_DIR=\${PWD}/run_files/\${CENTOS_VERSION}
-ARTIFACT_DIR=\${WORK_DIR}/\${DRIVER_ARCHIVE}
-DRIVER_DOWNLOAD_FROM=$BS_IP/static/CentOS7/gpu/nvidia_installers/\${DRIVER_ARCHIVE}.run
-
-NVIDIA_DIR=/usr/local/nvidia
-NVIDIA_BIN_DIR=/usr/local/nvidia/bin
-NVIDIA_LIB_DIR=/usr/local/nvidia/lib64
-
-TOOLS="nvidia-debugdump nvidia-cuda-mps-control nvidia-xconfig nvidia-modprobe nvidia-smi nvidia-cuda-mps-server
-nvidia-persistenced nvidia-settings"
-
-yum install -y make kernel-devel gcc wget
-
-if [ ! -f \${DRIVER_ARCHIVE_PATH} ]
-then
-  echo Downloading NVIDIA Linux drivers version \${DRIVER_VERSION}
-  mkdir -p nvidia_installers
-  wget --quiet -c -N -P nvidia_installers  \${DRIVER_DOWNLOAD_FROM} || { echo "Failed"; exit 1; }
-fi
+DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}
+DRIVER_ARCHIVE_PATH=${PWD}/nvidia_installers/${DRIVER_ARCHIVE}.run
+WORK_DIR=${PWD}/run_files/${CENTOS_VERSION}
+ARTIFACT_DIR=${WORK_DIR}/${DRIVER_ARCHIVE}
+DRIVER_DOWNLOAD_FROM=$DOWNLOAD_IP/static/CentOS7/gpu/${DRIVER_ARCHIVE}.run
 
 
-#rm -Rf \${PWD}/tmp
-mkdir -p \${WORK_DIR}
-cp -ul \${DRIVER_ARCHIVE_PATH} \${WORK_DIR}
+download_nvidia_gpu_drivers(){
+  if [ ! -f ${DRIVER_ARCHIVE_PATH} ]
+  then
+    echo Downloading NVIDIA Linux drivers version ${DRIVER_VERSION}
+    mkdir -p nvidia_installers
+    wget --quiet -c -N -P nvidia_installers  ${DRIVER_DOWNLOAD_FROM} || { echo "Failed"; exit 1; }
+  fi
+}
+build_lib_and_ko() {
+  TOOLS="nvidia-debugdump nvidia-cuda-mps-control nvidia-xconfig nvidia-modprobe nvidia-smi nvidia-cuda-mps-server nvidia-persistenced nvidia-settings"
+  mkdir -p ${WORK_DIR}
+  cp -ul ${DRIVER_ARCHIVE_PATH} ${WORK_DIR}
 
-pushd \${WORK_DIR}
-chmod +x \${DRIVER_ARCHIVE}.run
-rm -Rf ./\${DRIVER_ARCHIVE}
-./\${DRIVER_ARCHIVE}.run -x
-cd \${DRIVER_ARCHIVE}
-./nvidia-installer -s 
-popd
-# Create archives with no paths
-#sh _export.sh \${WORK_DIR}/\${DRIVER_ARCHIVE} \${DRIVER_VERSION}
-tar -C \${ARTIFACT_DIR} -cvj \$(basename -a \${ARTIFACT_DIR}/*.so.*) > libraries-\${DRIVER_VERSION}.tar.bz2
-tar -C \${ARTIFACT_DIR} -cvj \${TOOLS} > tools-\${DRIVER_VERSION}.tar.bz2
-
-if [ ! -d \${NVIDIA_DIR} ]
-then
-  mkdir -p \${NVIDIA_DIR}
-fi
-if [ ! -d \${NVIDIA_BIN_DIR} ]
-then
-  mkdir -p \${NVIDIA_BIN_DIR}
-  cp ./tools-\${DRIVER_VERSION}.tar.bz2 \${NVIDIA_BIN_DIR}
-  pushd \${NVIDIA_BIN_DIR}
-  tar -xjf ./tools-\${DRIVER_VERSION}.tar.bz2
-  rm -rf ./tools-\${DRIVER_VERSION}.tar.bz2
+  pushd ${WORK_DIR}
+  chmod +x ${DRIVER_ARCHIVE}.run
+  rm -Rf ./${DRIVER_ARCHIVE}
+  ./${DRIVER_ARCHIVE}.run -x
+  cd ${DRIVER_ARCHIVE}
+  ./nvidia-installer -s 
   popd
-fi
-if [ ! -d \${NVIDIA_LIB_DIR} ]
-then
-  mkdir -p \${NVIDIA_LIB_DIR}
-  cp ./libraries-\${DRIVER_VERSION}.tar.bz2 \${NVIDIA_LIB_DIR}
-  pushd \${NVIDIA_LIB_DIR}
-
-  for LIBRARY_NAME in libcuda libGLESv1_CM \\
-    libGL libEGL \\
-    libnvidia-cfg libnvidia-encode libnvidia-fbc \\
-    libnvidia-ifr libnvidia-ml libnvidia-opencl \\
-    libnvcuvid libvdpau
-  do
-    ln -sf \${LIBRARY_NAME}.so.${DRIVER_VERSION} \${LIBRARY_NAME}.so.1
-    ln -sf \${LIBRARY_NAME}.so.1 \${LIBRARY_NAME}.so
+  # Create archives with no paths
+  tar -C ${ARTIFACT_DIR} -cvj $(basename -a ${ARTIFACT_DIR}/*.so.*) > libraries-${DRIVER_VERSION}.tar.bz2
+  tar -C ${ARTIFACT_DIR} -cvj ${TOOLS} > tools-${DRIVER_VERSION}.tar.bz2
+}
+install_lib_and_ko() {
+  NVIDIA_DIR=/usr/local/nvidia
+  NVIDIA_BIN_DIR=/usr/local/nvidia/bin
+  NVIDIA_LIB_DIR=/usr/local/nvidia/lib64
+  if [ ! -d ${NVIDIA_DIR} ]
+  then
+    mkdir -p ${NVIDIA_DIR}
+  fi
+  if [ ! -d ${NVIDIA_BIN_DIR} ]
+  then
+    mkdir -p ${NVIDIA_BIN_DIR}
+    cp ./tools-${DRIVER_VERSION}.tar.bz2 ${NVIDIA_BIN_DIR}
+    pushd ${NVIDIA_BIN_DIR}
+    tar -xjf ./tools-${DRIVER_VERSION}.tar.bz2
+    rm -rf ./tools-${DRIVER_VERSION}.tar.bz2
+    popd
+  fi
+  if [ ! -d ${NVIDIA_LIB_DIR} ]
+  then
+    mkdir -p ${NVIDIA_LIB_DIR}
+    cp ./libraries-${DRIVER_VERSION}.tar.bz2 ${NVIDIA_LIB_DIR}
+    pushd ${NVIDIA_LIB_DIR}
+  
+    for LIBRARY_NAME in libcuda libGLESv1_CM \
+      libGL libEGL \
+      libnvidia-cfg libnvidia-encode libnvidia-fbc \
+      libnvidia-ifr libnvidia-ml libnvidia-opencl \
+      libnvcuvid libvdpau
+    do
+      ln -sf ${LIBRARY_NAME}.so.${DRIVER_VERSION} ${LIBRARY_NAME}.so.1
+      ln -sf ${LIBRARY_NAME}.so.1 ${LIBRARY_NAME}.so
+    done
+    
+    ln -sf libOpenCL.so.1.0.0 libOpenCL.so.1
+    ln -sf libOpenCL.so.1 libOpenCL.so
+    
+    ln -sf libGLESv2.so.${DRIVER_VERSION} libGLESv2.so.2
+    ln -sf libGLESv2.so.2 libGLESv2.so
+    
+    ln -sf libvdpau_nvidia.so.${DRIVER_VERSION} libvdpau_nvidia.so
+    ln -sf libvdpau_trace.so.${DRIVER_VERSION} libvdpau_trace.so
+  
+    tar -xjf ./libraries-${DRIVER_VERSION}.tar.bz2
+    rm -rf ./libraries-${DRIVER_VERSION}.tar.bz2
+    popd
+  fi
+  insmod ${WORK_DIR}/${DRIVER_ARCHIVE}/kernel/uvm/nvidia-uvm.ko
+}
+mknod_nvidia_dev() {
+  # Count the number of NVIDIA controllers found.
+  NVDEVS=`lspci | grep -i NVIDIA`
+  N3D=`echo "$NVDEVS" | grep "3D controller" | wc -l`
+  NVGA=`echo "$NVDEVS" | grep "VGA compatible controller" | wc -l`
+  N=`expr $N3D + $NVGA - 1`
+  
+  for i in `seq 0 $N`; do
+          mknod -m 666 /dev/nvidia$i c 195 $i
   done
   
-  ln -sf libOpenCL.so.1.0.0 libOpenCL.so.1
-  ln -sf libOpenCL.so.1 libOpenCL.so
+  mknod -m 666 /dev/nvidiactl c 195 255
   
-  ln -sf libGLESv2.so.\${DRIVER_VERSION} libGLESv2.so.2
-  ln -sf libGLESv2.so.2 libGLESv2.so
-  
-  ln -sf libvdpau_nvidia.so.\${DRIVER_VERSION} libvdpau_nvidia.so
-  ln -sf libvdpau_trace.so.\${DRIVER_VERSION} libvdpau_trace.so
-
-  tar -xjf ./libraries-\${DRIVER_VERSION}.tar.bz2
-  rm -rf ./libraries-\${DRIVER_VERSION}.tar.bz2
-  popd
-fi
-insmod \${WORK_DIR}/\${DRIVER_ARCHIVE}/kernel/uvm/nvidia-uvm.ko
-
-# Count the number of NVIDIA controllers found.
-NVDEVS=\`lspci | grep -i NVIDIA\`
-N3D=\`echo "\$NVDEVS" | grep "3D controller" | wc -l\`
-NVGA=\`echo "\$NVDEVS" | grep "VGA compatible controller" | wc -l\`
-N=\`expr \$N3D + \$NVGA - 1\`
-
-for i in \`seq 0 \$N\`; do
-        mknod -m 666 /dev/nvidia\$i c 195 \$i
-done
-
-mknod -m 666 /dev/nvidiactl c 195 255
-
-# Find out the major device number used by the nvidia-uvm driver
-D=\`grep nvidia-uvm /proc/devices | awk '{print \$1}'\`
-mknod -m 666 /dev/nvidia-uvm c \$D 0
-EOF
-
-  echo "Done"
-
+  # Find out the major device number used by the nvidia-uvm driver
+  D=`grep nvidia-uvm /proc/devices | awk '{print $1}'`
+  mknod -m 666 /dev/nvidia-uvm c $D 0
 }
-
-
-
+download_nvidia_gpu_drivers
+build_lib_and_ko
+install_lib_and_ko
+mknod_nvidia_dev
+EOF
+  echo "Done"
+}
