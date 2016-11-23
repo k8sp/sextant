@@ -38,6 +38,8 @@ type ExecutionConfig struct {
 	RebootStrategy           string
 	StartTime                string
 	TimeLength               string
+	CoreOSVersion            string
+	GPUDriversVersion        string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -79,6 +81,8 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		RebootStrategy: config.CoreOS.RebootStrategy,
 		StartTime:      config.CoreOS.StartTime,
 		TimeLength:     config.CoreOS.TimeLength,
+		CoreOSVersion:  config.CoreOSVersion
+		GPUDriversVersion:  config.GPUDriversVersion
 	}
 	return tmpl.Execute(w, ec)
 }

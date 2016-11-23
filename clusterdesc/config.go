@@ -43,6 +43,8 @@ type Cluster struct {
 	Images                   map[string]string
 	FlannelBackend           string `yaml:"flannel_backend"`
 	CoreOS                   CoreOS
+	CoreOSVersion            string `yaml:"coreos_version"`
+	GPUDriversVersion        string `yaml:"gpu_drivers_version"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.

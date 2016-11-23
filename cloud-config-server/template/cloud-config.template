@@ -336,6 +336,7 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
+
         - name: "settimezone.service"
           command: start
           content: |
@@ -482,6 +483,23 @@ coreos:
             [Install]
             WantedBy=multi-user.target
         {{- end}}
+
+        - name: "setup-gpu.service"
+          command: start
+          content: |
+            [Unit]
+            Description=Setup GPU
+
+            [Service]
+            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/setup_gpu.sh
+            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/libraries-{{ .GPUDriversVersion }}.tar.bz2
+            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/tools-{{ .GPUDriversVersion }}.tar.bz2
+            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/modules-{{ .CoreOSVerson }}-{{ .GPUDriversVersion }}.tar.bz2
+            ExecStart=/bin/bash /home/core/setup_gpu.sh {{ .CoreOSVersion }} {{ .GPUDriversVersion }}
+            RemainAfterExit=no
+            Type=oneshot
+
+
 
 hostname: "{{ .Hostname }}"
 
