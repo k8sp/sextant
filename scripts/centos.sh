@@ -175,22 +175,22 @@ EOF
 }
 
 
-#build_centos_gpu_drivers() {
 download_centos_gpu_drivers() {
   printf "Downding CentOS GPU drivers ...\n"
   [ ! -d $BSROOT/html/static/CentOS7/gpu_drivers ] && mkdir  -p $BSROOT/html/static/CentOS7/gpu_drivers
 
   DRIVER_VERSION=${1:-352.79}
-  #DRIVER_VERSION=${1:-352.39}
-  CENTOS_VERSION=${3:-7.2.1511}
+  CENTOS_VERSION=${2:-7.2.1511}
   DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}.run
-  DRIVER_DOWNLOAD_FROM=us.download.nvidia.com/XFree86/Linux-x86_64
-  #DRIVER_DOWNLOAD_TO=/home/atlas/bsroot/html/static/CentOS7/gpu/
+  DRIVER_DOWNLOAD_FROM=http://us.download.nvidia.com/XFree86/Linux-x86_64
   DRIVER_DOWNLOAD_TO=$BSROOT/html/static/CentOS7/gpu_drivers/nvidia_installers/
-  [ ! -d ${DRIVER_DOWNLOAD_TO} ] && mkdir -p ${DRIVER_DOWNLOAD_TO}
-  curl -s -L http://${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
-    -z ${DRIVER_DOWNLOAD_TO}/${DRIVER_ARCHIVE} \
-    -o ${DRIVER_DOWNLOAD_TO}/${DRIVER_ARCHIVE}
+  if [ ! -f ${DRIVER_DOWNLOAD_TO}/${DRIVER_ARCHIVE} ]
+  then
+    [ ! -d ${DRIVER_DOWNLOAD_TO} ] && mkdir -p ${DRIVER_DOWNLOAD_TO}
+    wget --quiet -c -N -P ${DRIVER_DOWNLOAD_TO} \
+ 		${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
+    		|| { echo "Failed"; exit 1; } 
+  fi
   echo "Done"
   printf "Generating CentOS GPU drivers build script ...\n"
   cat > $BSROOT/html/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh <<EOF
@@ -198,14 +198,14 @@ download_centos_gpu_drivers() {
 #
 # Build NVIDIA drivers on CentOS
 #
-DRIVER_VERSION=\${1:-${DRIVER_VERSION}}
-CENTOS_VERSION=\${3:-${CENTOS_VERSION}}
+DRIVER_VERSION=${DRIVER_VERSION}
+CENTOS_VERSION=${CENTOS_VERSION}
 
 DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-\${DRIVER_VERSION}
 DRIVER_ARCHIVE_PATH=\${PWD}/nvidia_installers/\${DRIVER_ARCHIVE}.run
 WORK_DIR=\${PWD}/run_files/\${CENTOS_VERSION}
 ARTIFACT_DIR=\${WORK_DIR}/\${DRIVER_ARCHIVE}
-DRIVER_DOWNLOAD_FROM=10.10.14.253/static/CentOS7/gpu/nvidia_installers/\${DRIVER_ARCHIVE}.run
+DRIVER_DOWNLOAD_FROM=$BS_IP/static/CentOS7/gpu/nvidia_installers/\${DRIVER_ARCHIVE}.run
 
 NVIDIA_DIR=/usr/local/nvidia
 NVIDIA_BIN_DIR=/usr/local/nvidia/bin
@@ -214,16 +214,15 @@ NVIDIA_LIB_DIR=/usr/local/nvidia/lib64
 TOOLS="nvidia-debugdump nvidia-cuda-mps-control nvidia-xconfig nvidia-modprobe nvidia-smi nvidia-cuda-mps-server
 nvidia-persistenced nvidia-settings"
 
+yum install -y make kernel-devel gcc wget
+
 if [ ! -f \${DRIVER_ARCHIVE_PATH} ]
 then
   echo Downloading NVIDIA Linux drivers version \${DRIVER_VERSION}
   mkdir -p nvidia_installers
-  curl -s -L http://\${DRIVER_DOWNLOAD_FROM} \\
-    -z \${DRIVER_ARCHIVE_PATH} \\
-    -o \${DRIVER_ARCHIVE_PATH}
+  wget --quiet -c -N -P nvidia_installers  \${DRIVER_DOWNLOAD_FROM} || { echo "Failed"; exit 1; }
 fi
 
-yum install -y make kernel-devel gcc
 
 #rm -Rf \${PWD}/tmp
 mkdir -p \${WORK_DIR}

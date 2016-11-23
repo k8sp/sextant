@@ -32,7 +32,7 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     generate_post_provision_script
     generate_post_nochroot_provision_script
     generate_rpmrepo_config
-#    build_centos_gpu_drivers
+    build_centos_gpu_drivers
     download_centos_gpu_drivers
 
 elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
