@@ -500,7 +500,7 @@ write_files:
       [Service]
       Type=notify
       User=etcd
-      Environment=ETCD_NAME=%m
+      Environment=ETCD_NAME=%H
       Environment=ETCD_DATA_DIR=/var/lib/etcd
       Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
       {{- if .EtcdMember }}
