@@ -82,14 +82,16 @@ zerombr
 clearpart --all
 # Disk partitioning information
 part / --fstype="xfs" --grow --ondisk=sda --size=1
-part swap --fstype="swap" --ondisk=sda --size=30000
+part swap --fstype="swap" --ondisk=sda --size=8000
 
-repo --name=base --baseurl="http://mirrors.163.com/centos/7/os/x86_64/"
+repo --name=cloud-init --baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 network --onboot on --bootproto dhcp --noipv6
 
 %packages --ignoremissing
 @Base
 @Core
+cloud-init
+etcd
 %end
 
 
@@ -107,6 +109,12 @@ wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
 bash -x ./post_nochroot_provision.sh
 %end
 
+%post
+wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
+bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
+%end
+
+
 EOF
     echo "Done"
 }
@@ -119,6 +127,37 @@ generate_post_provision_script() {
 #!/bin/bash
 EOF
     echo "Done"
+}
+generate_post_cloudinit_script() {
+    printf "Generating post cloudinit script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_cloudinit_provision.sh <<'EOF'
+#!/bin/bash
+default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
+bootstrapper_ip=$(grep nameserver /etc/resolv.conf|cut -d " " -f2)
+printf "Default interface: ${default_iface}\n"
+default_iface=`echo ${default_iface} | awk '{ print $1 }'`
+
+mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
+printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
+
+hostname_str=${mac_addr//:/-}
+
+mkdir -p /var/lib/cloud/seed/nocloud-net/
+cd /var/lib/cloud/seed/nocloud-net/
+wget -O user-data http://$bootstrapper_ip/cloud-config/${mac_addr}
+cat > /var/lib/cloud/seed/nocloud-net/meta-data << eof
+instance-id: iid-local01
+local-hostname: $hostname_str
+eof
+cloud-init init --local
+cloud-init init
+systemctl daemon-reload
+systemctl enable etcd2
+systemctl disable cloud-init
+EOF
+    echo "Done"
+
 }
 
 
@@ -164,7 +203,7 @@ EOF
              centos:7.2.1511\
              sh -c  '/usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
-             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init &&  \
+             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init etcd &&  \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 

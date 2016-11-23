@@ -38,6 +38,7 @@ type ExecutionConfig struct {
 	RebootStrategy           string
 	StartTime                string
 	TimeLength               string
+	OSName                   string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -79,6 +80,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		RebootStrategy: config.CoreOS.RebootStrategy,
 		StartTime:      config.CoreOS.StartTime,
 		TimeLength:     config.CoreOS.TimeLength,
+		OSName:         config.OSName,
 	}
 	return tmpl.Execute(w, ec)
 }
