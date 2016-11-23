@@ -16,7 +16,13 @@ flannel_backend: "host-gw"
 # coreos_channel can be configured as stable, alpha, beta
 coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
-coreos_version: "current"
+coreos_version: "1122.2.0"
+# gpu drivers version
+gpu_drivers_version: "367.57"
+
+# OS type: CentOS or CoreOS
+os_name: "CoreOS"
+
 
 coreos:
   reboot_strategy: "etcd-lock"
