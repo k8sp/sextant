@@ -310,7 +310,7 @@ mknod_nvidia_dev
 
 EOF
   echo "Done"
-  printf "Downding CentOS GPU drivers ...\n"
+  printf "Downloading CentOS GPU drivers ...\n"
   [ ! -d $BSROOT/html/static/CentOS7/gpu_drivers ] && mkdir  -p $BSROOT/html/static/CentOS7/gpu_drivers
 
   DRIVER_VERSION=${cluster_desc_gpu_drivers_version}
