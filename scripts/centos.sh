@@ -169,7 +169,7 @@ eof
 cloud-init init --local
 cloud-init init
 systemctl daemon-reload
-systemctl enable etcd docker flanneld kubelet.service kube-addons.service setup-network-environment.service
+systemctl enable etcd docker flanneld kubelet.service kube-addons.service setup-network-environment.service >> /root/service.log
 systemctl stop  NetworkManager
 systemctl disable  NetworkManager
 EOF
