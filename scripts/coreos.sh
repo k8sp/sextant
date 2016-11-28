@@ -70,27 +70,9 @@ EOF
 
 build_coreos_nvidia_gpu_drivers(){
     printf "Generating CoreOS Nvidia GPU drivers ... "
-
-    CONTAINER_NAME='build_coreos_gpu_drivers'
-
-    docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME >/dev/null 2>&1
-
-    docker run --name=$CONTAINER_NAME -d -it \
-        --privileged \
-        --volume $SEXTANT_DIR/scripts/coreos_gpu:/coreos_gpu \
-        --volume $BSROOT/html/static/coreos_gpu_drivers:/coreos_gpu_drivers \
-        diamanti/c7-systemd-dbus:latest
-
-    docker exec -it $CONTAINER_NAME \
-        sh -c  "cd /coreos_gpu && \
-        /usr/bin/yum -y install wget && \
-        /usr/bin/bash +x /coreos_gpu/build.sh \
-        /coreos_gpu /coreos_gpu_drivers \
-        $cluster_desc_gpu_drivers_version $cluster_desc_coreos_channel $cluster_desc_coreos_version" || \
-        { echo 'Failed to build GPU drivers!' ; exit 1; }
-
-    docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME >/dev/null 2>&1
-
+    bash +x $SEXTANT_DIR/scripts/coreos_gpu/build.sh $SEXTANT_DIR/scripts/coreos_gpu $BSROOT/html/static/coreos_gpu_drivers \
+        $cluster_desc_gpu_drivers_version $cluster_desc_coreos_channel $cluster_desc_coreos_version \
+        ||  { echo "Failed"; exit 1; }
 
     cp $SEXTANT_DIR/scripts/coreos_gpu/setup_gpu.sh $BSROOT/html/static/coreos_gpu_drivers || { echo "Failed"; exit 1; }
 

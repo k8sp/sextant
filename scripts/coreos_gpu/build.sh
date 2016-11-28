@@ -54,17 +54,17 @@ popd
 type systemd-nspawn >/dev/null 2>&1 \
     || { echo "systemd-nspawn is required, but it's not installed.  Aborting."; exit -1; }
 
-echo "systemd-nspawn -i ${WORK_DIR}/${DEV_CONTAINER} --share-system \
+echo "sudo systemd-nspawn -i ${DEV_CONTAINER} --share-system \
   --bind=${WORK_DIR}/_container_build.sh:/_container_build.sh \
   --bind=${PKG_DIR}:/nvidia_installers \
   /bin/bash -x /_container_build.sh ${DRIVER_VERSION}"
 
-systemd-nspawn -i ${WORK_DIR}/${DEV_CONTAINER} --share-system \
+sudo systemd-nspawn -i ${DEV_CONTAINER} --share-system \
   --bind=${WORK_DIR}/_container_build.sh:/_container_build.sh \
   --bind=${PKG_DIR}:/nvidia_installers \
   /bin/bash -x /_container_build.sh ${DRIVER_VERSION}
 
-chown -R ${UID}:${GROUPS[0]} ${PKG_DIR}
+sudo chown -R ${UID}:${GROUPS[0]} ${PKG_DIR}
 
 bash -x ${WORK_DIR}/_export.sh ${PKG_DIR}/*-${DRIVER_VERSION} \
   ${DRIVER_VERSION} ${COREOS_VERSION}-${DRIVER_VERSION}
