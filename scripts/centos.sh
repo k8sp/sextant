@@ -92,6 +92,8 @@ network --onboot on --bootproto dhcp --noipv6
 @Core
 cloud-init
 etcd
+docker
+flannel
 %end
 
 
@@ -125,6 +127,18 @@ generate_post_provision_script() {
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_provision.sh <<'EOF'
 #!/bin/bash
+#Obtain devices
+#devices=$(lsblk -l |awk '$6=="disk"{print $1}')
+# Zap all devices
+# NOTICE: dd zero to device mbr will not affect parted printed table,
+#         so use parted to remove the part tables
+default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
+printf "Default interface: ${default_iface}\n"
+default_iface=`echo ${default_iface} | awk '{ print $1 }'`
+mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
+printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
+hostname_str=${mac_addr//:/-}
+echo ${hostname_str} >/etc/hostname
 EOF
     echo "Done"
 }
@@ -141,20 +155,23 @@ default_iface=`echo ${default_iface} | awk '{ print $1 }'`
 mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
 printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
 
-hostname_str=${mac_addr//:/-}
+
+sed -i 's/disable_root: 1/disable_root: 0/g' /etc/cloud/cloud.cfg
+sed -i 's/ssh_pwauth:   0/ssh_pwauth:   1/g' /etc/cloud/cloud.cfg
+echo "FLANNEL_OPTIONS=\"-iface=${default_iface}\"" >> /etc/sysconfig/flanneld
 
 mkdir -p /var/lib/cloud/seed/nocloud-net/
 cd /var/lib/cloud/seed/nocloud-net/
 wget -O user-data http://$bootstrapper_ip/cloud-config/${mac_addr}
 cat > /var/lib/cloud/seed/nocloud-net/meta-data << eof
 instance-id: iid-local01
-local-hostname: $hostname_str
 eof
 cloud-init init --local
 cloud-init init
 systemctl daemon-reload
-systemctl enable etcd2
-systemctl disable cloud-init
+systemctl enable etcd docker flanneld kubelet.service kube-addons.service setup-network-environment.service
+systemctl stop  NetworkManager
+systemctl disable  NetworkManager
 EOF
     echo "Done"
 
@@ -166,23 +183,7 @@ generate_post_nochroot_provision_script() {
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
 #!/bin/bash
-#Obtain devices
-devices=$(lsblk -l |awk '$6=="disk"{print $1}')
-# Zap all devices
-# NOTICE: dd zero to device mbr will not affect parted printed table,
-#         so use parted to remove the part tables
 
-default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
-
-printf "Default interface: ${default_iface}\n"
-default_iface=`echo ${default_iface} | awk '{ print $1 }'`
-
-mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
-printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
-
-hostname_str=${mac_addr//:/-}
-
-hostnamectl set-hostname $hostname_str
 EOF
     echo "Done"
 }
@@ -203,7 +204,7 @@ EOF
              centos:7.2.1511\
              sh -c  '/usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
-             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init etcd &&  \
+             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init etcd docker flannel &&  \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 

@@ -19,7 +19,7 @@ write_files:
       {{ .BootstrapperIP }} {{ .Dockerdomain }}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem
-    owner: core
+    owner: root
     permissions: 0600
     content: |
       {{ .Crt }}
@@ -488,19 +488,18 @@ hostname: "{{ .Hostname }}"
 ssh_authorized_keys:
 {{ .SSHAuthorizedKeys }}
 {{ else }}
-write_files:
-  - path: /etc/systemd/system/etcd2.service
+  - path: /usr/lib/systemd/system/etcd.service
     owner: root
     permissions: 0644
     content: |
       [Unit]
-      Description=etcd2
+      Description=etcd
       Conflicts=etcd.service
 
       [Service]
       Type=notify
       User=etcd
-      Environment=ETCD_NAME=%m
+      Environment=ETCD_NAME=%H
       Environment=ETCD_DATA_DIR=/var/lib/etcd
       Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
       {{- if .EtcdMember }}
@@ -510,7 +509,7 @@ write_files:
       Environment=ETCD_ADVERTISE_CLIENT_URLS=http://{{ .Hostname }}:2379
       Environment=ETCD_INITIAL_CLUSTER_STATE=new
       {{- else }}
-      Environment=ETCD_PROXY="on"
+      Environment=ETCD_PROXY=on
       {{- end }}
       Environment=ETCD_INITIAL_CLUSTER={{ .InitialCluster }}
       ExecStart=/usr/bin/etcd
@@ -521,54 +520,39 @@ write_files:
 
       [Install]
        WantedBy=multi-user.target
-  - path: /etc/systemd/system/flanneld.service
+  - path: /usr/lib/systemd/system/flanneld.service
     owner: root
     permissions: 0644
     content: |
+      # /usr/lib/systemd/system/flanneld.service
       [Unit]
-      Description=Network fabric for containers
-      Documentation=https://github.com/coreos/flannel
-      Requires=early-docker.service
-      After=etcd.service etcd2.service early-docker.service
-      Before=early-docker.target
+      Description=Flanneld overlay address etcd agent
+      After=network.target
+      After=network-online.target
+      Wants=network-online.target
+      After=etcd.service
+      Before=docker.service
 
       [Service]
       Type=notify
-      Restart=always
       RestartSec=5
-      Environment="TMPDIR=/var/tmp/"
-      Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-      Environment="FLANNEL_IMG={{ .Dockerdomain }}:5000/{{ .Images.flannel }}"
-      Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
-      Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
-      LimitNOFILE=40000
-      LimitNPROC=1048576
-      ExecStartPre=/sbin/modprobe ip_tables
-      ExecStartPre=/usr/bin/mkdir -p /run/flannel
-      ExecStartPre=/usr/bin/mkdir -p ${ETCD_SSL_DIR}
-      ExecStartPre=-/usr/bin/touch ${FLANNEL_ENV_FILE}
+      EnvironmentFile=/etc/sysconfig/flanneld
+      EnvironmentFile=-/etc/sysconfig/docker-network
       {{- if .KubeMaster }}
-      ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ .FlannelBackend }}"}}'
+      ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ .FlannelBackend }}"}}'
+      {{ end }}
+
+      {{- if .FlannelIface }}
+      ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ .Hostname }}:2379 -etcd-prefix=/flannel/network -iface={{ .FlannelIface }}
+      {{- else }}
+      ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ .Hostname }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS
       {{- end }}
-
-      ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
-      /usr/bin/docker run --net=host --privileged=true --rm \
-      --volume=/run/flannel:/run/flannel \
-      --env=NOTIFY_SOCKET=/run/flannel/sd.sock \
-      --env=AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-      --env=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-      --env-file=${FLANNEL_ENV_FILE} \
-      --volume=/usr/share/ca-certificates:/etc/ssl/certs:ro \
-      --volume=${ETCD_SSL_DIR}:${ETCD_SSL_DIR}:ro \
-      ${FLANNEL_IMG} /opt/bin/flanneld --ip-masq=true
-
-      # Update docker options
-      ExecStartPost=/usr/bin/docker run --net=host --rm --volume=/run:/run \
-      ${FLANNEL_IMG} \
-      /opt/bin/mk-docker-opts.sh -d /run/flannel_docker_opts.env -i
+      ExecStartPost=/usr/libexec/flannel/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
+      Restart=always
 
       [Install]
       WantedBy=multi-user.target
+      RequiredBy=docker.service
   - path: /etc/systemd/system/setup-network-environment.service
     owner: root
     permissions: 0644
@@ -584,7 +568,10 @@ write_files:
       ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
       ExecStart=/opt/bin/setup-network-environment
       RemainAfterExit=yes
+      Restart=always
+      RestartSec=5
       Type=oneshot
+
   {{- if .CephMonitor }}
   - path: /etc/systemd/system/ceph-mon.service
     owner: root
@@ -639,7 +626,7 @@ write_files:
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
       ExecStart=/usr/bin/docker run --rm --net=host \
-      -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
+      -e KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080 \
       -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
       {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
 
@@ -713,4 +700,6 @@ write_files:
       [Install]
       WantedBy=multi-user.target
   {{- end}}
+ssh_authorized_keys:
+{{ .SSHAuthorizedKeys }}
 {{- end }}

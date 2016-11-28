@@ -62,6 +62,7 @@ func main() {
 	l, e := net.Listen("tcp", *addr)
 	candy.Must(e)
 	run(c, t, l, *caKey, *caCrt, *dir)
+
 }
 
 // By making the first two parameters closures, we get the flexibility

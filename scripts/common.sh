@@ -321,4 +321,3 @@ generate_addons_config() {
 
     echo "Done"
 }
-
