@@ -10,6 +10,7 @@ dhcp-option=6,{{range $index, $ele := .NameServers}}{{if $index}},{{end}}{{$ele}
 
 no-hosts
 expand-hosts
+addn-hosts=/bsroot/config/dnsmasq.hosts
 no-resolv
 {{range $index, $ele := .UpstreamNameServers}}
 server={{$ele}}
