@@ -11,8 +11,8 @@ INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
 # Check sextant dir
-if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
-    echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/sextant."
+if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/xuerq_sextant/sextant" ]]; then
+    echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/xuerq_sextant/sextant."
     echo "Please set GOPATH environment variable and use 'go get' to retrieve sextant."
     exit 1
 fi
@@ -90,6 +90,7 @@ EOF
 
 
 prepare_cc_server_contents() {
+:<<BLOCK
     printf "Generating Ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
     # update install-mon.sh and set OSD_JOURNAL_SIZE
@@ -129,7 +130,7 @@ prepare_cc_server_contents() {
     printf "Copying bsroot_lib.bash ... "
     cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
-
+BLOCK
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
     if grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null; then
@@ -163,9 +164,13 @@ printf "Interface: \${default_iface} MAC address: \${mac_addr}\n"
 
 wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
+wget -P /root http://$BS_IP/static/gpu-drivers/coreos/${cluster_desc_coreos_version}/*
+pushd /root/
+bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_coreos_version} ${cluster_desc_gpu_drivers_version}
+popd
 EOF
     echo "Done"
-
+:<<BLOCK
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
@@ -180,6 +185,7 @@ EOF
     # Never change 'current' to 'current/', I beg you.
     rm -rf current > /dev/null 2>&1
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
+BLOCK
     echo "Done"
 }
 
