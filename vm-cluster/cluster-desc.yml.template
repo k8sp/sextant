@@ -19,6 +19,9 @@ coreos_channel: "stable"
 coreos_version: "current"
 ingress_hostnetwork: true
 
+#OS type: CentOS or CoreOS
+os_name: "CoreOS"
+
 coreos:
   reboot_strategy: "etcd-lock"
   start_time: "03:00"
@@ -38,6 +41,7 @@ images:
   addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
   skydns: "typhoon1986/skydns:latest"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
+  default_backend: "yancey1989/defaultbackend:1.0"
 
 nodes:
   - mac: "08:00:27:4a:2d:a1"

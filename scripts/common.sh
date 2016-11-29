@@ -319,6 +319,17 @@ generate_addons_config() {
         -config-file /bsroot/config/dnsmasq.conf || \
         { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
 
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+                -template-file $SEXTANT_DIR_IN/addons/template/default-backend.template \
+                -config-file /bsroot/html/static/default-backend.yaml || \
+            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
+
+    cp $SEXTANT_DIR/addons/template/default-backend-svc.yaml $BSROOT/html/static/default-backend-svc.yaml
+
     echo "Done"
 }
-
