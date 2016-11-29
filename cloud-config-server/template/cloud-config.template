@@ -354,15 +354,15 @@ coreos:
           content: |
             [Unit]
             Description=Install ceph mon services
-            Requires=etcd.service
-            After=etcd.service
+            Requires=etcd2.service
+            After=etcd2.service
             Requires=network.target
             After=network.target
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget --quiet -O /tmp/install-emon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
-            ExecStart=/bin/bash /tmp/install-mon.sh {{ .Dockerdomain }}:5000
+            ExecStart=/usr/bin/wget --quiet -O /home/core/install-emon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+            ExecStart=/bin/bash /home/core/install-mon.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
         {{- end }}
@@ -373,15 +373,15 @@ coreos:
           content: |
             [Unit]
             Description=Install ceph osd service
-            Requires=etcd.service
-            After=etcd.service
+            Requires=etcd2.service
+            After=etcd2.service
             Requires=network.target
             After=network.target
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /tmp/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
-            ExecStart=/bin/bash /tmp/install-osd.sh {{ .Dockerdomain }}:5000
+            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+            ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
           {{- end}}
@@ -578,15 +578,15 @@ ssh_authorized_keys:
     content: |
       [Unit]
       Description=Install ceph mon services
-      Requires=etcd2.service
-      After=etcd2.service
+      Requires=etcd.service
+      After=etcd.service
       Requires=network.target
       After=network.target
 
       [Service]
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget --quiet -O /home/core/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
-      ExecStart=/bin/bash /home/core/install-mon.sh {{ .Dockerdomain }}:5000
+      ExecStart=/usr/bin/wget --quiet -O /tmp/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+      ExecStart=/bin/bash /tmp/install-mon.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
   {{- end }}
@@ -605,8 +605,8 @@ ssh_authorized_keys:
 
       [Service]
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
-      ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
+      ExecStart=/usr/bin/wget -O /tmp/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+      ExecStart=/bin/bash /tmp/install-osd.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
   {{- end}}

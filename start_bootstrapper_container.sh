@@ -6,7 +6,7 @@ if [[ "$#" -gt 1 ]]; then
     echo "Usage: start_bootstrapper_container.sh [bsroot-path]"
     exit 1
 elif [[ "$#" -ne 1 ]]; then
-    BSROOT=/bsroot
+    BSROOT=$(cd `dirname $0`; pwd)
 else
     BSROOT=$1
 fi
@@ -22,9 +22,12 @@ if [[ $BSROOT != /* ]]; then
 fi
 
 if [[ -e "$BSROOT/html/static/current/CentOS-7-x86_64-DVD-1511.iso" ]]; then
-    mkdir -p $BSROOT/html/static/CentOS7/dvd_content
-    sudo umount $BSROOT/html/static/CentOS7/dvd_content
-    sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
+    if [[ ! -d "$BSROOT/html/static/CentOS7/dvd_content" ]]; then
+        mkdir -p $BSROOT/html/static/CentOS7/dvd_content
+    fi
+    if [[ ! -f "$BSROOT/html/static/CentOS7/dvd_content/.treeinfo" ]]; then
+        sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
+    fi
 fi
 
 # Config Registry tls
