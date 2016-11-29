@@ -7,7 +7,7 @@ fi
 
 #Obtain devices
 devices=$(lsblk -l |awk '$6=="disk"{print $1}')
-systemdevice=$(lsblk -l |awk '$7=="/usr"{print $1}' |sed 's/[0-9]\+$//')
+systemdevice=$(lsblk -l |awk '$7=="/"{print $1}' |sed 's/[0-9]\+$//')
 
 CEPH_CLUSTER_NAME=ceph
 
