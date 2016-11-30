@@ -473,7 +473,7 @@ coreos:
             {{ if .IngressLabel }}
             --logtostderr=true \
             --node-labels=role=ingress \
-            {{ else }}
+            {{- else }}
             --logtostderr=true \
             {{- end }}
             --network-plugin= \
@@ -540,7 +540,7 @@ ssh_authorized_keys:
       EnvironmentFile=-/etc/sysconfig/docker-network
       {{- if .KubeMaster }}
       ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ .FlannelBackend }}"}}'
-      {{ end }}
+      {{- end }}
 
       {{- if .FlannelIface }}
       ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ .Hostname }}:2379 -etcd-prefix=/flannel/network -iface={{ .FlannelIface }}
@@ -553,6 +553,20 @@ ssh_authorized_keys:
       [Install]
       WantedBy=multi-user.target
       RequiredBy=docker.service
+  - path: /etc/systemd/system/settimezone.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Set the time zone
+
+      [Service]
+      ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+      RemainAfterExit=no
+      Type=oneshot
+      [Install]
+      WantedBy=multi-user.target
+
   - path: /etc/systemd/system/setup-network-environment.service
     owner: root
     permissions: 0644
@@ -584,11 +598,15 @@ ssh_authorized_keys:
       After=network.target
 
       [Service]
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget --quiet -O /tmp/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
-      ExecStart=/bin/bash /tmp/install-mon.sh {{ .Dockerdomain }}:5000
+      ExecStart=/usr/bin/wget --quiet -O /opt/bin/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+      ExecStart=/bin/bash /opt/bin/install-mon.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
+
+      [Install]
+      WantedBy=multi-user.target
   {{- end }}
 
   {{- if .ZapAndStartOSD }}
@@ -604,11 +622,15 @@ ssh_authorized_keys:
       After=network.target
 
       [Service]
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget -O /tmp/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
-      ExecStart=/bin/bash /tmp/install-osd.sh {{ .Dockerdomain }}:5000
+      ExecStart=/usr/bin/wget -O /opt/bin/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+      ExecStart=/bin/bash /opt/bin/install-osd.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
+
+      [Install]
+      WantedBy=multi-user.target
   {{- end}}
   {{- if .KubeMaster }}
   - path: /etc/systemd/system/kube-addons.service
@@ -691,7 +713,7 @@ ssh_authorized_keys:
       {{- if .IngressLabel }}
       --logtostderr=true \
       --node-labels=role=ingress \
-      {{ else }}
+      {{- else }}
       --logtostderr=true \
       {{- end }}
       --network-plugin= \
@@ -703,4 +725,18 @@ ssh_authorized_keys:
   {{- end}}
 ssh_authorized_keys:
 {{ .SSHAuthorizedKeys }}
+runcmd:
+  - systemctl  daemon-reload
+  {{- if .CephMonitor }}
+  - systemctl enable ceph-mon.service
+  {{- end}}
+  {{- if .ZapAndStartOSD }}
+  - systemctl enable ceph-osd.service
+  {{- end}}
+  {{- if .KubeMaster }}
+  - systemctl  enable etcd.service flanneld.service kubelet.service setup-network-environment.service kube-addons.service settimezone.service
+  {{- else }}
+  - systemctl enable etcd.service flanneld.service kubelet.service setup-network-environment.service settimezone.service
+  {{- end }}
+  - reboot
 {{- end }}
