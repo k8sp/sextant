@@ -18,13 +18,6 @@ etcdctl get /ceph-config/$CEPH_CLUSTER_NAME/auth/cephx
 # NOTICE: use docker run --rm to ensure container is deleted after execution
 if [ $? -ne 0 ]; then
   echo "Enable cephx."
-  if [[ ! -d "/etc/ceph" ]]; then
-    mkdir -p /etc/ceph
-  fi
-  cat > $BSROOT/tftpboot/pxelinux.cfg/default <<EOF
-# auth
-/auth/cephx true
-EOF
   docker run --rm --net=host \
     --name ceph_kvstore \
     -v /etc/ceph/:/etc/ceph/ \
@@ -35,7 +28,7 @@ EOF
     -e KV_PORT=2379 \
     -e OSD_JOURNAL_SIZE=<JOURNAL_SIZE> \
     --entrypoint=/bin/bash \
-    "$docker_hub"ceph/daemon populate_kvstore
+    "$docker_hub"ceph/daemon -c "sed -i.bak \"/^\/osd\/osd_journal_size/d\" /ceph.defaults && echo \"/osd/osd_journal_size <JOURNAL_SIZE>\" >>  /ceph.defaults && /entrypoint.sh populate_kvstore"
 fi
 
 # MON
