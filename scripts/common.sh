@@ -106,7 +106,9 @@ prepare_cc_server_contents() {
         > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
     echo "Done"
 
+BLOCK
     mkdir -p $BSROOT/html/static/cloud-config
+:<<BLOCK
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
@@ -121,6 +123,7 @@ prepare_cc_server_contents() {
     printf "Downloading setup-network-environment file ... "
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
+BLOCK
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
@@ -130,7 +133,6 @@ prepare_cc_server_contents() {
     printf "Copying bsroot_lib.bash ... "
     cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
-BLOCK
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
     if grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null; then
@@ -164,10 +166,6 @@ printf "Interface: \${default_iface} MAC address: \${mac_addr}\n"
 
 wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
-wget -P /root http://$BS_IP/static/gpu-drivers/coreos/${cluster_desc_coreos_version}/*
-pushd /root/
-bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_coreos_version} ${cluster_desc_gpu_drivers_version}
-popd
 EOF
     echo "Done"
 :<<BLOCK
@@ -218,16 +216,18 @@ build_bootstrapper_image() {
     echo "Done"
 
     printf "Building bootstrapper image ... "
+    docker rm -f bootstrapper > /dev/null 2>&1
+    docker rmi bootstrapper:latest > /dev/null 2>&1
     cd $SEXTANT_DIR/docker
-    docker build -t bootstrapper . > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker build -t bootstrapper . #> /dev/null 2>&1 || { echo "Failed"; exit 1; }
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
     # NOTE: we need to run docker load on the bootstrapper server
     # to load these saved images.
-    echo "Done"
 
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
+    echo "Done"
 }
 
 

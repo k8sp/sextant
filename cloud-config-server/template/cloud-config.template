@@ -489,12 +489,11 @@ coreos:
           content: |
             [Unit]
             Description=Setup GPU
+            Requires=network.target
+            After=network.target
 
             [Service]
-            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/setup_gpu.sh
-            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/libraries-{{ .GPUDriversVersion }}.tar.bz2
-            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/tools-{{ .GPUDriversVersion }}.tar.bz2
-            ExecStartPre=/bin/wget --quiet -P /home/core http://{{ .BootstrapperIP }}/static/coreos_gpu_drivers/modules-{{ .CoreOSVerson }}-{{ .GPUDriversVersion }}.tar.bz2
+            ExecStartPre=/bin/wget --quiet -P /home/core -r -nd http://{{ .BootstrapperIP }}/static/gpu-drivers/coreos/{{ .CoreOSVersion }}
             ExecStart=/bin/bash /home/core/setup_gpu.sh {{ .CoreOSVersion }} {{ .GPUDriversVersion }}
             RemainAfterExit=no
             Type=oneshot

@@ -23,6 +23,7 @@ trap finish exit
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
+:<<BLOCK
 cp ${SCRIPTS_DIR}/_container_build.sh ${WORK_DIR}
 cp ${SCRIPTS_DIR}/_export.sh ${WORK_DIR}
 
@@ -40,6 +41,7 @@ mkdir -p ${DRIVER_ARCHIVE_PATH}
 SITE=us.download.nvidia.com/XFree86/Linux-x86_64
 wget -c -N http://${SITE}/${DRIVER_VERSION}/${DRIVER_ARCHIVE}.run \
   -P ${DRIVER_ARCHIVE_PATH} || { echo "Failed"; exit 1; }
+BLOCK
 
 rm -Rf ${WORK_DIR}/tmp
 mkdir -p ${WORK_DIR}/tmp ${PKG_DIR}
