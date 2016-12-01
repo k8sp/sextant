@@ -221,12 +221,27 @@ build_bootstrapper_image() {
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper . #> /dev/null 2>&1 || { echo "Failed"; exit 1; }
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-    # NOTE: we need to run docker load on the bootstrapper server
-    # to load these saved images.
 
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
+
+    # Check cluster-desc file
+    printf "Checking cluster description file ..."
+    docker run --rm \
+        --volume $BSROOT:/bsroot \
+        --entrypoint "/bin/sh" \
+        bootstrapper -c \
+          "/go/bin/cloud-config-server -addr :80 \
+          -dir /bsroot/html/static \
+          -cc-template-file /bsroot/config/cloud-config.template \
+          -cc-template-url \"\" \
+          -cluster-desc-file /bsroot/config/cluster-desc.yml \
+          -cluster-desc-url \"\" \
+          -ca-crt /bsroot/tls/ca.pem \
+          -ca-key /bsroot/tls/ca-key.pem \
+          -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+
     echo "Done"
 }
 

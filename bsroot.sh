@@ -58,3 +58,4 @@ build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config
+
