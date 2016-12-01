@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-http-backend
+  labels:
+    name: default-http-backend
+    kubernetes.io/cluster-service: "true"
+  namespace: kube-system
+spec:
+  selector:
+    app: default-http-backend
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: default-http-backend
+

@@ -427,6 +427,9 @@ coreos:
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend.yaml http://{{ .BootstrapperIP }}/static/default-backend.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend-svc.yaml http://{{ .BootstrapperIP }}/static/default-backend-svc.yaml
+            
             ExecStart=/usr/bin/docker run --rm --net=host \
             -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
             -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
