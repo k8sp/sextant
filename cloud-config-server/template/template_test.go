@@ -41,6 +41,17 @@ func TestExecute(t *testing.T) {
 	Execute(tmpl, config, "00:25:90:c0:f7:80", caKey, caCrt, &ccTmpl)
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
-	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster-token"]
-	assert.Equal(t, initialEtcdCluster, "etcd-cluster-1")
+	switch i := config.OSName; i {
+	case "CoreOS":
+		initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster-token"]
+		assert.Equal(t, initialEtcdCluster, "etcd-cluster-1")
+	case "CentOS":
+		for _, fileinfo := range yml["write_files"].([]interface{}) {
+			m := fileinfo.(map[interface{}]interface{})["path"]
+			if m == "/etc/systemd/system/setup-network-environment.service" {
+				assert.Equal(t, m, "/etc/systemd/system/setup-network-environment.service")
+			}
+		}
+	}
+
 }

@@ -40,6 +40,7 @@ type ExecutionConfig struct {
 	TimeLength               string
 	CoreOSVersion            string
 	GPUDriversVersion        string
+	OSName                   string
 }
 
 // Execute returns the executed cloud-config template for a node with
@@ -83,6 +84,7 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 		TimeLength:        config.CoreOS.TimeLength,
 		CoreOSVersion:     config.CoreOSVersion,
 		GPUDriversVersion: config.GPUDriversVersion,
+		OSName:            config.OSName,
 	}
 	return tmpl.Execute(w, ec)
 }

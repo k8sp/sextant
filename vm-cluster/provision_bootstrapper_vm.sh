@@ -8,6 +8,8 @@ cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
 #修复无法找到pxe　server的异常
 sed -i '/interface=eth0/,/bind-interfaces/d' /bsroot/config/dnsmasq.conf
+# Set system time zone
+/usr/bin/timedatectl set-timezone Asia/Shanghai
 
 cd /bsroot
 ./start_bootstrapper_container.sh /bsroot

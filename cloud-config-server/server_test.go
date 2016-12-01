@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -34,13 +35,19 @@ func TestRun(t *testing.T) {
 	}()
 	caKey, caCrt := certgen.GenerateRootCA(out)
 
+	config := candy.WithOpened("./template/cluster-desc.sample.yaml", func(r io.Reader) interface{} {
+		b, e := ioutil.ReadAll(r)
+		candy.Must(e)
+		c := &clusterdesc.Cluster{}
+		assert.Nil(t, yaml.Unmarshal(b, &c))
+		return c
+	}).(*clusterdesc.Cluster)
+
 	// Run the cloud-config-server in a goroutine.
 	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
 	candy.Must(e)
-
 	clusterDescExample, e := ioutil.ReadFile(path.Join(candy.GoPath(), clusterDescExampleFile))
 	candy.Must(e)
-
 	clusterDesc := func() []byte { return clusterDescExample }
 	ccTemplate := func() []byte { return ccTmpl }
 
@@ -56,12 +63,22 @@ func TestRun(t *testing.T) {
 	// Compare only a small fraction -- the etcd2 initial cluster -- for testing.
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(cc, yml))
-	initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
+	switch i := config.OSName; i {
+	case "CoreOS":
+		initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
 
-	c := &clusterdesc.Cluster{}
-	candy.Must(yaml.Unmarshal(clusterDescExample, c))
+		c := &clusterdesc.Cluster{}
+		candy.Must(yaml.Unmarshal(clusterDescExample, c))
 
-	assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
+		assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
+	case "CentOS":
+		for _, fileinfo := range yml["write_files"].([]interface{}) {
+			m := fileinfo.(map[interface{}]interface{})["path"]
+			if m == "/etc/systemd/system/setup-network-environment.service" {
+				assert.Equal(t, m, "/etc/systemd/system/setup-network-environment.service")
+			}
+		}
+	}
 
 	// Test for static file Handler
 	e = ioutil.WriteFile(path.Join(out, "hello"), []byte("Hello Go"), 0644)

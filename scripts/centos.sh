@@ -82,7 +82,7 @@ zerombr
 clearpart --all
 # Disk partitioning information
 part / --fstype="xfs" --grow --ondisk=sda --size=1
-part swap --fstype="swap" --ondisk=sda --size=30000
+part swap --fstype="swap" --ondisk=sda --size=8000
 
 repo --name=cloud-init --baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 network --onboot on --bootproto dhcp --noipv6
@@ -106,19 +106,24 @@ wget
 %end
 
 %post --log=/root/ks-post-provision.log
+
 wget -P /root http://$BS_IP/static/CentOS7/post_provision.sh
 bash -x /root/post_provision.sh
+
 wget -P /root http://$BS_IP/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh
 pushd /root/
 bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${BS_IP} ${cluster_desc_centos_version}
 popd
+
+wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
+bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
+
 %end
 
 %post --nochroot
 wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
 bash -x ./post_nochroot_provision.sh
 %end
-
 
 EOF
     echo "Done"
@@ -137,10 +142,8 @@ generate_post_provision_script() {
 #         so use parted to remove the part tables
 
 default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
-
 printf "Default interface: ${default_iface}\n"
 default_iface=`echo ${default_iface} | awk '{ print $1 }'`
-
 mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
 printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
 
@@ -149,6 +152,44 @@ echo ${hostname_str} >/etc/hostname
 
 EOF
     echo "Done"
+}
+
+
+generate_post_cloudinit_script() {
+    printf "Generating post cloudinit script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_cloudinit_provision.sh <<'EOF'
+#!/bin/bash
+default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
+bootstrapper_ip=$(grep nameserver /etc/resolv.conf|cut -d " " -f2)
+printf "Default interface: ${default_iface}\n"
+default_iface=`echo ${default_iface} | awk '{ print $1 }'`
+
+mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
+printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
+
+
+sed -i 's/disable_root: 1/disable_root: 0/g' /etc/cloud/cloud.cfg
+sed -i 's/ssh_pwauth:   0/ssh_pwauth:   1/g' /etc/cloud/cloud.cfg
+echo "FLANNEL_OPTIONS=\"-iface=${default_iface}\"" >> /etc/sysconfig/flanneld
+
+mkdir -p /var/lib/cloud/seed/nocloud-net/
+cd /var/lib/cloud/seed/nocloud-net/
+
+wget -O user-data http://$bootstrapper_ip/cloud-config/${mac_addr}
+
+cat > /var/lib/cloud/seed/nocloud-net/meta-data << eof
+instance-id: iid-local01
+eof
+
+cloud-init init --local
+cloud-init init
+
+systemctl stop  NetworkManager
+systemctl disable  NetworkManager
+EOF
+    echo "Done"
+
 }
 
 

@@ -46,6 +46,7 @@ type Cluster struct {
 	CoreOS                   CoreOS
 	CoreOSVersion            string `yaml:"coreos_version"`
 	GPUDriversVersion        string `yaml:"gpu_drivers_version"`
+	OSName                   string `yaml:"os_name"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
