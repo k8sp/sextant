@@ -67,3 +67,17 @@ EOF
     echo "Done"
 }
 
+
+build_coreos_nvidia_gpu_drivers(){
+    printf "Generating CoreOS Nvidia GPU drivers ... "
+    bash +x $SEXTANT_DIR/scripts/coreos_gpu/build.sh $SEXTANT_DIR/scripts/coreos_gpu $BSROOT/html/static/coreos_gpu_drivers \
+        $cluster_desc_gpu_drivers_version $cluster_desc_coreos_channel $cluster_desc_coreos_version \
+        ||  { echo "Failed"; exit 1; }
+
+    cp $SEXTANT_DIR/scripts/coreos_gpu/setup_gpu.sh $BSROOT/html/static/coreos_gpu_drivers || { echo "Failed"; exit 1; }
+
+    echo "Done"
+
+}
+
+

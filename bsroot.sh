@@ -40,6 +40,7 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     check_coreos_version
     download_pxe_images
     generate_pxe_config
+    build_coreos_nvidia_gpu_drivers
 
 else
 

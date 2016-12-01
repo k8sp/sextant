@@ -1,13 +1,13 @@
-bootstrapper: 192.168.8.101
-subnet: 192.168.8.0
+bootstrapper: 10.10.14.253
+subnet: 10.10.14.0
 netmask: 255.255.255.0
-iplow: 192.168.8.110
-iphigh: 192.168.8.220
-routers: [192.168.8.101]
-broadcast: 192.168.8.255
-nameservers: [192.168.8.101]
+iplow: 10.10.14.1
+iphigh: 10.10.14.127
+routers: [10.10.14.254]
+broadcast: 10.10.14.255
+nameservers: [10.10.14.253]
 upstreamnameservers: [8.8.8.8, 8.8.4.4]
-domainname: "ailab.unisound.com"
+domainname: "ail.unisound.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
@@ -16,11 +16,15 @@ flannel_backend: "host-gw"
 # coreos_channel can be configured as stable, alpha, beta
 coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
-coreos_version: "current"
+coreos_version: "1122.2.0"
+centos_version: "7.2.1511"
+# gpu drivers version
+gpu_drivers_version: "367.57"
+
 ingress_hostnetwork: true
 
 #OS type: CentOS or CoreOS
-os_name: "CentOS"
+os_name: "CoreOS"
 
 coreos:
   reboot_strategy: "etcd-lock"
@@ -29,7 +33,7 @@ coreos:
 
 ceph:
   zap_and_start_osd: y
-  osd_journal_size: 500
+  osd_journal_size: 5000
 
 images:
   hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
@@ -49,31 +53,32 @@ nodes:
     kube_master: y
     etcd_member: y
     ingress_label: n
-    flannel_iface: "eth0"
-  - mac: "00:25:90:c0:f6:ee"
+  - mac: "0c:c4:7a:82:c5:bc"
     ceph_monitor: y
     kube_master: n
     etcd_member: y
     ingress_label: n
-    flannel_iface: "eth0"
-  - mac: "00:25:90:c0:f6:d6"
+  - mac: "0c:c4:7a:82:c5:b8"
     ceph_monitor: y
-    kube_master: n
-    etcd_member: y
-    ingress_label: n
-    flannel_iface: "eth0"
-  - mac: "00:25:90:c0:f7:ac"
-    ceph_monitor: n
-    kube_master: n
-    etcd_member: y
-    ingress_label: n
-    flannel_iface: "eth0"
-  - mac: "00:25:90:c0:f7:7e"
-    ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: y
-    flannel_iface: "eth0"
+  - mac: "00:25:90:c0:f6:ee"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: n
+    ingress_label: n
+  - mac: "00:25:90:c0:f6:d6"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: n
+    ingress_label: n
 
 ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVwfLAgA8DICHp0//xfBTgfU34fVOtKpxgrkceC605HGQ6GIPsBHKw6CYeGziwZBDNtMZxTeyQ7+79sqA2VUR2I5nrhlxw/Wc80yTsjbRmcIbr3mUNCd3+cOqnOAsWEucZCHHcNYwUQ3wIOoyP0cBLKI4b25ucgtawxCmB7PJ1Cme+vIf1cVffeQqedu7hmlpQf/DnQc7O1iBRhEAqKgy1Y+hb0Ryc7StAe0nDHCj+2b08vHlNXaS2sJKrXUE0HhCZZP46APaLmZPmmHeoJKx31M0IERWYaZRvLe0Pl7Pp6DueOSJvvNwR5YbNe5aQ2pO3xiv3wCj6n66dlqAhpmmD vien.lee@localhost"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrYpsQVHBRUA/sZfxgK+9jZBGZfoulXXe0faPCGC0b3L6z/qYzJnNFf1d4gj6hQaGyHGvVlr6Kd/6y+0Eour51R2H+8FO+9Y7BaomuluHzm/jcgruAmbVrXZ8vKDDPDx4Lf1tnU1SqPpKFRgdro+BUcj/0LZ45tzsblpA2JOiMJkpqtx17WPKIzc9q5OZKVcV+zh/O+JuKLW/bDIndGiQRVJBGa87ZkCf+fzO5ME4nl7MsG/YY+9J/UkwDbZQd3wFTRqmHncrSupNhu1R2DttP9eWSHQsJIaEXmqKv4p7p4byztix3A/2hBUILZa3iDwxlCZq7OBrQCc/xOI45VMR7 liangjiameng@liangjiameng-Ubuntu"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAr5WIU6wES7WLrWTd3Y+vykAKERYdCzUne3xtlzk9tkcVTQ1IZ5I/cd+x7yw1BM69iRGkGWGRR4Z7k7CzQEbQ8udvK4KEOdZ+JWQfqm8XSlG4CA/cxevu55Trnp7kL4Kb5AtYxnIDhxS6NkrNrte5S4HBpQTA92DXtRW+nplyZ5TAk/qfOMcLoY1tdlTzGdPjWksvb13vvsBv8WkzqIXnBo+2ZJ9ZdieWLJlU0ExPqCH+kdPfv54kf7d8VY8+5jPXZ4IKGOMwi5929iVmkSzrKjvWdMT0aYSAzysohdchLbZcsm4iyQcAwU/J7kkZBbfvOcKr7EGQOif+F1Ag2LtNsQ== liuqs@Megatron"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJ+IorvkvsgiUYzu10DyQl6lIaZWolDLpatZMc+yHJv5YM/j4//NeviAOZAIRS5YjoTbRrr5rGvY6FDX+I1Z+4fXMKYW21HvSSgZBwkZpxSlnkz4s0/osJB6B30EX1FG2bMPXHcMKvVAZCc8InNQoMZd0a0QEHVNw7o2v721IVZQ/DvUk+1zAGn5fjLP8G0sHM1H8y+D8DIuB+8+eoDp1KJ8fl0etkVRLQon94w/EwS9Qwpt2PVYq8W2FK5vs1PSHiLCFpllenQS56dIoFoSt1cZSAy/Uvfdip+/Bb856YIqL896BjpwxkZcJDKZEKGi7wxrqyIyLuR7tp2j/b6WWl Liang@JiaendeMacBook-Air.local"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHHyuMYt9Q4v16EEQt/sDebbg8bM3W2sHDgoAzu0L38L2Ac7fiCo/3yr7r3qu4KAw6BQ5JbiBGEiXfwbsp/mqsQ6lKwGNmUiLUFqrQ7XwAp0388I8j/KF3PXDViKknjCM27rep0+7Hqu7QoQBmeEnNBajyxMESx06muS/1SzqvNMlfd0jSqJh+uaFzokSvOF9Zfe99b+Pj2aEXvu3hB+aWDjNyPrenQ7xOhpDshmkOH/bdqCmCVG+8JDWk9XQ8zdm2eSqyiGamYxmlvp5Dn6N+6o74D/6+i1vzdt2psb4mq74UN8arakVgGqwdmlcM6iSvFO8Ee3y986/+IR2hW4Sp xuerq@bogon"
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAllVLACpyGPH3tMLMLIS6YrobXqSbLcCuIcUxQmRjnKb+7sCW6/3LLKZDdCjNdeUM2BCqbSZROh5ojmmd+nkaJDx8wB/mDXI91nnNesDar5agO564WL7h5hhLCW11PuLjgHaw9LWiOHrFOuun1O6O1kJZTsm/Kkfkb/lveWefJN14UBdhf2bk39FdnjMJR9BVLmPFHfHDLAtB++4b0pG3a2EY7erqI7XuzLxHzmvaJbGklE1aj6KreHYGLpzPa6b+s1Q/20gx0jQBSfjFwF64wFdUrWJBJ1LzY3CD7HdWCefcMWcdQmzpQNhAO5qKaIxC2s6skwF3CuXJBnbZ6Q7KKQ== liyijie@Megatron"

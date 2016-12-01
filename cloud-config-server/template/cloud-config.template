@@ -336,6 +336,22 @@ coreos:
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
+
+        - name: setup-gpu.service
+          command: start
+          content: |
+            [Unit]
+            Description=Setup GPU
+            Requires=network.target
+            After=network.target
+            [Service]
+            ExecStartPre=/usr/bin/mkdir -p /opt/gpu
+            ExecStartPre=/usr/bin/wget -P /opt/gpu -r -nd http://{{ .BootstrapperIP }}/static/gpu-drivers/coreos/{{ .CoreOSVersion }}
+            ExecStart=/bin/bash /opt/gpu/setup_gpu.sh {{ .CoreOSVersion }} {{ .GPUDriversVersion }}
+            RemainAfterExit=no
+            Type=oneshot
+
+
         - name: "settimezone.service"
           command: start
           content: |
@@ -346,6 +362,7 @@ coreos:
             ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
             RemainAfterExit=no
             Type=oneshot
+
 
         {{- if .CephMonitor }}
         - name: "ceph-mon.service"
@@ -366,6 +383,7 @@ coreos:
             Type=oneshot
         {{- end }}
 
+
         {{- if .ZapAndStartOSD }}
         - name: "ceph-osd.service"
           command: start
@@ -385,6 +403,7 @@ coreos:
             Type=oneshot
           {{- end}}
 
+
         - name: docker.service
           runtime: true
           command: start
@@ -394,6 +413,7 @@ coreos:
               [Unit]
               After=docker.socket early-docker.target network.target flanneld.service
               Requires=docker.socket early-docker.target flanneld.service
+
         {{- if .KubeMaster }}
         - name: kube-addons.service
           command: start
@@ -445,6 +465,8 @@ coreos:
             RestartSec=10
             [Install]
             WantedBy=multi-user.target
+
+
         {{- else }}
         - name: kubelet.service
           runtime: true
@@ -472,12 +494,12 @@ coreos:
             --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
             --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
             --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
-            {{ if .IngressLabel }}
+            {{ if .IngressLabel }} \
             --logtostderr=true \
             --node-labels=role=ingress \
-            {{ else }}
+            {{ else }} \
             --logtostderr=true \
-            {{ end }}
+            {{ end }} \
             --network-plugin= \
             --network-plugin-dir=/etc/cni/net.d
             Restart=always

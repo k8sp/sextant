@@ -44,6 +44,8 @@ type Cluster struct {
 	FlannelBackend           string `yaml:"flannel_backend"`
 	IngressHostNetwork       bool   `yaml:"ingress_hostnetwork"`
 	CoreOS                   CoreOS
+	CoreOSVersion            string `yaml:"coreos_version"`
+	GPUDriversVersion        string `yaml:"gpu_drivers_version"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
