@@ -338,7 +338,6 @@ coreos:
             Type=oneshot
 
         - name: setup-gpu.service
-          runtime: true
           command: start
           content: |
             [Unit]
@@ -347,7 +346,6 @@ coreos:
             After=network.target
             [Service]
             ExecStartPre=/usr/bin/mkdir -p /opt/gpu
-            ExecStartPre=/usr/bin/wget -P /opt/gpu http://{{ .BootstrapperIP }}/static/gpu-drivers/coreos/{{ .CoreOSVersion }}/setup_gpu.sh
             ExecStartPre=/usr/bin/wget -P /opt/gpu -r -nd http://{{ .BootstrapperIP }}/static/gpu-drivers/coreos/{{ .CoreOSVersion }}
             ExecStart=/bin/bash /opt/gpu/setup_gpu.sh {{ .CoreOSVersion }} {{ .GPUDriversVersion }}
             RemainAfterExit=no
@@ -506,7 +504,7 @@ coreos:
             [Install]
             WantedBy=multi-user.target
         {{- end}}
- 
+
 hostname: "{{ .Hostname }}"
 
 ssh_authorized_keys:
