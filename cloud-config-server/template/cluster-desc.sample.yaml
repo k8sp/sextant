@@ -44,36 +44,31 @@ images:
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
 
 nodes:
-  - mac: "00:25:90:cd:f7:86"
-    ceph_monitor: y
-    kube_master: y
-    etcd_member: y
-    ingress_label: n
   - mac: "00:25:90:c0:f7:80"
     ceph_monitor: y
     kube_master: y
     etcd_member: y
     ingress_label: n
-  - mac: "00:25:90:c0:f6:ee"
-    ceph_monitor: y
-    kube_master: n
-    etcd_member: y
-    ingress_label: n
-  - mac: "00:25:90:c0:f6:d6"
-    ceph_monitor: y
-    kube_master: n
-    etcd_member: y
-    ingress_label: n
   - mac: "0c:c4:7a:82:c5:bc"
     ceph_monitor: y
     kube_master: n
-    etcd_member: n 
+    etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:b8"
     ceph_monitor: y
     kube_master: n
-    etcd_member: n
+    etcd_member: y
     ingress_label: y
+  - mac: "00:25:90:c0:f6:ee"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: n
+    ingress_label: n
+  - mac: "00:25:90:c0:f6:d6"
+    ceph_monitor: y
+    kube_master: n
+    etcd_member: n
+    ingress_label: n
 
 ssh_authorized_keys: |1+
     - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzAy8KEKxDMmjd55RMKLFs8bhNGHgC+pvjbC7BOp4gibozfZAr84nWsfZPs44h1jMq0pX2qzGOpzGEN9RH/ALFCe/OixWkh+INnVTIr8scZr6M+3NzN+chBVGvmIAebUfhXrrP7pUXwK06T2MyT7HaDumfUiHF+n3vNIQTpsxnJA7lmx2IJvz6EujK9le75vJM19MsbUZDk61wuiqhbUZMwQEAKrWsvt9CPhqyHD2Ueul0cG/0fHqOXS/fw7Ikg29rUwdzRuYnvw6izuvBoaHF6nNxR+qSiVi3uyJdNox0/nd87OVvd0fE5xEz+xZ8aFwGyAZabo/KWgcMxk6WN0O1Q== lipeng@Megatron"

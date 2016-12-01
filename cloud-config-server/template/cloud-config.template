@@ -365,6 +365,7 @@ coreos:
             RemainAfterExit=no
             Type=oneshot
 
+
         {{- if .CephMonitor }}
         - name: "ceph-mon.service"
           command: start
@@ -383,6 +384,7 @@ coreos:
             RemainAfterExit=no
             Type=oneshot
         {{- end }}
+
 
         {{- if .ZapAndStartOSD }}
         - name: "ceph-osd.service"
