@@ -47,6 +47,7 @@ type Cluster struct {
 	CoreOSVersion            string `yaml:"coreos_version"`
 	GPUDriversVersion        string `yaml:"gpu_drivers_version"`
 	OSName                   string `yaml:"os_name"`
+	SetNTP                   bool   `yaml:"set_ntp"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.

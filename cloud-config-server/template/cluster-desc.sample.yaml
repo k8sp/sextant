@@ -11,20 +11,28 @@ domainname: "ail.unisound.com"
 dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
+
 # Flannel backend only support host-gw and udp for now.
 flannel_backend: "host-gw"
-# coreos_channel can be configured as stable, alpha, beta
+
+# coreos_channel can be configured as stable, alpha, beta.
 coreos_channel: "stable"
+
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "1122.2.0"
+
 centos_version: "7.2.1511"
+
 # gpu drivers version
 gpu_drivers_version: "367.57"
 
 ingress_hostnetwork: true
 
+# Ntpserver set_ntp option for the cluster configuration.
+set_ntp: y
+
 #OS type: CentOS or CoreOS
-os_name: "CoreOS"
+os_name: "CentOS"
 
 coreos:
   reboot_strategy: "etcd-lock"
@@ -46,6 +54,7 @@ images:
   skydns: "typhoon1986/skydns:latest"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
   default_backend: "yancey1989/defaultbackend:1.0"
+  ntp: "redaphid/docker-ntp-server"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"

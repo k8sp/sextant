@@ -29,6 +29,7 @@ type addonsConfig struct {
 	Images              map[string]string
 	IngressHostNetwork  bool
 	MasterHostname      string
+	SetNTP              bool
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -54,6 +55,7 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 		Images:              config.Images,
 		IngressHostNetwork:  config.IngressHostNetwork,
 		MasterHostname:      config.GetMasterHostname(),
+		SetNTP:              config.SetNTP,
 	}
 	candy.Must(tmpl.Execute(w, ac))
 }

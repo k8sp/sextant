@@ -3,7 +3,10 @@ user=root
 dhcp-range={{ .IPLow }},{{ .IPHigh }},{{ .Netmask }},12h
 log-dhcp
 
+{{- if .SetNTP }}
 dhcp-option=option:ntp-server,{{ .Bootstrapper }}
+{{- end }}
+
 dhcp-option=28,{{ .Broadcast }}
 dhcp-option=3,{{range $index, $ele := .Routers}}{{if $index}},{{end}}{{$ele}}{{end}}
 dhcp-option=6,{{range $index, $ele := .NameServers}}{{if $index}},{{end}}{{$ele}}{{end}}
@@ -20,7 +23,6 @@ local=/{{ .DomainName }}/
 domain-needed
 
 
-# FIXME: should add NTP time server
 dhcp-boot=pxelinux.0
 pxe-prompt="Press F8 for menu.", 5
 pxe-service=x86PC, "Install CoreOS from network server", pxelinux
