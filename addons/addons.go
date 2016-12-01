@@ -27,7 +27,7 @@ type addonsConfig struct {
 	K8sClusterDNS       string
 	EtcdEndpoint        string
 	Images              map[string]string
-	SetNtp              bool
+	SetNTP              bool
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -51,7 +51,7 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 		K8sClusterDNS:       config.K8sClusterDNS,
 		EtcdEndpoint:        strings.Split(config.GetEtcdEndpoints(), ",")[0],
 		Images:              config.Images,
-		SetNtp:              config.SetNtp,
+		SetNTP:              config.SetNTP,
 	}
 	candy.Must(tmpl.Execute(w, ac))
 }

@@ -3,7 +3,7 @@ user=root
 dhcp-range={{ .IPLow }},{{ .IPHigh }},{{ .Netmask }},12h
 log-dhcp
 
-{{- if .SetNtp }}
+{{- if .SetNTP }}
 dhcp-option=option:ntp-server,{{ .Bootstrapper }}
 {{- end }}
 dhcp-option=28,{{ .Broadcast }}
