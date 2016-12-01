@@ -35,7 +35,16 @@ cp $BSROOT/tls/ca.pem /etc/docker/certs.d/bootstrapper:5000/ca.crt
 if ! grep -q "127.0.0.1 bootstrapper" /etc/hosts
   then echo "127.0.0.1 bootstrapper" >> /etc/hosts
 fi
-
+ntp_set=$(grep '^set_ntp' $BSROOT/config/cluster-desc.yml|cut -d : -f2)
+if [[ $ntp_set == " y" ]]; then
+docker load < $BSROOT/docker-ntp-server.tar > /dev/null 2>&1 || { echo "Docker can not load ntpserver.tar!"; exit 1; }
+docker rm -f ntpserver
+docker run -d \
+       --name ntpserver \
+       --net=host \
+       --privileged \
+       docker-ntp-server.tar || { echo "Failed"; exit -1; }
+fi
 docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
 docker rm -f bootstrapper
 docker run -d \

@@ -592,8 +592,8 @@ ssh_authorized_keys:
     content: |
       [Unit]
       Description=Install ceph mon services
-      Requires=etcd2.service
-      After=etcd2.service
+      Requires=etcd.service
+      After=etcd.service
       Requires=network.target
       After=network.target
 
@@ -616,8 +616,8 @@ ssh_authorized_keys:
     content: |
       [Unit]
       Description=Install ceph osd service
-      Requires=etcd2.service
-      After=etcd2.service
+      Requires=etcd.service
+      After=etcd.service
       Requires=network.target
       After=network.target
 
