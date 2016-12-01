@@ -12,7 +12,12 @@ if [ $# -ne 2 ]; then
    exit 1;
 fi
 
-cd `dirname $0`
+
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+WORKDIR=$(dirname $(realpath $0))
 
 mkdir -p /opt/bin
 mkdir -p /var/lib/nvidia
@@ -26,9 +31,9 @@ TEMPLATE=/etc/ld.so.conf.d/nvidia.conf
 EOF
 }
 
-MODULES="modules-$1-$2"
-TOOLS="tools-$2"
-LIBRARIES="libraries-$2"
+MODULES="$WORKDIR/modules-$1-$2"
+TOOLS="$WORKDIR/tools-$2"
+LIBRARIES="$WORKDIR/libraries-$2"
 
 rm -rf {$MODULES,$TOOLS,$LIBRARIES}
 mkdir -p {$MODULES,$TOOLS,$LIBRARIES}
