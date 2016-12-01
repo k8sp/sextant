@@ -44,6 +44,7 @@ type Cluster struct {
 	FlannelBackend           string `yaml:"flannel_backend"`
 	CoreOS                   CoreOS
 	OSName                   string `yaml:"os_name"`
+	SetNtp                   bool   `yaml:"set_ntp"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
