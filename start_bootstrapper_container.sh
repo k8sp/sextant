@@ -43,7 +43,7 @@ docker run -d \
        --name ntpserver \
        --net=host \
        --privileged \
-       docker-ntp-server.tar || { echo "Failed"; exit -1; }
+       redaphid/docker-ntp-server || { echo "Failed"; exit -1; }
 fi
 docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
 docker rm -f bootstrapper
