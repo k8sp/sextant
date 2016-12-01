@@ -11,8 +11,8 @@ INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
 # Check sextant dir
-if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/xuerq_sextant/sextant" ]]; then
-    echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/xuerq_sextant/sextant."
+if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
+    echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/sextant."
     echo "Please set GOPATH environment variable and use 'go get' to retrieve sextant."
     exit 1
 fi
