@@ -57,6 +57,49 @@ check_prerequisites() {
     echo "Done"
 }
 
+check_cluster_desc_file() {
+  # Check cluster-desc file
+  printf "Preparing cluster detection environment..."
+  # target binary arch is amd64, and build in docker image will always amd64
+  printf "Cross-compiling Sextant Go programs ... "
+  docker run --rm -it \
+        --volume $GOPATH:/go \
+        -e CGO_ENABLED=0 \
+        -e GOOS=linux \
+        -e GOARCH=amd64 \
+        golang:wheezy \
+        go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+        || { echo "Build sextant failed..."; exit 1; }
+  # Copy built binaries
+  cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
+  echo "Done"
+  printf "Cross-compiling Docker registry ... "
+  docker run --rm -it --name=registry_build \
+        --volume $GOPATH:/go \
+        -e CGO_ENABLED=0 \
+        -e GOOS=linux \
+        -e GOARCH=amd64 \
+        golang:wheezy \
+        sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
+        || { echo "Complie Docker registry failed..."; exit 1; }
+  cp $GOPATH/bin/registry $SEXTANT_DIR/docker
+  echo "Done"
+  printf "Checking cluster description file ..."
+  docker run --rm \
+      --volume $BSROOT:/bsroot \
+      --entrypoint "/bin/sh" \
+      bootstrapper -c \
+        "/go/bin/cloud-config-server -addr :80 \
+        -dir /bsroot/html/static \
+        -cc-template-file /bsroot/config/cloud-config.template \
+        -cc-template-url \"\" \
+        -cluster-desc-file /bsroot/config/cluster-desc.yml \
+        -cluster-desc-url \"\" \
+        -ca-crt /bsroot/tls/ca.pem \
+        -ca-key /bsroot/tls/ca-key.pem \
+        -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+  echo "Done"
+}
 
 generate_registry_config() {
     printf "Generating Docker registry config file ... "
@@ -189,31 +232,6 @@ BLOCK
 
 
 build_bootstrapper_image() {
-    # target binary arch is amd64, and build in docker image will always amd64
-    printf "Cross-compiling Sextant Go programs ... "
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            -e CGO_ENABLED=0 \
-            -e GOOS=linux \
-            -e GOARCH=amd64 \
-            golang:wheezy \
-            go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
-            || { echo "Build sextant failed..."; exit 1; }
-    # Copy built binaries
-    cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
-    echo "Done"
-
-    printf "Cross-compiling Docker registry ... "
-    docker run --rm -it --name=registry_build \
-            --volume $GOPATH:/go \
-            -e CGO_ENABLED=0 \
-            -e GOOS=linux \
-            -e GOARCH=amd64 \
-            golang:wheezy \
-            sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
-            || { echo "Complie Docker registry failed..."; exit 1; }
-    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
-    echo "Done"
 
     printf "Building bootstrapper image ... "
     docker rm -f bootstrapper > /dev/null 2>&1
@@ -225,23 +243,6 @@ build_bootstrapper_image() {
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
-
-    # Check cluster-desc file
-    printf "Checking cluster description file ..."
-    docker run --rm \
-        --volume $BSROOT:/bsroot \
-        --entrypoint "/bin/sh" \
-        bootstrapper -c \
-          "/go/bin/cloud-config-server -addr :80 \
-          -dir /bsroot/html/static \
-          -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url \"\" \
-          -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url \"\" \
-          -ca-crt /bsroot/tls/ca.pem \
-          -ca-key /bsroot/tls/ca-key.pem \
-          -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
     echo "Done"
 }
 
