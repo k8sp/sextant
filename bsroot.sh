@@ -21,6 +21,7 @@ load_yaml $CLUSTER_DESC cluster_desc_
 
 
 check_prerequisites
+check_cluster_desc_file
 
 
 echo "Install OS: ${cluster_desc_os_name}"
@@ -55,7 +56,6 @@ generate_registry_config
 prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
-check_cluster_desc_file
 
 generate_tls_assets
 prepare_setup_kubectl
