@@ -358,19 +358,15 @@ EOF
   echo "Done"
 
   printf "Downloading CentOS GPU drivers ...\n"
-  [ ! -d $ABSOLUTE_GPU_DIR ] && mkdir -p $ABSOLUTE_GPU_DIR
 
   DRIVER_VERSION=${cluster_desc_gpu_drivers_version}
   echo ${cluster_desc_gpu_drivers_version}
   DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}.run
   DRIVER_DOWNLOAD_FROM=http://us.download.nvidia.com/XFree86/Linux-x86_64
-  DRIVER_DOWNLOAD_TO=$ABSOLUTE_GPU_DIR/nvidia_installers/
-  if [ ! -f ${DRIVER_DOWNLOAD_TO}/${DRIVER_ARCHIVE} ]
-  then
-    [ ! -d ${DRIVER_DOWNLOAD_TO} ] && mkdir -p ${DRIVER_DOWNLOAD_TO}
-    wget --quiet -c -N -P ${DRIVER_DOWNLOAD_TO} \
- 		${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
-    		|| { echo "Failed"; exit 1; } 
-  fi
+  DRIVER_DOWNLOAD_TO=$ABSOLUTE_GPU_DIR
+  mkdir -p ${DRIVER_DOWNLOAD_TO}
+  wget --quiet -c -N -P ${DRIVER_DOWNLOAD_TO} \
+    ${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
+    || { echo "Failed"; exit 1; }
   echo "Done"
 }
