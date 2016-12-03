@@ -90,7 +90,6 @@ EOF
 
 
 prepare_cc_server_contents() {
-:<<BLOCK
     printf "Generating Ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
     # update install-mon.sh and set OSD_JOURNAL_SIZE
@@ -106,9 +105,7 @@ prepare_cc_server_contents() {
         > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
     echo "Done"
 
-BLOCK
     mkdir -p $BSROOT/html/static/cloud-config
-:<<BLOCK
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
@@ -123,7 +120,6 @@ BLOCK
     printf "Downloading setup-network-environment file ... "
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
-BLOCK
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
@@ -168,7 +164,7 @@ wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
     echo "Done"
-:<<BLOCK
+
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
@@ -183,7 +179,6 @@ EOF
     # Never change 'current' to 'current/', I beg you.
     rm -rf current > /dev/null 2>&1
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
-BLOCK
     echo "Done"
 }
 
