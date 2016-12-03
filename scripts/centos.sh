@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+GPU_DIR='gpu_drivers'
+ABSOLUTE_GPU_DIR="$BSROOT/html/static/CentOS7/$GPU_DIR"
+HTTP_GPU_DIR="http://$BS_IP/static/CentOS7/$GPU_DIR"
+
 download_centos_images() {
     VERSION=CentOS7
     mkdir -p $BSROOT/tftpboot
@@ -110,9 +114,9 @@ wget
 wget -P /root http://$BS_IP/static/CentOS7/post_provision.sh
 bash -x /root/post_provision.sh
 
-wget -P /root http://$BS_IP/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh
+wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
 pushd /root/
-bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${BS_IP} ${cluster_desc_centos_version}
+bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR} ${cluster_desc_centos_version}
 popd
 
 wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
@@ -230,21 +234,19 @@ EOF
 
 download_centos_gpu_drivers() {
   printf "Generating CentOS GPU drivers build script ...\n"
-  cat > $BSROOT/html/static/CentOS7/gpu_drivers/build_centos_gpu_drivers.sh <<'EOF'
+  cat > $ABSOLUTE_GPU_DIR/build_centos_gpu_drivers.sh <<'EOF'
 #!/bin/bash
 #
 # Build NVIDIA drivers on CentOS
 #
 DRIVER_VERSION=$1
-DOWNLOAD_IP=$2
+HTTP_GPU_DIR=$2
 CENTOS_VERSION=$3
 
 DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}
 DRIVER_ARCHIVE_PATH=${PWD}/nvidia_installers/${DRIVER_ARCHIVE}.run
 WORK_DIR=${PWD}/run_files/${CENTOS_VERSION}
 ARTIFACT_DIR=${WORK_DIR}/${DRIVER_ARCHIVE}
-DRIVER_DOWNLOAD_FROM=$DOWNLOAD_IP/static/CentOS7/gpu/${DRIVER_ARCHIVE}.run
-
 NVIDIA_DIR=/usr/local/nvidia
 NVIDIA_BIN_DIR=/usr/local/nvidia/bin
 NVIDIA_LIB_DIR=/usr/local/nvidia/lib64
@@ -255,7 +257,7 @@ download_nvidia_gpu_drivers(){
   then
     echo Downloading NVIDIA Linux drivers version ${DRIVER_VERSION}
     mkdir -p nvidia_installers
-    wget --quiet -c -N -P nvidia_installers  ${DRIVER_DOWNLOAD_FROM} || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P nvidia_installers ${HTTP_GPU_DIR}/${DRIVER_ARCHIVE}.run || { echo "Failed"; exit 1; }
   fi
 }
 
@@ -354,14 +356,15 @@ mknod_nvidia_dev
 
 EOF
   echo "Done"
+
   printf "Downloading CentOS GPU drivers ...\n"
-  [ ! -d $BSROOT/html/static/CentOS7/gpu_drivers ] && mkdir  -p $BSROOT/html/static/CentOS7/gpu_drivers
+  [ ! -d $ABSOLUTE_GPU_DIR ] && mkdir -p $ABSOLUTE_GPU_DIR
 
   DRIVER_VERSION=${cluster_desc_gpu_drivers_version}
   echo ${cluster_desc_gpu_drivers_version}
   DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}.run
   DRIVER_DOWNLOAD_FROM=http://us.download.nvidia.com/XFree86/Linux-x86_64
-  DRIVER_DOWNLOAD_TO=$BSROOT/html/static/CentOS7/gpu_drivers/nvidia_installers/
+  DRIVER_DOWNLOAD_TO=$ABSOLUTE_GPU_DIR/nvidia_installers/
   if [ ! -f ${DRIVER_DOWNLOAD_TO}/${DRIVER_ARCHIVE} ]
   then
     [ ! -d ${DRIVER_DOWNLOAD_TO} ] && mkdir -p ${DRIVER_DOWNLOAD_TO}
