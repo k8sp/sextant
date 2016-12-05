@@ -13,6 +13,7 @@ realpath() {
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
+SET_GPU=$(grep '^set_gpu' $SEXTANT_DIR/cloud-config-server/template/cluster-desc.sample.yaml|cut -d : -f2)
 
 
 source $SEXTANT_DIR/scripts/common.sh
@@ -33,7 +34,9 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     generate_post_nochroot_provision_script
     generate_post_cloudinit_script
     generate_rpmrepo_config
-    download_centos_gpu_drivers
+    if [[ "$SET_GPU" == " y" ]];then
+      download_centos_gpu_drivers
+    fi
 
 elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
 
@@ -43,8 +46,9 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     generate_pxe_config
     acquire_specify_version
     update_coreos_images
-    #build_coreos_nvidia_gpu_drivers
-
+    if [[ "$SET_GPU" == " y" ]];then
+      build_coreos_nvidia_gpu_drivers
+    fi
 
 else
 
