@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# Common utilities, variables and checks for all build scripts.
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
+    exit 1
+fi
+
 # Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
@@ -9,6 +19,10 @@ SEXTANT_DIR=$(dirname $(realpath $0))
 CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
+
+source $SEXTANT_DIR/scripts/load_yaml.sh
+# load yaml from "cluster-desc.yaml"
+load_yaml $CLUSTER_DESC cluster_desc_
 
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
@@ -22,7 +36,6 @@ if [[ "$#" == 2 ]]; then
 else
     BSROOT=$SEXTANT_DIR/bsroot
 fi
-
 if [[ -d $BSROOT ]]; then
     echo "$BSROOT already exists. Overwrite without removing it."
 else
@@ -44,10 +57,10 @@ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
-
-check_prerequisites() {
+# check_prerequisites checks for required software packages.
+function check_prerequisites() {
     printf "Checking prerequisites ... "
-    err=0
+    local err=0
     for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
@@ -56,6 +69,7 @@ check_prerequisites() {
     fi
     echo "Done"
 }
+
 
 
 generate_registry_config() {
@@ -126,8 +140,8 @@ prepare_cc_server_contents() {
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying bsroot_lib.bash ... "
-    cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
+    printf "Copying load_yaml.sh ... "
+    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh

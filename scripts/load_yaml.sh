@@ -1,29 +1,16 @@
 #!/usr/bin/env bash
 
-# check_prerequisites checks for required software packages.
-function check_prerequisites() {
-    printf "Checking prerequisites ... "
-    local err=0
-    for tool in wget tar gpg docker tr go make; do
-        command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
-    done
-    if [[ $err -ne 0 ]]; then
-        exit 1
-    fi
-    echo "Done"
-}
-
 # parse_yaml was shamelessly stolen from
 # https://gist.github.com/pkuczynski/8665367.  It encapsulates a AWK
 # script which converts a .yaml file into a .bash file, where each
 # bash variable corresponds to a key-value pair in the .yaml file.
-# 
+#
 # For example, the following invocation generates parseResult.bash,
 # where every bash variable's name is composed of the prefix,
 # cluster_desc_, and the key name (including all its ancestor keys).
-# 
+#
 #    parse_yaml example.yaml "cluster_desc_" > parseResult.bash
-# 
+#
 
 ## derived from https://gist.github.com/epiloque/8cf512c6d64641bde388
 ## works for arrays of hashes, as long as the hashes do not have arrays
@@ -56,7 +43,7 @@ parse_yaml() {
 # variables, each corresponds to a key-value pair in the .yaml file.
 #
 #   load_yaml example.yaml "cluster_desc_"
-# 
+#
 function load_yaml() {
     local yaml=$1
     local prefix=$2
@@ -65,4 +52,3 @@ function load_yaml() {
     source $parsedYaml
     rm $parsedYaml
 }
-
