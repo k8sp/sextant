@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# Common utilities, variables and checks for all build scripts.
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
+    exit 1
+fi
+
 # Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
@@ -9,6 +19,10 @@ SEXTANT_DIR=$(dirname $(realpath $0))
 CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
+
+source $SEXTANT_DIR/scripts/load_yaml.sh
+# load yaml from "cluster-desc.yaml"
+load_yaml $CLUSTER_DESC cluster_desc_
 
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
@@ -22,7 +36,6 @@ if [[ "$#" == 2 ]]; then
 else
     BSROOT=$SEXTANT_DIR/bsroot
 fi
-
 if [[ -d $BSROOT ]]; then
     echo "$BSROOT already exists. Overwrite without removing it."
 else
@@ -44,10 +57,10 @@ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
-
-check_prerequisites() {
+# check_prerequisites checks for required software packages.
+function check_prerequisites() {
     printf "Checking prerequisites ... "
-    err=0
+    local err=0
     for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
@@ -67,7 +80,7 @@ check_cluster_desc_file() {
           -e GOOS=linux \
           -e GOARCH=amd64 \
           golang:wheezy \
-          go get github.com/k8sp/sextant/cloud-config-server \
+          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
           || { echo "Build sextant failed..."; exit 1; }
     echo "Done"
 
@@ -118,7 +131,6 @@ EOF
 
 
 prepare_cc_server_contents() {
-:<<BLOCK
     printf "Generating Ceph installation scripts..."
     mkdir -p $BSROOT/html/static/ceph
     # update install-mon.sh and set OSD_JOURNAL_SIZE
@@ -134,9 +146,7 @@ prepare_cc_server_contents() {
         > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
     echo "Done"
 
-BLOCK
     mkdir -p $BSROOT/html/static/cloud-config
-:<<BLOCK
 
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
@@ -151,15 +161,14 @@ BLOCK
     printf "Downloading setup-network-environment file ... "
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
-BLOCK
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying bsroot_lib.bash ... "
-    cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
+    printf "Copying load_yaml.sh ... "
+    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
@@ -196,7 +205,7 @@ wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
     echo "Done"
-:<<BLOCK
+
     printf "Updating CoreOS images ... "
     if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
         mkdir -p $BSROOT/html/static/$VERSION
@@ -211,21 +220,13 @@ EOF
     # Never change 'current' to 'current/', I beg you.
     rm -rf current > /dev/null 2>&1
     ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
-BLOCK
     echo "Done"
 }
 
 
 build_bootstrapper_image() {
     printf "Build Cloud-config-server ... "
-    docker run --rm -it \
-          --volume $GOPATH:/go \
-          -e CGO_ENABLED=0 \
-          -e GOOS=linux \
-          -e GOARCH=amd64 \
-          golang:wheezy \
-          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
-          || { echo "Build sextant failed..."; exit 1; }
+    # build moved to check_cluster_desc_file
     echo "Done"
 
     printf "Cross-compiling Docker registry ... "
