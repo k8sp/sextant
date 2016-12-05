@@ -20,6 +20,10 @@ CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.tem
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
+source $SEXTANT_DIR/scripts/load_yaml.sh
+# load yaml from "cluster-desc.yaml"
+load_yaml $CLUSTER_DESC cluster_desc_
+
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
     echo "\$SEXTANT_DIR=$SEXTANT_DIR differs from $GOPATH/src/github.com/k8sp/sextant."
@@ -66,61 +70,7 @@ function check_prerequisites() {
     echo "Done"
 }
 
-# parse_yaml was shamelessly stolen from
-# https://gist.github.com/pkuczynski/8665367.  It encapsulates a AWK
-# script which converts a .yaml file into a .bash file, where each
-# bash variable corresponds to a key-value pair in the .yaml file.
-#
-# For example, the following invocation generates parseResult.bash,
-# where every bash variable's name is composed of the prefix,
-# cluster_desc_, and the key name (including all its ancestor keys).
-#
-#    parse_yaml example.yaml "cluster_desc_" > parseResult.bash
-#
 
-## derived from https://gist.github.com/epiloque/8cf512c6d64641bde388
-## works for arrays of hashes, as long as the hashes do not have arrays
-parse_yaml() {
-    local prefix=$2
-    local s
-    local w
-    local fs
-    s='[[:space:]]*'
-    w='[a-zA-Z0-9_]*'
-    fs="$(echo @|tr @ '\034')"
-    sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s[:-]$s\(.*\)$s\$|\1$fs\2$fs\3|p" "$1" |
-    awk -F"$fs" '{
-      indent = length($1)/2;
-      if (length($2) == 0) { conj[indent]="+";} else {conj[indent]="";}
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-              vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-              printf("%s%s%s%s=(\"%s\")\n", "'"$prefix"'",vn, $2, conj[indent-1],$3);
-      }
-    }' | sed 's/_=/+=/g'
-}
-
-# load_yaml calls parse_yaml to convert a .yaml file into a temporary
-# .bash file, run the temporary .bash file, and delete it.  So we will
-# have bash variables defined and whose values are values in the .yaml
-# file.  For example, the following invocation creates some bash
-# variables, each corresponds to a key-value pair in the .yaml file.
-#
-#   load_yaml example.yaml "cluster_desc_"
-#
-function load_yaml() {
-    local yaml=$1
-    local prefix=$2
-    local parsedYaml=$(mktemp /tmp/bsroot-parse-yaml.XXXXX)
-    parse_yaml $yaml $prefix > $parsedYaml
-    source $parsedYaml
-    rm $parsedYaml
-}
-
-# load yaml from "cluster-desc.yaml"
-load_yaml $CLUSTER_DESC cluster_desc_
 
 generate_registry_config() {
     printf "Generating Docker registry config file ... "
@@ -190,8 +140,8 @@ prepare_cc_server_contents() {
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying bsroot_lib.bash ... "
-    cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
+    printf "Copying load_yaml.sh ... "
+    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
