@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 
-if [[ ! -f ./bsroot_lib.bash ]]; then
+if [[ ! -f ./scripts/load_yaml.sh ]]; then
     echo "Please run bsroot_test.bats from the sextant directory, "
     echo "otherwise, bats would prevents us from finding bsroot_lib.bash"
 fi
 SEXTANT_DIR=$PWD
-source $SEXTANT_DIR/bsroot_lib.bash
+source $SEXTANT_DIR/scripts/load_yaml.sh
 
 setup() {
     echo "setup ${BATS_TEST_NAME} ..." >> /tmp/bsroot_test_bats.log
