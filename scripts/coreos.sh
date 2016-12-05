@@ -10,6 +10,23 @@ check_coreos_version () {
     echo "Done with coreos channel: " $cluster_desc_coreos_channel "version: " $VERSION
 }
 
+update_coreos_images() {
+  printf "Updating CoreOS images ... "
+if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
+    mkdir -p $BSROOT/html/static/$VERSION
+fi
+
+wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt
+wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
+wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
+cd $BSROOT/html/static/$VERSION
+gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+cd $BSROOT/html/static
+# Never change 'current' to 'current/', I beg you.
+rm -rf current > /dev/null 2>&1
+ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
+echo "Done"
+}
 
 download_pxe_images() {
     mkdir -p $BSROOT/tftpboot
@@ -53,6 +70,21 @@ download_pxe_images() {
     echo "Done"
 }
 
+acquire_specify_version() {
+  # Fetch release binary tarball from github accroding to the versions
+  # defined in "cluster-desc.yml"
+  hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+  printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
+  wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
+  chmod +x $BSROOT/html/static/kubelet
+  echo "Done"
+
+  # setup-network-environment will fetch the default system IP infomation
+  # when using cloud-config file to initiate a kubernetes cluster node
+  printf "Downloading setup-network-environment file ... "
+  wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
+  echo "Done"
+}
 
 generate_pxe_config() {
     printf "Generating pxelinux.cfg ... "
@@ -79,5 +111,3 @@ build_coreos_nvidia_gpu_drivers(){
     echo "Done"
 
 }
-
-

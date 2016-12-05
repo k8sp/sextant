@@ -41,7 +41,10 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     check_coreos_version
     download_pxe_images
     generate_pxe_config
-    build_coreos_nvidia_gpu_drivers
+    acquire_specify_version
+    update_coreos_images
+    #build_coreos_nvidia_gpu_drivers
+
 
 else
 
@@ -58,4 +61,3 @@ build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config
-

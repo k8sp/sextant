@@ -88,43 +88,27 @@ EOF
     echo "Done"
 }
 
+generate_ceph_install_scripts() {
+  printf "Generating Ceph installation scripts..."
+  mkdir -p $BSROOT/html/static/ceph
+  # update install-mon.sh and set OSD_JOURNAL_SIZE
+  OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
+  # update ceph install scripts to use image configured in cluster-desc.yml
+  CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
+  printf "$CEPH_DAEMON_IMAGE..."
+  sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
+      sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
+      > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
+
+  sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
+      > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
+  echo "Done"
+
+}
+
 
 prepare_cc_server_contents() {
-:<<BLOCK
-    printf "Generating Ceph installation scripts..."
-    mkdir -p $BSROOT/html/static/ceph
-    # update install-mon.sh and set OSD_JOURNAL_SIZE
-    OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
-    # update ceph install scripts to use image configured in cluster-desc.yml
-    CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
-    printf "$CEPH_DAEMON_IMAGE..."
-    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
-        sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
-        > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
-
-    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
-        > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
-    echo "Done"
-
-BLOCK
     mkdir -p $BSROOT/html/static/cloud-config
-:<<BLOCK
-
-    # Fetch release binary tarball from github accroding to the versions
-    # defined in "cluster-desc.yml"
-    hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-    printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    chmod +x $BSROOT/html/static/kubelet
-    echo "Done"
-
-    # setup-network-environment will fetch the default system IP infomation
-    # when using cloud-config file to initiate a kubernetes cluster node
-    printf "Downloading setup-network-environment file ... "
-    wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
-    echo "Done"
-BLOCK
-
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
     cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
@@ -167,23 +151,6 @@ printf "Interface: \${default_iface} MAC address: \${mac_addr}\n"
 wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
-    echo "Done"
-:<<BLOCK
-    printf "Updating CoreOS images ... "
-    if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
-        mkdir -p $BSROOT/html/static/$VERSION
-    fi
-
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static/$VERSION
-    gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static
-    # Never change 'current' to 'current/', I beg you.
-    rm -rf current > /dev/null 2>&1
-    ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
-BLOCK
     echo "Done"
 }
 
