@@ -234,6 +234,29 @@ EOF
 
 download_centos_gpu_drivers() {
   printf "Generating CentOS GPU drivers build script ...\n"
+  cat > /usr/local/bin/nvidia-gpu-mkdev.sh <<'EOF'
+#!/bin/bash
+
+/sbin/modprobe nvidia
+# Count the number of NVIDIA controllers found.
+NVDEVS=`lspci | grep -i NVIDIA`
+N3D=`echo "$NVDEVS" | grep "3D controller" | wc -l`
+NVGA=`echo "$NVDEVS" | grep "VGA compatible controller" | wc -l`
+N=`expr $N3D + $NVGA - 1`
+
+for i in `seq 0 $N`; do
+  mknod -m 666 /dev/nvidia$i c 195 $i
+done
+
+mknod -m 666 /dev/nvidiactl c 195 255
+
+/sbin/modprobe nvidia-uvm
+# Find out the major device number used by the nvidia-uvm driver
+D=\`grep nvidia-uvm /proc/devices | awk '{print \$1}'\`;
+mknod -m 666 /dev/nvidia-uvm c \$D 0
+
+EOF
+
   cat > $ABSOLUTE_GPU_DIR/build_centos_gpu_drivers.sh <<'EOF'
 #!/bin/bash
 #
@@ -323,36 +346,12 @@ install_lib_and_ko() {
     popd
   fi
 }
-
-
-mknod_nvidia_dev() {
-  # Count the number of NVIDIA controllers found.
-  NVDEVS=`lspci | grep -i NVIDIA`
-  N3D=`echo "$NVDEVS" | grep "3D controller" | wc -l`
-  NVGA=`echo "$NVDEVS" | grep "VGA compatible controller" | wc -l`
-  N=`expr $N3D + $NVGA - 1`
-
-  for i in `seq 0 $N`; do
-          mknod -m 666 /dev/nvidia$i c 195 $i
-  done
-
-  mknod -m 666 /dev/nvidiactl c 195 255
-
-  # Find out the major device number used by the nvidia-uvm driver
-  cmd_insmod="insmod ${WORK_DIR}/${DRIVER_ARCHIVE}/kernel/uvm/nvidia-uvm.ko"
-  cmd_mknod="D=\`grep nvidia-uvm /proc/devices | awk '{print \$1}'\`;mknod -m 666 /dev/nvidia-uvm c \$D 0"
-
-  echo "nvidia-smi" >>/etc/rc.local
-  echo $cmd_insmod >>/etc/rc.local
-  echo $cmd_mknod >>/etc/rc.local
-  chmod +x /etc/rc.local
-}
-
-
 download_nvidia_gpu_drivers
 build_lib_and_ko
 install_lib_and_ko
-mknod_nvidia_dev
+/bin/bash /usr/local/bin/nvidia-gpu-mkdev.sh
+echo "/bin/bash /usr/local/bin/nvidia-gpu-mkdev.sh" >>/etc/rc.local
+chmod +x /etc/rc.local
 
 EOF
   echo "Done"
