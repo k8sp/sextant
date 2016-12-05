@@ -20,6 +20,7 @@ coreos_channel: "stable"
 
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "1122.2.0"
+centos_version: "7.2.1511"
 
 # gpu drivers version
 gpu_drivers_version: "367.57"
