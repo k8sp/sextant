@@ -1,32 +1,37 @@
 #!/usr/bin/env bash
+# bsroot.sh doing the preparing stage of running the sextant bootstrapper.
+#
+# Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]
+#
+#
+# Things include:
+# 1. Create a "bsroot" directory, download contents that is needed:
+#      1) PXE images
+#      2) Linux images, currently CoreOS and CentOS7
+#      3) docker images that is needed to deploy kubernetes and ceph
+#      4) NVIDIA gpu drivers
+# 2. Compile cloud-config-server binaries in a docker container
+# 3. Generate configurations accroding to 'cluster-desc.yaml'
+# 4. Generate root CA and api-server certs under 'ssl/'.
+# 4. Package the bootstrapper as a docker image. Put dnsmasq, docker registry
+#    cloud-config-server and scripts needed into one image.
+# ***** Important *****
+# bsroot.sh considers the situation of a "offline cluster", which is not able to
+# connect to the internet directly. So all the images/files must be prepared
+# under generated "./bsroot" directory. Copy this directory to the "real"
+# bootstrap server when the bootstrapper server is "offline". Or, you can run
+# bsroot.sh directly on the bootstrap server.
 
-# bsroot.sh creates the $PWD/bsroot directory, which is supposed to be
-# scp-ed to the bootstrapper server as /bsroot.
-if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
-    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
-    exit 1
-fi
-
-# Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
-realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-}
-
-SEXTANT_DIR=$(dirname $(realpath $0))
-
-
-
-source $SEXTANT_DIR/scripts/common.sh
-source $SEXTANT_DIR/scripts/bsroot_lib.bash
-load_yaml $CLUSTER_DESC cluster_desc_
-
+SEXTANT_ROOT=${PWD}
+source $SEXTANT_ROOT/scripts/common.sh
 
 check_prerequisites
+check_cluster_desc_file
+
 
 
 echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
-
     source $SEXTANT_DIR/scripts/centos.sh
     download_centos_images
     generate_pxe_centos_config
@@ -38,9 +43,7 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     if [[ $cluster_desc_set_gpu == "y" ]];then
       download_centos_gpu_drivers
     fi
-
 elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
-
     source $SEXTANT_DIR/scripts/coreos.sh
     check_coreos_version
     download_pxe_images
@@ -50,12 +53,9 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     if [[ $cluster_desc_set_gpu == "y" ]];then
       build_coreos_nvidia_gpu_drivers
     fi
-
 else
-
     echo "Unsupport OS: ${cluster_desc_os_name}"
     exit -1
-
 fi
 
 generate_registry_config
@@ -63,7 +63,6 @@ generate_ceph_install_scripts
 prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
-
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config

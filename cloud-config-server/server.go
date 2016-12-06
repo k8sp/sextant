@@ -137,6 +137,14 @@ func validation(clusterDescFile string, ccTemplateFile string, caKey, caCrt, dir
 			return errors.New("Generate cloud-config format failed with mac: " + mac + "\n" + err.Error())
 		}
 		ccTmplBuffer.Reset()
+		// check generated cloud-config in yaml format
+		for _, wfunit := range yml["write_files"].([]interface{}) {
+			fn := wfunit.(map[interface{}]interface{})["path"].(string)
+			fcontent := wfunit.(map[interface{}]interface{})["content"].(string)
+			if strings.HasSuffix(fn, "ca.pem") && fcontent == "" {
+				return errors.New("cloud-config has no CA contents")
+			}
+		}
 	}
 	return nil
 }
