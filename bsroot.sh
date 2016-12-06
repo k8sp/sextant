@@ -13,7 +13,7 @@ realpath() {
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
-SET_GPU=$(grep '^set_gpu' $SEXTANT_DIR/cloud-config-server/template/cluster-desc.sample.yaml|cut -d : -f2)
+
 
 
 source $SEXTANT_DIR/scripts/common.sh
@@ -24,6 +24,7 @@ load_yaml $CLUSTER_DESC cluster_desc_
 check_prerequisites
 
 echo "Install OS: ${cluster_desc_os_name}"
+SET_GPU=$(grep '^set_gpu' $BSROOT/cluster-desc.yml|cut -d : -f2)
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
 
     source $SEXTANT_DIR/scripts/centos.sh

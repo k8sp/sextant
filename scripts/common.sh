@@ -43,7 +43,8 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
 fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-
+[ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
+  cp $CLUSTER_DESC $BSROOT/config/cluster_desc.yml
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
