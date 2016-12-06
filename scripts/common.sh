@@ -44,7 +44,7 @@ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
-  cp $CLUSTER_DESC $BSROOT/config/cluster_desc.yml
+  cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
