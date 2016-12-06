@@ -8,7 +8,6 @@ import (
 
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
 	tpcfg "github.com/k8sp/sextant/clusterdesc"
-	"github.com/topicai/candy"
 )
 
 // ExecutionConfig struct config a Coreos's cloud config file which use for installing Coreos in k8s cluster.
@@ -48,11 +47,12 @@ type ExecutionConfig struct {
 func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt string, w io.Writer) error {
 	node := getNodeByMAC(config, mac)
 	ca, e := ioutil.ReadFile(caCrt)
-	candy.Must(e)
-
-	k, c := certgen.Gen(false, node.Hostname(), caKey, caCrt)
-	if node.KubeMaster == true {
-		k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
+	var k, c []byte
+	if e == nil {
+		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt)
+		if node.KubeMaster == true {
+			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
+		}
 	}
 
 	ec := ExecutionConfig{

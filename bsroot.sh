@@ -27,6 +27,8 @@ SEXTANT_ROOT=${PWD}
 source $SEXTANT_ROOT/scripts/common.sh
 
 check_prerequisites
+check_cluster_desc_file
+
 
 echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
