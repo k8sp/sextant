@@ -44,7 +44,7 @@ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
-  cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml
+  cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
 
 check_prerequisites() {
     printf "Checking prerequisites ... "
@@ -112,7 +112,6 @@ prepare_cc_server_contents() {
     mkdir -p $BSROOT/html/static/cloud-config
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
-    cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Copying bsroot_lib.bash ... "

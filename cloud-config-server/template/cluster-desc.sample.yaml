@@ -33,7 +33,7 @@ ingress_hostnetwork: true
 set_ntp: y
 
 #OS type: CentOS or CoreOS
-os_name: "CreOS"
+os_name: "CoreOS"
 
 coreos:
   reboot_strategy: "etcd-lock"

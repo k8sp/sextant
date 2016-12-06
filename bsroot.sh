@@ -24,7 +24,6 @@ load_yaml $CLUSTER_DESC cluster_desc_
 check_prerequisites
 
 echo "Install OS: ${cluster_desc_os_name}"
-SET_GPU=$(grep '^set_gpu' $BSROOT/config/cluster-desc.yml|cut -d " " -f2)
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
 
     source $SEXTANT_DIR/scripts/centos.sh
@@ -35,7 +34,7 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     generate_post_nochroot_provision_script
     generate_post_cloudinit_script
     generate_rpmrepo_config
-    if [[ "$SET_GPU" == "y" ]];then
+    if [[ $cluster_desc_set_gpu == "y" ]];then
       download_centos_gpu_drivers
     fi
 
@@ -47,7 +46,7 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     generate_pxe_config
     acquire_specify_version
     update_coreos_images
-    if [[ "$SET_GPU" == "y" ]];then
+    if [[ $cluster_desc_set_gpu == "y" ]];then
       build_coreos_nvidia_gpu_drivers
     fi
 
@@ -59,6 +58,7 @@ else
 fi
 
 generate_registry_config
+generate_ceph_install_scripts
 prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
