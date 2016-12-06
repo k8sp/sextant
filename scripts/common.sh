@@ -228,10 +228,8 @@ EOF
 
 
 build_bootstrapper_image() {
-    printf "Build Cloud-config-server ... "
-    # build moved to check_cluster_desc_file
-    echo "Done"
-
+    # cloud-config-server and addon compile moved to check_cluster_desc_file
+    # Compile registry and build docker image here
     printf "Cross-compiling Docker registry ... "
     docker run --rm -it --name=registry_build \
           --volume $GOPATH:/go \
@@ -250,7 +248,7 @@ build_bootstrapper_image() {
     docker rm -f bootstrapper > /dev/null 2>&1
     docker rmi bootstrapper:latest > /dev/null 2>&1
     cd $SEXTANT_DIR/docker
-    docker build -t bootstrapper . #> /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
 
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
