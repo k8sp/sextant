@@ -85,17 +85,20 @@ check_cluster_desc_file() {
     echo "Done"
 
     printf "Checking cluster description file ..."
-    docker run --rm -it \
+    mkdir -p $BSROOT/config > /dev/null 2>&1
+    cp $SEXTANT_DIR/cloud-config-server/template/cloud-config.template $BSROOT/config
+    cp $CLUSTER_DESC $BSROOT/config
+    docker run -it \
+        --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
-        --entrypoint "/bin/sh" \
-        bootstrapper -c \
-          "/go/bin/cloud-config-server -addr :80 \
+        golang:wheezy \
+          /go/bin/cloud-config-server -addr :80 \
           -dir /bsroot/html/static \
           -cc-template-file /bsroot/config/cloud-config.template \
           -cc-template-url \"\" \
           -cluster-desc-file /bsroot/config/cluster-desc.yml \
           -cluster-desc-url \"\" \
-          -validate true"  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+          -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
