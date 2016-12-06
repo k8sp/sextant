@@ -108,6 +108,8 @@ generate_ceph_install_scripts() {
 }
 
 
+
+
 prepare_cc_server_contents() {
     mkdir -p $BSROOT/html/static/cloud-config
     printf "Copying cloud-config template and cluster-desc.yml ... "

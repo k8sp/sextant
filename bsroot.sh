@@ -23,6 +23,7 @@ load_yaml $CLUSTER_DESC cluster_desc_
 
 check_prerequisites
 
+
 echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
 
