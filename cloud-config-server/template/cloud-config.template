@@ -373,6 +373,8 @@ coreos:
             Description=Install ceph mon services
             Requires=etcd2.service
             After=etcd2.service
+            Requires=docker.service
+            After=docker.service
             Requires=network.target
             After=network.target
 
@@ -393,6 +395,8 @@ coreos:
             Description=Install ceph osd service
             Requires=etcd2.service
             After=etcd2.service
+            Requires=docker.service
+            After=docker.service
             Requires=network.target
             After=network.target
 
@@ -619,6 +623,8 @@ ssh_authorized_keys:
       Description=Install ceph mon services
       Requires=etcd.service
       After=etcd.service
+      Requires=docker.service
+      After=docker.service
       Requires=network.target
       After=network.target
 
@@ -643,6 +649,8 @@ ssh_authorized_keys:
       Description=Install ceph osd service
       Requires=etcd.service
       After=etcd.service
+      Requires=docker.service
+      After=docker.service
       Requires=network.target
       After=network.target
 
