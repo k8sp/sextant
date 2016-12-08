@@ -49,9 +49,9 @@ func Execute(tmpl *template.Template, config *tpcfg.Cluster, mac, caKey, caCrt s
 	ca, e := ioutil.ReadFile(caCrt)
 	var k, c []byte
 	if e == nil {
-		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt)
+		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt, config.KubeMasterIP, config.KubeMasterDNS)
 		if node.KubeMaster == true {
-			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
+			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt, config.KubeMasterIP, config.KubeMasterDNS)
 		}
 	}
 

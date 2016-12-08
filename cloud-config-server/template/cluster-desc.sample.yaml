@@ -34,6 +34,14 @@ set_ntp: y
 #OS type: CentOS or CoreOS
 os_name: "CentOS"
 
+# kube master ip, there should be cluster ip
+kube_master_ip:
+    - "10.100.0.1"
+    - "192.168.61.73"
+    - "192.168.48.23"
+kube_master_dns:
+    - "aa-bb-cc-dd"
+
 coreos:
   reboot_strategy: "etcd-lock"
   start_time: "03:00"

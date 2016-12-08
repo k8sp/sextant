@@ -69,3 +69,30 @@ etcdctl --endpoints http://08-00-27-ef-d2-12:2379 get /ceph-config/ceph/adminKey
 ```
 mount -t ceph 192.168.8.112:/ /ceph -o name=admin,secret=[your secret]
 ```
+
+## 维护集群
+
+### 集群初始化完成后如何更新master节点的证书
+
+1.修改certgen.go中openssl.cnf的配置
+```
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+DNS.5 = 10.10.10.201
+IP.1 = 10.100.0.1
+```
+1. 根据openssl.cnf，重新生成api-server.pem等文件：https://coreos.com/kubernetes/docs/latest/openssl.html
+1. 重启master的相关进程，包括api-server, controller-manager, scheduler, kube-proxy
+1. 使用kubectl delete secret删除kube-system/default namespace下的default secret
+1. 重新提交失败的service
