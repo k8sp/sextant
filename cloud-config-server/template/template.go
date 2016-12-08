@@ -66,11 +66,12 @@ func Execute(w io.Writer, mac, templateName, ccTemplateDir, clusterDescFile, caK
 func GetConfigDataByMac(mac string, clusterdesc *clusterdesc.Cluster, caKey, caCrt string) *ExecutionConfig {
 	node := getNodeByMAC(clusterdesc, mac)
 	ca, e := ioutil.ReadFile(caCrt)
-	candy.Must(e)
-
-	k, c := certgen.Gen(false, node.Hostname(), caKey, caCrt)
-	if node.KubeMaster == true {
-		k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
+	var k, c []byte
+	if e == nil {
+		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt)
+		if node.KubeMaster == true {
+			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt)
+		}
 	}
 
 	return &ExecutionConfig{

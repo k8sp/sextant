@@ -35,10 +35,10 @@ func TestExecute(t *testing.T) {
 		return c
 	}).(*clusterdesc.Cluster)
 
-	tmpl, e := template.ParseFiles("cloud-config.template", "cc-centos.template", "cc-common.template", "cc-coreos.template")
+	tmpl, e := template.ParseGlob("./templatefiles/*")
 	candy.Must(e)
 	var ccTmpl bytes.Buffer
-	confData := GetConfigData(config, "00:25:90:c0:f7:80", caKey, caCrt)
+	confData := GetConfigDataByMac("00:25:90:c0:f7:80", config, caKey, caCrt)
 	candy.Must(tmpl.ExecuteTemplate(&ccTmpl, "cc-template", *confData))
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))

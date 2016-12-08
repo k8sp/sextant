@@ -1,0 +1,253 @@
+{{ define "centos" }}
+  - path: /usr/lib/systemd/system/etcd.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=etcd
+      Conflicts=etcd.service
+
+      [Service]
+      Type=notify
+      User=etcd
+      Environment=ETCD_NAME=%H
+      Environment=ETCD_DATA_DIR=/var/lib/etcd
+      Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
+      {{- if .EtcdMember }}
+      Environment=ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
+      Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{ .Hostname }}:2380
+      Environment=ETCD_LISTEN_PEER_URLS=http://{{ .Hostname }}:2380,http://{{ .Hostname }}:7001
+      Environment=ETCD_ADVERTISE_CLIENT_URLS=http://{{ .Hostname }}:2379
+      Environment=ETCD_INITIAL_CLUSTER_STATE=new
+      {{- else }}
+      Environment=ETCD_PROXY=on
+      {{- end }}
+      Environment=ETCD_INITIAL_CLUSTER={{ .InitialCluster }}
+      ExecStart=/usr/bin/etcd
+      Restart=always
+      RestartSec=10s
+      LimitNOFILE=40000
+      TimeoutStartSec=0
+
+      [Install]
+       WantedBy=multi-user.target
+  - path: /usr/lib/systemd/system/flanneld.service
+    owner: root
+    permissions: 0644
+    content: |
+      # /usr/lib/systemd/system/flanneld.service
+      [Unit]
+      Description=Flanneld overlay address etcd agent
+      After=network.target
+      After=network-online.target
+      Wants=network-online.target
+      After=etcd.service
+      Before=docker.service
+
+      [Service]
+      Type=notify
+      RestartSec=5
+      EnvironmentFile=/etc/sysconfig/flanneld
+      EnvironmentFile=-/etc/sysconfig/docker-network
+      {{- if .KubeMaster }}
+      ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ .FlannelBackend }}"}}'
+      {{- end }}
+
+      {{- if .FlannelIface }}
+      ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ .Hostname }}:2379 -etcd-prefix=/flannel/network -iface={{ .FlannelIface }}
+      {{- else }}
+      ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ .Hostname }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS
+      {{- end }}
+      ExecStartPost=/usr/libexec/flannel/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+      RequiredBy=docker.service
+  - path: /etc/systemd/system/settimezone.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Set the time zone
+
+      [Service]
+      ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+      RemainAfterExit=no
+      Type=oneshot
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/systemd/system/setup-network-environment.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Setup Network Environment
+      Documentation=https://github.com/kelseyhightower/setup-network-environment
+      Requires=network-online.target
+      After=network-online.target
+      [Service]
+      ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+      ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}/static/setup-network-environment-1.0.1
+      ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
+      ExecStart=/opt/bin/setup-network-environment
+      RemainAfterExit=yes
+      Type=oneshot
+      [Install]
+      WantedBy=multi-user.target
+  {{- if .CephMonitor }}
+  - path: /etc/systemd/system/ceph-mon.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Install ceph mon services
+      Requires=etcd.service
+      After=etcd.service
+      Requires=network.target
+      After=network.target
+
+      [Service]
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
+      ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+      ExecStart=/usr/bin/wget --quiet -O /opt/bin/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+      ExecStart=/bin/bash /opt/bin/install-mon.sh {{ .Dockerdomain }}:5000
+      RemainAfterExit=no
+      Type=oneshot
+
+      [Install]
+      WantedBy=multi-user.target
+  {{- end }}
+
+  {{- if .ZapAndStartOSD }}
+  - path: /etc/systemd/system/ceph-osd.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Install ceph osd service
+      Requires=etcd.service
+      After=etcd.service
+      Requires=network.target
+      After=network.target
+
+      [Service]
+      ExecStartPre=/usr/bin/mkdir -p /opt/bin
+      ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
+      ExecStart=/usr/bin/wget -O /opt/bin/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+      ExecStart=/bin/bash /opt/bin/install-osd.sh {{ .Dockerdomain }}:5000
+      RemainAfterExit=no
+      Type=oneshot
+
+      [Install]
+      WantedBy=multi-user.target
+  {{- end}}
+  {{- if .KubeMaster }}
+  - path: /etc/systemd/system/kube-addons.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Install Kubernetes addons
+      After=kubelet.service
+      Requires=kubelet.service
+      [Service]
+      ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
+      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
+      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
+      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
+      ExecStart=/usr/bin/docker run --rm --net=host \
+      -e KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080 \
+      -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
+      {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/systemd/system/kubelet.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Kubernetes Kubelet
+      Documentation=https://github.com/kubernetes/kubernetes
+      Requires=docker.service
+      After=docker.service
+      [Service]
+      Environment=KUBELET_VERSION=v1.2.4_coreos.1
+      EnvironmentFile=/etc/network-environment
+      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+      ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+      ExecStart=/opt/bin/kubelet \
+      --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
+      --register-node=true \
+      --api-servers=http://{{ .MasterHostname }}:8080 \
+      --network-plugin-dir=/etc/kubernetes/cni/net.d \
+      --network-plugin=${NETWORK_PLUGIN} \
+      --register-schedulable=false \
+      --allow-privileged=true \
+      --config=/etc/kubernetes/manifests \
+      --hostname-override={{ .MasterHostname }} \
+      --cluster-dns={{ .K8sClusterDNS }} \
+      --cluster-domain=cluster.local \
+      Restart=always
+      RestartSec=10
+      [Install]
+      WantedBy=multi-user.target
+  {{- else }}
+  - path: /etc/systemd/system/kubelet.service
+    owner: root
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Kubernetes Kubelet
+      Documentation=https://github.com/kubernetes/kubernetes
+      After=docker.service
+      Requires=docker.service
+      [Service]
+      EnvironmentFile=/etc/network-environment
+      Environment=KUBELET_VERSION=v1.2.4_coreos.1
+      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+      ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+      ExecStart=/opt/bin/kubelet \
+      --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
+      --address=0.0.0.0 \
+      --allow-privileged=true \
+      --cluster-dns={{ .K8sClusterDNS }} \
+      --cluster-domain=cluster.local \
+      --config=/etc/kubernetes/manifests \
+      --hostname-override={{ .Hostname }} \
+      --api-servers=https://{{ .MasterHostname }}:443 \
+      --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+      --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
+      --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+      {{- if .IngressLabel }}
+      --logtostderr=true \
+      --node-labels=role=ingress \
+      {{- else }}
+      --logtostderr=true \
+      {{- end }}
+      --network-plugin= \
+      --network-plugin-dir=/etc/cni/net.d
+      Restart=always
+      RestartSec=10
+      [Install]
+      WantedBy=multi-user.target
+  {{- end}}
+ssh_authorized_keys:
+{{ .SSHAuthorizedKeys }}
+runcmd:
+- systemctl  daemon-reload
+{{- if .CephMonitor }}
+- systemctl enable ceph-mon.service
+{{- end}}
+{{- if .ZapAndStartOSD }}
+- systemctl enable ceph-osd.service
+{{- end}}
+{{- if .KubeMaster }}
+- systemctl  enable etcd.service flanneld.service kubelet.service setup-network-environment.service kube-addons.service settimezone.service
+{{- else }}
+- systemctl enable etcd.service flanneld.service kubelet.service setup-network-environment.service settimezone.service
+{{- end }}
+- reboot
+{{ end }}

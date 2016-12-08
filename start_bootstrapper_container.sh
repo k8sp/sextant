@@ -64,7 +64,7 @@ docker run -d \
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
 
-source $BSROOT/bsroot_lib.bash
+source $BSROOT/load_yaml.sh
 load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do

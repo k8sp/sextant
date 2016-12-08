@@ -1,0 +1,12 @@
+#cloud-config
+{{ define "cc-template" }}
+write_files:
+{{ template "common" .}}
+{{- if ne .OSName "CentOS" }}
+{{/* coreos section define coreos units */}}
+{{ template "coreos" .}}
+{{ else }}
+{{/* centos cloud-config will continue write_files section */}}
+{{ template "centos" .}}
+{{- end }}
+{{ end }}

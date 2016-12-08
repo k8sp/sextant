@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 
+# Common utilities, variables and checks for all build scripts.
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+    echo "Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]"
+    exit 1
+fi
+
 # Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
-CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
+
+source $SEXTANT_DIR/scripts/load_yaml.sh
+# load yaml from "cluster-desc.yaml"
+load_yaml $CLUSTER_DESC cluster_desc_
 
 # Check sextant dir
 if [[ "$SEXTANT_DIR" != "$GOPATH/src/github.com/k8sp/sextant" ]]; then
@@ -22,7 +35,6 @@ if [[ "$#" == 2 ]]; then
 else
     BSROOT=$SEXTANT_DIR/bsroot
 fi
-
 if [[ -d $BSROOT ]]; then
     echo "$BSROOT already exists. Overwrite without removing it."
 else
@@ -44,10 +56,10 @@ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
-
-check_prerequisites() {
+# check_prerequisites checks for required software packages.
+function check_prerequisites() {
     printf "Checking prerequisites ... "
-    err=0
+    local err=0
     for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
     done
@@ -57,6 +69,39 @@ check_prerequisites() {
     echo "Done"
 }
 
+
+check_cluster_desc_file() {
+    # Check cluster-desc file
+    printf "Cross-compiling cloud-config-server ... "
+    docker run --rm -it \
+          --volume $GOPATH:/go \
+          -e CGO_ENABLED=0 \
+          -e GOOS=linux \
+          -e GOARCH=amd64 \
+          golang:wheezy \
+          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+          || { echo "Build sextant failed..."; exit 1; }
+    echo "Done"
+
+    printf "Checking cluster description file ..."
+
+    printf "Copying cloud-config template and cluster-desc.yml ... "
+    mkdir -p $BSROOT/config > /dev/null 2>&1
+    cp -r $SEXTANT_DIR/cloud-config-server/template/templatefiles $BSROOT/config
+    cp $CLUSTER_DESC $BSROOT/config
+    echo "Done"
+
+    docker run -it \
+        --volume $GOPATH:/go \
+        --volume $BSROOT:/bsroot \
+        golang:wheezy \
+          /go/bin/cloud-config-server \
+          -dir /bsroot/html/static \
+          --cloud-config-dir /bsroot/config/templatefiles \
+          -cluster-desc /bsroot/config/cluster-desc.yml \
+          -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    echo "Done"
+}
 
 generate_registry_config() {
     printf "Generating Docker registry config file ... "
@@ -121,13 +166,8 @@ prepare_cc_server_contents() {
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying cloud-config template and cluster-desc.yml ... "
-    cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
-    cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
-    echo "Done"
-
-    printf "Copying bsroot_lib.bash ... "
-    cp $SEXTANT_DIR/scripts/bsroot_lib.bash $BSROOT/ || { echo "Failed"; exit 1; }
+    printf "Copying load_yaml.sh ... "
+    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
     printf "Generating install.sh ... "
     echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
@@ -184,59 +224,32 @@ EOF
 
 
 build_bootstrapper_image() {
-    # target binary arch is amd64, and build in docker image will always amd64
-    printf "Cross-compiling Sextant Go programs ... "
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            -e CGO_ENABLED=0 \
-            -e GOOS=linux \
-            -e GOARCH=amd64 \
-            golang:wheezy \
-            go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
-            || { echo "Build sextant failed..."; exit 1; }
-    # Copy built binaries
-    cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
-    echo "Done"
-
+    # cloud-config-server and addon compile moved to check_cluster_desc_file
+    # Compile registry and build docker image here
     printf "Cross-compiling Docker registry ... "
     docker run --rm -it --name=registry_build \
-            --volume $GOPATH:/go \
-            -e CGO_ENABLED=0 \
-            -e GOOS=linux \
-            -e GOARCH=amd64 \
-            golang:wheezy \
-            sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
-            || { echo "Complie Docker registry failed..."; exit 1; }
-    cp $GOPATH/bin/registry $SEXTANT_DIR/docker
+          --volume $GOPATH:/go \
+          -e CGO_ENABLED=0 \
+          -e GOOS=linux \
+          -e GOARCH=amd64 \
+          golang:wheezy \
+          sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
+          || { echo "Complie Docker registry failed..."; exit 1; }
+
+    rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons,registry}
+    cp $GOPATH/bin/{cloud-config-server,addons,registry} $SEXTANT_DIR/docker
     echo "Done"
 
     printf "Building bootstrapper image ... "
     docker rm -f bootstrapper > /dev/null 2>&1
     docker rmi bootstrapper:latest > /dev/null 2>&1
     cd $SEXTANT_DIR/docker
-    docker build -t bootstrapper . #> /dev/null 2>&1 || { echo "Failed"; exit 1; }
+    docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
 
     cp $SEXTANT_DIR/start_bootstrapper_container.sh \
        $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
     chmod +x $BSROOT/start_bootstrapper_container.sh
-
-    # Check cluster-desc file
-    printf "Checking cluster description file ..."
-    docker run --rm \
-        --volume $BSROOT:/bsroot \
-        --entrypoint "/bin/sh" \
-        bootstrapper -c \
-          "/go/bin/cloud-config-server -addr :80 \
-          -dir /bsroot/html/static \
-          -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url \"\" \
-          -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url \"\" \
-          -ca-crt /bsroot/tls/ca.pem \
-          -ca-key /bsroot/tls/ca-key.pem \
-          -validate true " > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-
     echo "Done"
 }
 

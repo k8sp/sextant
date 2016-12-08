@@ -1,0 +1,226 @@
+{{ define "common" }}
+  - path: /etc/modules-load.d/rbd.conf
+    content: rbd
+  - path: /etc/kubernetes/ssl/ca.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .CaCrt }}
+  - path: /etc/docker/certs.d/{{ .Dockerdomain }}:5000/ca.crt
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .CaCrt }}
+  - path: /etc/hosts
+    owner: root
+    content: |
+      127.0.0.1 localhost
+      {{ .BootstrapperIP }} {{ .Dockerdomain }}
+  {{/* ********************************************************* */}}
+  {{- if .KubeMaster }}
+  - path: /etc/kubernetes/ssl/apiserver.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Crt }}
+  - path: /etc/kubernetes/ssl/apiserver-key.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Key }}
+  - path: /etc/kubernetes/manifests/kubernetes_master.manifest
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-controller
+      spec:
+        hostNetwork: true
+        volumes:
+          - name: "etc-kubernetes"
+            hostPath:
+              path: "/etc/kubernetes"
+          - name: ssl-certs-kubernetes
+            hostPath:
+              path: /etc/kubernetes/ssl
+          - name: "ssl-certs-host"
+            hostPath:
+              path: "/usr/share/ca-certificates"
+          - name: "var-run-kubernetes"
+            hostPath:
+              path: "/var/run/kubernetes"
+          - name: "etcd-datadir"
+            hostPath:
+              path: "/var/lib/etcd"
+          - name: "usr"
+            hostPath:
+              path: "/usr"
+          - name: "lib64"
+            hostPath:
+              path: "/lib64"
+        containers:
+          - name: kube-apiserver
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
+            command:
+              - /hyperkube
+              - apiserver
+              - --allow-privileged=true
+              - --bind-address=0.0.0.0
+              - --insecure-bind-address=0.0.0.0
+              - --secure-port=443
+              - --etcd-servers=http://{{ .MasterHostname }}:4001
+              - --service-cluster-ip-range={{ .K8sServiceClusterIPRange }}
+              - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+              - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+              - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+              - --client-ca-file=/etc/kubernetes/ssl/ca.pem
+              - --logtostderr=true
+            ports:
+              - containerPort: 443
+                hostPort: 443
+                name: https
+              - containerPort: 8080
+                hostPort: 8080
+                name: local
+            volumeMounts:
+              - mountPath: /etc/kubernetes/ssl
+                name: ssl-certs-kubernetes
+                readOnly: true
+              - mountPath: /etc/ssl/certs
+                name: ssl-certs-host
+                readOnly: true
+              - mountPath: /etc/kubernetes
+                name: "etc-kubernetes"
+              - mountPath: /var/run/kubernetes
+                name: "var-run-kubernetes"
+
+          - name: kube-controller-manager
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
+            command:
+            - /hyperkube
+            - controller-manager
+            - --master=http://127.0.0.1:8080
+            - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+            - --root-ca-file=/etc/kubernetes/ssl/ca.pem
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10252s
+              initialDelaySeconds: 15
+              timeoutSeconds: 1
+            volumeMounts:
+            - mountPath: /etc/kubernetes/ssl
+              name: ssl-certs-kubernetes
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs-host
+              readOnly: true
+
+          - name: kube-scheduler
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
+            command:
+            - /hyperkube
+            - scheduler
+            - --master=http://127.0.0.1:8080
+            livenessProbe:
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10251
+              initialDelaySeconds: 15
+              timeoutSeconds: 1
+
+          - name: kube-proxy
+            image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
+            command:
+            - /hyperkube
+            - proxy
+            - --master=http://127.0.0.1:8080
+            - --proxy-mode=iptables
+            securityContext:
+              privileged: true
+            volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs-host
+              readOnly: true
+  {{/* ********************************************************* */}}
+  {{- else }}
+  - path: /etc/kubernetes/ssl/worker.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Crt }}
+  - path: /etc/kubernetes/ssl/worker-key.pem
+    owner: root
+    permissions: 0600
+    content: |
+      {{ .Key }}
+  - path: /etc/kubernetes/worker-kubeconfig.yaml
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: local
+        cluster:
+          certificate-authority: /etc/kubernetes/ssl/ca.pem
+      users:
+      - name: kubelet
+        user:
+          client-certificate: /etc/kubernetes/ssl/worker.pem
+          client-key: /etc/kubernetes/ssl/worker-key.pem
+      contexts:
+      - context:
+          cluster: local
+          user: kubelet
+        name: kubelet-context
+      current-context: kubelet-context
+
+  - path: /etc/kubernetes/manifests/kube-proxy.manifest
+    owner: root
+    permissions: 0755
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+       name: kube-proxy
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-proxy
+          image: {{ .Dockerdomain }}:5000/{{ .Images.hyperkube }}
+          command:
+          - /hyperkube
+          - proxy
+          - --master=https://{{ .MasterHostname }}:443
+          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+          - --proxy-mode=iptables
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: "ssl-certs"
+            - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+              name: "kubeconfig"
+              readOnly: true
+            - mountPath: /etc/kubernetes/ssl
+              name: "etc-kube-ssl"
+              readOnly: true
+        volumes:
+          - name: "ssl-certs"
+            hostPath:
+              path: "/usr/share/ca-certificates"
+          - name: "kubeconfig"
+            hostPath:
+              path: "/etc/kubernetes/worker-kubeconfig.yaml"
+          - name: "etc-kube-ssl"
+            hostPath:
+              path: "/etc/kubernetes/ssl"
+  {{/* ********************************************************* */}}
+  {{- end }}
+{{ end }}
