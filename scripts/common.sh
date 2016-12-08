@@ -241,8 +241,8 @@ build_bootstrapper_image() {
     echo "Done"
 
     printf "Building bootstrapper image ... "
-    docker rm -f bootstrapper > /dev/null 2>&1
-    docker rmi bootstrapper:latest > /dev/null 2>&1
+    docker rm -f bootstrapper || { echo "container bootstrapper not exist, skipping..."; }
+    docker rmi bootstrapper:latest || { echo "image bootstrapper not exist, skipping..."; }
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
