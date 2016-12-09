@@ -16,7 +16,6 @@ realpath() {
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
-CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
@@ -87,19 +86,21 @@ check_cluster_desc_file() {
     echo "Done"
 
     printf "Checking cluster description file ..."
+
+    printf "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
-    cp $SEXTANT_DIR/cloud-config-server/template/cloud-config.template $BSROOT/config
+    cp -r $SEXTANT_DIR/cloud-config-server/template/templatefiles $BSROOT/config
     cp $CLUSTER_DESC $BSROOT/config
+    echo "Done"
+
     docker run -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
         golang:wheezy \
-          /go/bin/cloud-config-server -addr :80 \
+          /go/bin/cloud-config-server \
           -dir /bsroot/html/static \
-          -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url \"\" \
-          -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url \"\" \
+          --cloud-config-dir /bsroot/config/templatefiles \
+          -cluster-desc /bsroot/config/cluster-desc.yml \
           -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
