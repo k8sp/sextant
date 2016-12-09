@@ -16,7 +16,6 @@ realpath() {
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
-CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
@@ -85,19 +84,21 @@ check_cluster_desc_file() {
     echo "Done"
 
     printf "Checking cluster description file ..."
+
+    printf "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
-    cp $SEXTANT_DIR/cloud-config-server/template/cloud-config.template $BSROOT/config
+    cp -r $SEXTANT_DIR/cloud-config-server/template/templatefiles $BSROOT/config
     cp $CLUSTER_DESC $BSROOT/config
+    echo "Done"
+
     docker run -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
         golang:wheezy \
-          /go/bin/cloud-config-server -addr :80 \
+          /go/bin/cloud-config-server \
           -dir /bsroot/html/static \
-          -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url \"\" \
-          -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url \"\" \
+          --cloud-config-dir /bsroot/config/templatefiles \
+          -cluster-desc /bsroot/config/cluster-desc.yml \
           -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -163,11 +164,6 @@ prepare_cc_server_contents() {
     # when using cloud-config file to initiate a kubernetes cluster node
     printf "Downloading setup-network-environment file ... "
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
-    echo "Done"
-
-    printf "Copying cloud-config template and cluster-desc.yml ... "
-    cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
-    cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Copying load_yaml.sh ... "
@@ -245,8 +241,8 @@ build_bootstrapper_image() {
     echo "Done"
 
     printf "Building bootstrapper image ... "
-    docker rm -f bootstrapper > /dev/null 2>&1
-    docker rmi bootstrapper:latest > /dev/null 2>&1
+    docker rm -f bootstrapper || { echo "container bootstrapper not exist, skipping..."; }
+    docker rmi bootstrapper:latest || { echo "image bootstrapper not exist, skipping..."; }
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }

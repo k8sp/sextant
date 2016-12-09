@@ -10,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/clusterdesc"
+	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
@@ -35,10 +35,11 @@ func TestExecute(t *testing.T) {
 		return c
 	}).(*clusterdesc.Cluster)
 
-	tmpl, e := template.ParseFiles("cloud-config.template")
+	tmpl, e := template.ParseGlob("./templatefiles/*")
 	candy.Must(e)
 	var ccTmpl bytes.Buffer
-	Execute(tmpl, config, "00:25:90:c0:f7:80", caKey, caCrt, &ccTmpl)
+	confData := GetConfigDataByMac("00:25:90:c0:f7:80", config, caKey, caCrt)
+	candy.Must(tmpl.ExecuteTemplate(&ccTmpl, "cc-template", *confData))
 	yml := make(map[interface{}]interface{})
 	candy.Must(yaml.Unmarshal(ccTmpl.Bytes(), yml))
 	switch i := config.OSName; i {
