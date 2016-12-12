@@ -68,9 +68,9 @@ func GetConfigDataByMac(mac string, clusterdesc *clusterdesc.Cluster, caKey, caC
 	ca, e := ioutil.ReadFile(caCrt)
 	var k, c []byte
 	if e == nil {
-		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt, config.KubeMasterIP, config.KubeMasterDNS)
+		k, c = certgen.Gen(false, node.Hostname(), caKey, caCrt, clusterdesc.KubeMasterIP, clusterdesc.KubeMasterDNS)
 		if node.KubeMaster == true {
-			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt, config.KubeMasterIP, config.KubeMasterDNS)
+			k, c = certgen.Gen(true, node.Hostname(), caKey, caCrt, clusterdesc.KubeMasterIP, clusterdesc.KubeMasterDNS)
 		}
 	}
 
