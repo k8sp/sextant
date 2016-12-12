@@ -95,7 +95,7 @@ network --onboot on --bootproto dhcp --noipv6
 @Base
 @Core
 cloud-init
-docker
+docker-engine-${DE_VERSION}
 etcd
 flannel
 make
@@ -218,12 +218,23 @@ baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 enabled=1
 gpgcheck=0
 EOF
+  printf "Generating docker repo configuration file....."
+  tee $BSROOT/docker.repo <<-'EOF'
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/centos/7/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+EOF
+
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
              centos:7.2.1511\
-             sh -c  '/usr/bin/yum -y install epel-release yum-utils createrepo  && \
+             sh -c  'mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
+             /usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
-             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init docker etcd flannel &&  \
+             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init docker-engine-'${DE_VERSION}' etcd flannel &&  \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
