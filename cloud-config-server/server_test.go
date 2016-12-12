@@ -1,22 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
-	"path"
 	"testing"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/gorilla/mux"
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/clusterdesc"
+	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -25,7 +24,8 @@ const (
 	loadTimeout            = 15 * time.Second
 )
 
-func TestRun(t *testing.T) {
+func TestCloudConfigHandler(t *testing.T) {
+	// generate temp ca files for unitest and delete it when exit
 	out, e := ioutil.TempDir("", "")
 	candy.Must(e)
 	defer func() {
@@ -34,58 +34,52 @@ func TestRun(t *testing.T) {
 		}
 	}()
 	caKey, caCrt := certgen.GenerateRootCA(out)
-
-	config := candy.WithOpened("./template/cluster-desc.sample.yaml", func(r io.Reader) interface{} {
+	templateDir := "./template/templatefiles"
+	clusterDescFile := "./template/cluster-desc.sample.yaml"
+	// load ClusterDesc
+	config := candy.WithOpened(clusterDescFile, func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
+
 		c := &clusterdesc.Cluster{}
 		assert.Nil(t, yaml.Unmarshal(b, &c))
 		return c
 	}).(*clusterdesc.Cluster)
+	// test HTTP handler directly
+	rr := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/cloud-config/00:25:90:c0:f7:80", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// use mux router.ServeHTTP to test handlers
+	// TODO: put route setups in a common function
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/cloud-config/{mac}",
+		makeCloudConfigHandler(clusterDescFile, templateDir, caKey, caCrt))
+	router.ServeHTTP(rr, req)
 
-	// Run the cloud-config-server in a goroutine.
-	ccTmpl, e := ioutil.ReadFile(path.Join(candy.GoPath(), tmplFile))
-	candy.Must(e)
-	clusterDescExample, e := ioutil.ReadFile(path.Join(candy.GoPath(), clusterDescExampleFile))
-	candy.Must(e)
-	clusterDesc := func() []byte { return clusterDescExample }
-	ccTemplate := func() []byte { return ccTmpl }
-
-	ln, e := net.Listen("tcp", ":0") // OS will allocate a not-in-use port.
-	candy.Must(e)
-
-	go run(clusterDesc, ccTemplate, ln, caKey, caCrt, out)
-
-	// Retrieve a cloud-config file from the in-goroutine server.
-	cc, e := candy.HTTPGet(fmt.Sprintf("http://%s/cloud-config/00:25:90:c0:f7:80", ln.Addr()), loadTimeout)
-	candy.Must(e)
-
-	// Compare only a small fraction -- the etcd2 initial cluster -- for testing.
-	yml := make(map[interface{}]interface{})
-	candy.Must(yaml.Unmarshal(cc, yml))
-	switch i := config.OSName; i {
-	case "CoreOS":
-		initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
-
-		c := &clusterdesc.Cluster{}
-		candy.Must(yaml.Unmarshal(clusterDescExample, c))
-
-		assert.Equal(t, c.InitialEtcdCluster(), initialEtcdCluster)
-	case "CentOS":
-		for _, fileinfo := range yml["write_files"].([]interface{}) {
-			m := fileinfo.(map[interface{}]interface{})["path"]
-			if m == "/etc/systemd/system/setup-network-environment.service" {
-				assert.Equal(t, m, "/etc/systemd/system/setup-network-environment.service")
-			}
-		}
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
 	}
 
-	// Test for static file Handler
-	e = ioutil.WriteFile(path.Join(out, "hello"), []byte("Hello Go"), 0644)
-	candy.Must(e)
-
-	f, e := candy.HTTPGet(fmt.Sprintf("http://%s/static/hello", ln.Addr()), loadTimeout)
-	candy.Must(e)
-
-	assert.Equal(t, string(f), "Hello Go")
+	if rr.Body.String() != "" {
+		// Compare only a small fraction -- the etcd2 initial cluster -- for testing.
+		yml := make(map[interface{}]interface{})
+		candy.Must(yaml.Unmarshal(rr.Body.Bytes(), yml))
+		switch i := config.OSName; i {
+		case "CoreOS":
+			initialEtcdCluster := yml["coreos"].(map[interface{}]interface{})["etcd2"].(map[interface{}]interface{})["initial-cluster"]
+			assert.Equal(t, config.InitialEtcdCluster(), initialEtcdCluster)
+		case "CentOS":
+			for _, fileinfo := range yml["write_files"].([]interface{}) {
+				m := fileinfo.(map[interface{}]interface{})["path"]
+				if m == "/etc/systemd/system/setup-network-environment.service" {
+					assert.Equal(t, m, "/etc/systemd/system/setup-network-environment.service")
+				}
+			}
+		}
+	} else {
+		t.Errorf("cloud-config empty.")
+	}
 }

@@ -16,7 +16,6 @@ realpath() {
 }
 
 SEXTANT_DIR=$(dirname $(realpath $0))
-CLOUD_CONFIG_TEMPLATE=$SEXTANT_DIR/cloud-config-server/template/cloud-config.template
 INSTALL_CEPH_SCRIPT_DIR=$SEXTANT_DIR/install-ceph
 CLUSTER_DESC=$(realpath $1)
 
@@ -56,6 +55,8 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
 fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+[ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
+  cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
 
 # check_prerequisites checks for required software packages.
 function check_prerequisites() {
@@ -85,19 +86,21 @@ check_cluster_desc_file() {
     echo "Done"
 
     printf "Checking cluster description file ..."
+
+    printf "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
-    cp $SEXTANT_DIR/cloud-config-server/template/cloud-config.template $BSROOT/config
+    cp -r $SEXTANT_DIR/cloud-config-server/template/templatefiles $BSROOT/config
     cp $CLUSTER_DESC $BSROOT/config
+    echo "Done"
+
     docker run -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
         golang:wheezy \
-          /go/bin/cloud-config-server -addr :80 \
+          /go/bin/cloud-config-server \
           -dir /bsroot/html/static \
-          -cc-template-file /bsroot/config/cloud-config.template \
-          -cc-template-url \"\" \
-          -cluster-desc-file /bsroot/config/cluster-desc.yml \
-          -cluster-desc-url \"\" \
+          --cloud-config-dir /bsroot/config/templatefiles \
+          -cluster-desc /bsroot/config/cluster-desc.yml \
           -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
@@ -132,42 +135,28 @@ EOF
     echo "Done"
 }
 
+generate_ceph_install_scripts() {
+  printf "Generating Ceph installation scripts..."
+  mkdir -p $BSROOT/html/static/ceph
+  # update install-mon.sh and set OSD_JOURNAL_SIZE
+  OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
+  # update ceph install scripts to use image configured in cluster-desc.yml
+  CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
+  printf "$CEPH_DAEMON_IMAGE..."
+  sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
+      sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
+      > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
+
+  sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
+      > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
+  echo "Done"
+
+}
 
 prepare_cc_server_contents() {
-    printf "Generating Ceph installation scripts..."
-    mkdir -p $BSROOT/html/static/ceph
-    # update install-mon.sh and set OSD_JOURNAL_SIZE
-    OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
-    # update ceph install scripts to use image configured in cluster-desc.yml
-    CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
-    printf "$CEPH_DAEMON_IMAGE..."
-    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
-        sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
-        > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
-
-    sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
-        > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
-    echo "Done"
-
     mkdir -p $BSROOT/html/static/cloud-config
-
-    # Fetch release binary tarball from github accroding to the versions
-    # defined in "cluster-desc.yml"
-    hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-    printf "Downloading and kubelet and kubectl of release ${hyperkube_version} ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    chmod +x $BSROOT/html/static/kubelet
-    echo "Done"
-
-    # setup-network-environment will fetch the default system IP infomation
-    # when using cloud-config file to initiate a kubernetes cluster node
-    printf "Downloading setup-network-environment file ... "
-    wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
-    echo "Done"
-
     printf "Copying cloud-config template and cluster-desc.yml ... "
     cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
-    cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Copying load_yaml.sh ... "
@@ -208,22 +197,6 @@ wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
 sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
 EOF
     echo "Done"
-
-    printf "Updating CoreOS images ... "
-    if [[ ! -d $BSROOT/html/static/$VERSION ]]; then
-        mkdir -p $BSROOT/html/static/$VERSION
-    fi
-
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/version.txt
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2 || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/html/static/$VERSION https://$cluster_desc_coreos_channel.release.core-os.net/amd64-usr/$cluster_desc_coreos_version/coreos_production_image.bin.bz2.sig || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static/$VERSION
-    gpg --verify coreos_production_image.bin.bz2.sig > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    cd $BSROOT/html/static
-    # Never change 'current' to 'current/', I beg you.
-    rm -rf current > /dev/null 2>&1
-    ln -sf ./$VERSION current || { echo "Failed"; exit 1; }
-    echo "Done"
 }
 
 
@@ -245,8 +218,8 @@ build_bootstrapper_image() {
     echo "Done"
 
     printf "Building bootstrapper image ... "
-    docker rm -f bootstrapper > /dev/null 2>&1
-    docker rmi bootstrapper:latest > /dev/null 2>&1
+    docker rm -f bootstrapper > /dev/null 2>&1 || echo "No such container: bootstrapper ,Pass..."
+    docker rmi bootstrapper:latest > /dev/null 2>&1 || echo "No such images: bootstrapper ,Pass..."
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }

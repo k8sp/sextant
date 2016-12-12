@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # bsroot.sh doing the preparing stage of running the sextant bootstrapper.
 #
 # Usage: bsroot.sh <cluster-desc.yml> [\$SEXTANT_DIR/bsroot]
@@ -30,6 +29,7 @@ check_prerequisites
 check_cluster_desc_file
 
 
+
 echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
     source $SEXTANT_DIR/scripts/centos.sh
@@ -40,19 +40,26 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     generate_post_nochroot_provision_script
     generate_post_cloudinit_script
     generate_rpmrepo_config
-    download_centos_gpu_drivers
+    if [[ $cluster_desc_set_gpu == "y" ]];then
+      download_centos_gpu_drivers
+    fi
 elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     source $SEXTANT_DIR/scripts/coreos.sh
     check_coreos_version
     download_pxe_images
     generate_pxe_config
-    build_coreos_nvidia_gpu_drivers
+    acquire_specify_version
+    update_coreos_images
+    if [[ $cluster_desc_set_gpu == "y" ]];then
+      build_coreos_nvidia_gpu_drivers
+    fi
 else
     echo "Unsupport OS: ${cluster_desc_os_name}"
     exit -1
 fi
 
 generate_registry_config
+generate_ceph_install_scripts
 prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
