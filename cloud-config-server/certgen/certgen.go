@@ -25,8 +25,13 @@ DNS.1 = kubernetes
 DNS.2 = kubernetes.default
 DNS.3 = kubernetes.default.svc
 DNS.4 = kubernetes.default.svc.cluster.local
-IP.1 = 10.100.0.1
-DNS.5 = {{.}}
+DNS.5 = {{ .HostName }}
+{{ range $index, $element := .KubeMasterDNS }}
+DNS.{{ add $index 6 }} = {{ $element }}
+{{ end }}
+{{ range $index, $element := .KubeMasterIP }}
+IP.{{ add $index 1}} = {{ $element }}
+{{ end }}
 `
 
 	workerOpenSSLConfTmpl = `[req]
@@ -38,9 +43,24 @@ basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = {{.}}
+DNS.1 = {{ .HostName }}
 `
 )
+
+var funcMap = template.FuncMap{
+	"add": add,
+}
+
+func add(a, b int) int {
+	return (a + b)
+}
+
+// Execution struct config opendssl.conf
+type Execution struct {
+	HostName      string
+	KubeMasterIP  []string
+	KubeMasterDNS []string
+}
 
 // GenerateRootCA generate ca.key and ca.crt depending on out path
 func GenerateRootCA(out string) (string, string) {
@@ -54,13 +74,13 @@ func GenerateRootCA(out string) (string, string) {
 
 func openSSLCnfTmpl(master bool) *template.Template {
 	if master == true {
-		return template.Must(template.New("").Parse(masterOpenSSLConfTmpl))
+		return template.Must(template.New("").Funcs(funcMap).Parse(masterOpenSSLConfTmpl))
 	}
-	return template.Must(template.New("").Parse(workerOpenSSLConfTmpl))
+	return template.Must(template.New("").Funcs(funcMap).Parse(workerOpenSSLConfTmpl))
 }
 
 // Gen generates and returns the TLS certse.  It panics for errors.
-func Gen(master bool, hostname, caKey, caCrt string) ([]byte, []byte) {
+func Gen(master bool, hostname, caKey, caCrt string, kubeMasterIP, kubeMasterDNS []string) ([]byte, []byte) {
 	out, e := ioutil.TempDir("", "")
 	candy.Must(e)
 	defer func() {
@@ -74,8 +94,14 @@ func Gen(master bool, hostname, caKey, caCrt string) ([]byte, []byte) {
 	csr := path.Join(out, "csr.pem")
 	crt := path.Join(out, "crt.pem")
 
+	ec := Execution{
+		HostName:      hostname,
+		KubeMasterIP:  kubeMasterIP,
+		KubeMasterDNS: kubeMasterDNS,
+	}
+
 	candy.WithCreated(cnf, func(w io.Writer) {
-		candy.Must(openSSLCnfTmpl(master).Execute(w, hostname))
+		candy.Must(openSSLCnfTmpl(master).Execute(w, ec))
 	})
 	subj := "/CN=" + hostname
 	if master == true {

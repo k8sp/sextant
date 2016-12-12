@@ -44,10 +44,12 @@ type Cluster struct {
 	FlannelBackend           string `yaml:"flannel_backend"`
 	IngressHostNetwork       bool   `yaml:"ingress_hostnetwork"`
 	CoreOS                   CoreOS
-	CoreOSVersion            string `yaml:"coreos_version"`
-	GPUDriversVersion        string `yaml:"gpu_drivers_version"`
-	OSName                   string `yaml:"os_name"`
-	SetNTP                   bool   `yaml:"set_ntp"`
+	CoreOSVersion            string   `yaml:"coreos_version"`
+	GPUDriversVersion        string   `yaml:"gpu_drivers_version"`
+	OSName                   string   `yaml:"os_name"`
+	SetNTP                   bool     `yaml:"set_ntp"`
+	KubeMasterIP             []string `yaml:"kube_master_ip"`
+	KubeMasterDNS            []string `yaml:"kube_master_dns"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
