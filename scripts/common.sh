@@ -54,12 +54,7 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
   exit 1
 fi
 
-DE_VERSION=`grep "docker_engine_version:" $CLUSTER_DESC | awk '{print $2}' | sed 's/ //g' | sed 's/"//g'`
-if [[ "$?" -ne 0 || "$DE_VERSION" == "" ]]; then
-    echo "Failed parsing cluster-desc file $CLUSTER_DESC for docker-engine version."
-    exit 1
-fi
-echo "Using docker-engine version ${DE_VERSION}"
+echo "Using docker-engine version ${cluster_desc_docker_engine_version}"
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 
