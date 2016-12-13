@@ -102,6 +102,9 @@ make
 kernel-devel
 gcc
 wget
+# update kernel
+kernel-ml
+kernel-ml-devel
 %end
 
 
@@ -111,13 +114,15 @@ wget
 
 %post --log=/root/ks-post-provision.log
 
-wget -P /root http://$BS_IP/static/CentOS7/post_provision.sh
-bash -x /root/post_provision.sh
+wget -P /root http://$BS_IP/static/CentOS7/set-hostname.sh
+bash -x /root/set-hostname.sh
 
+wget -P /root http://$BS_IP/static/CentOS7/update-kernel.sh
+bash -x /root/update-kernel.sh
+
+# Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
-pushd /root/
 bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR} ${cluster_desc_centos_version}
-popd
 
 wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
 bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
@@ -137,13 +142,8 @@ EOF
 generate_post_provision_script() {
     printf "Generating post provision script ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_provision.sh <<'EOF'
+    cat > "$BSROOT/html/static/CentOS7/set-hostname.sh" <<'EOF'
 #!/bin/bash
-#Obtain devices
-#devices=$(lsblk -l |awk '$6=="disk"{print $1}')
-# Zap all devices
-# NOTICE: dd zero to device mbr will not affect parted printed table,
-#         so use parted to remove the part tables
 
 default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
 printf "Default interface: ${default_iface}\n"
@@ -155,6 +155,21 @@ hostname_str=${mac_addr//:/-}
 echo ${hostname_str} >/etc/hostname
 
 EOF
+
+cat > $BSROOT/html/static/CentOS7/update-kernel.sh <<'EOF'
+#!/bin/bash
+
+# For install multi-kernel, set the first line kernel in grub list as default to boot
+grub2-set-default 0
+
+# load overlay for docker storage driver
+echo "overlay" > /etc/modules-load.d/overlay.conf
+
+# set overaly as docker storage driver instead of devicemapper (the default one on centos)
+sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /etc/systemd/system/multi-user.target.wants/docker.service
+
+EOF
+
     echo "Done"
 }
 
@@ -231,16 +246,20 @@ EOF
 
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
-             centos:7.2.1511\
+             centos:7.2.1511 \
              sh -c  'mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
              /usr/bin/yum -y install epel-release yum-utils createrepo  && \
+             /usr/bin/rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org && \
+             /usr/bin/rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm && \
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
-             /usr/bin/yumdownloader  --resolve --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init docker-engine-'${cluster_desc_docker_engine_version}' etcd flannel &&  \
-             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' ||  \
+             /usr/bin/yumdownloader  --enablerepo=elrepo-kernel --resolve \
+             --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init \
+             docker-engine-'${cluster_desc_docker_engine_version}' etcd flannel \
+             kernel-ml kernel-ml-devel && \
+             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' || \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
   echo "Done"
-
 }
 
 

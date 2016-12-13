@@ -156,11 +156,6 @@ generate_ceph_install_scripts() {
 }
 
 prepare_cc_server_contents() {
-    mkdir -p $BSROOT/html/static/cloud-config
-    printf "Copying cloud-config template and cluster-desc.yml ... "
-    cp $CLOUD_CONFIG_TEMPLATE $BSROOT/config/ || { echo "Failed"; exit 1; }
-    echo "Done"
-
     printf "Copying load_yaml.sh ... "
     cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
     echo "Done"
