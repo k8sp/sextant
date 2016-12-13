@@ -20,7 +20,11 @@ func TestGen(t *testing.T) {
 		}
 	}()
 	caKey, caCrt := GenerateRootCA(out)
-	key, crt := Gen(true, "10.10.10.201", caKey, caCrt)
+
+	kubeMasterIP := []string{"10.100.0.1", "192.168.100.1", "192.168.100.2"}
+	kubeMasterDNS := []string{"aa-bb-cc-dd-ee", "xx-yy.abc.com"}
+
+	key, crt := Gen(true, "10.10.10.201", caKey, caCrt, kubeMasterIP, kubeMasterDNS)
 
 	assert.True(t, strings.HasPrefix(string(key), "-----BEGIN RSA PRIVATE KEY-----"))
 	assert.True(t, strings.HasSuffix(string(key), "-----END RSA PRIVATE KEY-----\n"))

@@ -21,6 +21,7 @@ coreos_channel: "stable"
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "1122.2.0"
 centos_version: "7.2.1511"
+docker_engine_version: "1.12.0"
 
 # gpu drivers version
 set_gpu: n
@@ -33,6 +34,14 @@ set_ntp: y
 os_name: "CentOS"
 
 ingress_hostnetwork: true
+
+# kube master ip, there should be cluster ip
+kube_master_ip:
+    - "10.100.0.1"
+    - "192.168.61.73"
+    - "192.168.48.23"
+kube_master_dns:
+    - "aa-bb-cc-dd"
 
 coreos:
   reboot_strategy: "etcd-lock"

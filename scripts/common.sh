@@ -54,6 +54,8 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
   exit 1
 fi
 
+echo "Using docker-engine version ${cluster_desc_docker_engine_version}"
+
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
   cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
