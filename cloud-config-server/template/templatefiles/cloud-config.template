@@ -1,5 +1,5 @@
-#cloud-config
 {{ define "cc-template" }}
+#cloud-config
 write_files:
 {{ template "common" .}}
 {{- if ne .OSName "CentOS" }}
