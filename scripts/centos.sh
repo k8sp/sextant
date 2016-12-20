@@ -20,13 +20,13 @@ download_centos_images() {
     printf "Downloading CentOS 7 PXE vmlinuz image ... "
     cd $BSROOT/tftpboot
     mkdir -p $BSROOT/tftpboot/CentOS7
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.3.1611/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.3.1611/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CentOS 7 ISO ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.3.1611/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
@@ -102,7 +102,7 @@ make
 kernel-devel
 gcc
 wget
-# update kernel
+#update kernel
 kernel-ml
 kernel-ml-devel
 %end
@@ -257,7 +257,7 @@ baseurl=http://$BS_IP/static/CentOS7/dvd_content/
 enabled=1
 gpgcheck=0
 EOF
-  elif [[ $cluster_desc_set_yum_repo == "163" ]];then
+  elif [[ $cluster_desc_set_yum_repo == "mirrors.163.com" ]];then
     wget -P $BSROOT/html/static/CentOS7/repo/ http://mirrors.163.com/.help/CentOS7-Base-163.repo
   fi
 
@@ -280,7 +280,7 @@ EOF
 
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
-             centos:7.3.1611 \
+             centos:$cluster_desc_centos_version \
              sh -c  'mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
              /usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org && \
