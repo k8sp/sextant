@@ -37,9 +37,8 @@ os_name: "CentOS"
 # If you need to configure the other repository, need to open the configuration switch.
 # Currently supports only add 163 repository.
 # for example: 163 repo:
-#  set_yum_repo: "mirrors.163.com"
-#set_yum_repo: "bootstrapper"
-set_yum_repo: "mirrors.163.com"
+# set_yum_repo: "mirrors.163.com"
+set_yum_repo: "bootstrapper"
 
 ingress_hostnetwork: true
 
