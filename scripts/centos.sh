@@ -103,8 +103,8 @@ kernel-devel
 gcc
 wget
 #update kernel
-kernel-ml
-kernel-ml-devel
+kernel-lt
+kernel-lt-devel
 %end
 
 
@@ -289,7 +289,7 @@ EOF
              /usr/bin/yumdownloader  --enablerepo=elrepo-kernel --resolve \
              --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init \
              docker-engine-'${cluster_desc_docker_engine_version}' etcd flannel \
-             kernel-ml kernel-ml-devel && \
+             kernel-lt kernel-lt-devel && \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' || \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
