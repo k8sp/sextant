@@ -20,13 +20,13 @@ download_centos_images() {
     printf "Downloading CentOS 7 PXE vmlinuz image ... "
     cd $BSROOT/tftpboot
     mkdir -p $BSROOT/tftpboot/CentOS7
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.2.1511/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.2.1511/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.3.1611/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/7.3.1611/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CentOS 7 ISO ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.2.1511/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/7.3.1611/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
@@ -134,6 +134,11 @@ wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
 bash -x ./post_nochroot_provision.sh
 %end
 
+%post
+wget  http://$BS_IP/static/CentOS7/post_yum_repo.sh
+bash -x ./post_yum_repo.sh
+%end
+
 EOF
     echo "Done"
 }
@@ -214,7 +219,7 @@ EOF
 
 
 generate_post_nochroot_provision_script() {
-    printf "Generating post nochroot provision script ... "
+    printf "Generating post yum repository script ... "
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
 #!/bin/bash
@@ -223,11 +228,35 @@ EOF
     echo "Done"
 }
 
+generate_post_yum_repo_script() {
+    printf "Generating post nochr  script ... "
+    mkdir -p $BSROOT/html/static/CentOS7
+    cat > $BSROOT/html/static/CentOS7/post_yum_repo.sh <<'EOF'
+#!/bin/bash
+mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+wget -P /etc/yum.repos.d/   http://$BS_IP/static/CentOS7/repo/CentOS7-Base*.repo
+yum clean all
+yum makecache
+EOF
+    echo "Done"
+}
 
 generate_rpmrepo_config() {
   printf "Generating rpm repo configuration files ..."
   [ ! -d $BSROOT/html/static/CentOS7/repo ] && mkdir  -p $BSROOT/html/static/CentOS7/repo
-  cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
+  if [[ $cluster_desc_set_yum_repo == "bootstrapper" ]]; then
+    cat > $BSROOT/html/static/CentOS7/repo/CentOS7-Base.repo <<EOF
+[Base]
+name=Base Packages for Enterprise Linux 7
+baseurl=http://$BS_IP/static/CentOS7/dvd_content/
+enabled=1
+gpgcheck=0
+EOF
+  elif [[ $cluster_desc_set_yum_repo == "163" ]];then
+    wget -P $BSROOT/html/static/CentOS7/repo/ http://mirrors.163.com/.help/CentOS7-Base-163.repo
+  fi
+
+   cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
 [Cloud-init]
 name=Cloud init Packages for Enterprise Linux 7
 baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
@@ -246,7 +275,7 @@ EOF
 
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
-             centos:7.2.1511 \
+             centos:7.3.1611 \
              sh -c  'mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
              /usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org && \

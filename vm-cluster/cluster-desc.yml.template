@@ -20,7 +20,7 @@ coreos_channel: "stable"
 
 # coreos_version can be configured as the special version num or "current"
 coreos_version: "1122.2.0"
-centos_version: "7.2.1511"
+centos_version: "7.3.1611"
 docker_engine_version: "1.12.0"
 
 # gpu drivers version
@@ -32,6 +32,14 @@ set_ntp: y
 
 # OS type: CentOS or CoreOS
 os_name: "CentOS"
+
+# Centos repository: default repository for bootstrapper,
+# If you need to configure the other repository, need to open the configuration switch.
+# Currently supports only add 163 repository.
+# for example: 163 repo:
+#  set_yum_repo: "163"
+#set_yum_repo: "bootstrapper"
+set_yum_repo: "163"
 
 ingress_hostnetwork: true
 

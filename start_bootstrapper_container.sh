@@ -21,12 +21,12 @@ if [[ $BSROOT != /* ]]; then
   exit 1
 fi
 
-if [[ -e "$BSROOT/html/static/current/CentOS-7-x86_64-DVD-1511.iso" ]]; then
+if [[ -e "$BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-1611.iso" ]]; then
     if [[ ! -d "$BSROOT/html/static/CentOS7/dvd_content" ]]; then
         mkdir -p $BSROOT/html/static/CentOS7/dvd_content
     fi
     if [[ ! -f "$BSROOT/html/static/CentOS7/dvd_content/.treeinfo" ]]; then
-        sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-DVD-1511.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
+        sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-1611.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
     fi
 fi
 
