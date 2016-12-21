@@ -332,11 +332,30 @@ generate_addons_config() {
                 -config-file /bsroot/html/static/default-backend.yaml || \
             { echo 'Failed to generate default-backend.yaml !'; exit 1; }
 
-    cp $SEXTANT_DIR/addons/template/default-backend-svc.yaml $BSROOT/html/static/default-backend-svc.yaml
-    cp $SEXTANT_DIR/addons/template/grafana-service.yaml $BSROOT/html/static/grafana-service.yaml
-    cp $SEXTANT_DIR/addons/template/heapster-controller.yaml $BSROOT/html/static/heapster-controller.yaml
-    cp $SEXTANT_DIR/addons/template/heapster-service.yaml $BSROOT/html/static/heapster-service.yaml
-    cp $SEXTANT_DIR/addons/template/influxdb-grafana-controller.yaml $BSROOT/html/static/influxdb-grafana-controller.yaml
-    cp $SEXTANT_DIR/addons/template/influxdb-service.yaml $BSROOT/html/static/influxdb-service.yaml
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+                -template-file $SEXTANT_DIR_IN/addons/template/heapster-controller.template \
+                -config-file /bsroot/html/static/heapster-controller.yaml || \
+            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
+
+    docker run --rm -it \
+            --volume $GOPATH:/go \
+            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $BSROOT:/bsroot \
+            golang:wheezy \
+            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
+                -template-file $SEXTANT_DIR_IN/addons/template/influxdb-grafana-controller.template \
+                -config-file /bsroot/html/static/influxdb-grafana-controller.yaml || \
+            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
+
+    files=`ls $SEXTANT_DIR/addons/template/|grep "yaml"`
+    for file in $files
+    do
+        cp $SEXTANT_DIR/addons/template/$file $BSROOT/html/static/$file;
+    done
     echo "Done"
 }

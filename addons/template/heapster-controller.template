@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: heapster
-        image: kubernetes/heapster:canary
+        image: {{ .Dockerdomain }}:5000/{{ .Images.heapster }}
         imagePullPolicy: Always
         command:
         - /heapster
