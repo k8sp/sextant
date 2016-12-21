@@ -48,7 +48,7 @@ Vagrant.configure("2") do |config|
       master.vm.network  "private_network", type: "dhcp", virtualbox__intnet: true, :mac => "0800274a2da1", :adapter=>1, auto_config: false
       master.vm.provider "virtualbox" do |ms|
         ms.gui = true
-    	 ms.memory = "1024"
+    	 ms.memory = "1536"
     	 ms.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--usb", "off", "--usbehci", "off"]
       end
    end
@@ -59,7 +59,7 @@ Vagrant.configure("2") do |config|
       worker.vm.network  "private_network", type: "dhcp", virtualbox__intnet: true, :adapter=>1, auto_config: false
       worker.vm.provider "virtualbox" do |wk|
          wk.gui = true
-         wk.memory = "1024"
+         wk.memory = "1536"
          wk.customize ["modifyvm", :id, "--boot1", "disk", "--boot2", "net", "--macaddress1", "auto", "--usb", "off", "--usbehci", "off"]
          wk.customize ["storagectl", :id, "--name", "SATA", "--remove"]
          wk.customize ["storagectl", :id, "--name", "SATA Controller", "--add", "sata"]
