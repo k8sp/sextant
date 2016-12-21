@@ -5,6 +5,7 @@ metadata:
     k8s-app: heapster
     name: heapster
     version: v6
+    kubernetes.io/cluster-service: "true"
   name: heapster
   namespace: kube-system
 spec:

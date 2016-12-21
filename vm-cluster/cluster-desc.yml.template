@@ -73,7 +73,7 @@ images:
   ntp: "redaphid/docker-ntp-server"
   heapster: "kubernetes/heapster:canary"
   grafana: "lupan/heapster_grafana:v2.6.0-2"
-  influxdb: "kubernetes/heapster_influxdb:v0.5"
+  influxdb: "lupan/heapster_influxdb:v0.5"
 
 nodes:
   - mac: "08:00:27:4a:2d:a1"
