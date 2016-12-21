@@ -333,6 +333,10 @@ generate_addons_config() {
             { echo 'Failed to generate default-backend.yaml !'; exit 1; }
 
     cp $SEXTANT_DIR/addons/template/default-backend-svc.yaml $BSROOT/html/static/default-backend-svc.yaml
-
+    cp $SEXTANT_DIR/addons/template/grafana-service.yaml $BSROOT/html/static/grafana-service.yaml
+    cp $SEXTANT_DIR/addons/template/heapster-controller.yaml $BSROOT/html/static/heapster-controller.yaml
+    cp $SEXTANT_DIR/addons/template/heapster-service.yaml $BSROOT/html/static/heapster-service.yaml
+    cp $SEXTANT_DIR/addons/template/influxdb-grafana-controller.yaml $BSROOT/html/static/influxdb-grafana-controller.yaml
+    cp $SEXTANT_DIR/addons/template/influxdb-service.yaml $BSROOT/html/static/influxdb-service.yaml
     echo "Done"
 }
