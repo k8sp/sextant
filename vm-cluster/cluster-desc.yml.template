@@ -31,7 +31,7 @@ gpu_drivers_version: "367.57"
 set_ntp: y
 
 # OS type: CentOS or CoreOS
-os_name: "CoreOS"
+os_name: "CentOS"
 
 # Centos repository: default repository for bootstrapper,
 # If you need to configure the other repository, need to open the configuration switch.
