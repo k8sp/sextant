@@ -71,6 +71,9 @@ images:
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
   default_backend: "yancey1989/defaultbackend:1.0"
   ntp: "redaphid/docker-ntp-server"
+  heapster: "kubernetes/heapster:canary"
+  grafana: "lupan/heapster_grafana:v2.6.0-2"
+  influxdb: "lupan/heapster_influxdb:v0.5"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
