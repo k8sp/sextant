@@ -1,25 +1,24 @@
 [![Build Status](https://travis-ci.org/k8sp/sextant.svg?branch=master)](https://travis-ci.org/k8sp/sextant.svg?branch=master)
 
-# sextant
+#Sextant
 <img src="logo/Sextant.png" width="250">
 
-sextant 提供了可以通过PXE全自动化安装初始化一个CoreOS+kubernetes集群。
+Sextant provides a tool that initialize a cluster with CoreOS and Kubernetes crossing PXE technology.
 
-## 环境准备
-bootstrapper需要运行在一台服务器上(以下称bootstrapper server)，满足以下的几个要求：
+# Enviroment Prepare
+Bootstrapper will running on a machine(bootstrapper server), which need to meet the following requirements
 
-1. 待初始化的kubernetes机器需要和bootstrapper server保持网络连通
-1. bootstrapper server是一台安装有docker daemon(***1.11以上版本***)的Linux服务器
-1. 拥有bootstrapper server的root权限
-1. 配置bootstrapper server的/etc/hosts文件，增加hostname的解析：```127.0.0.1  bootstrapper```
+1. The kubernetes machine to be initialized need to be connected with bootstrapper server.
+2. Bootstrapper server is a linux server with `docker daemon`(more than 1.11 version) installed.
+3. Root permissions with bootstrapper server.
 
-## 初始化配置和准备bootstrapper需要的镜像文件
-***在能访问互联网的一台机器上完成下面的准备环境，配置，创建Docker镜像的步骤***
-* 注：如果bootstrapper机器没有互联网访问，可以事先准备好/bsroot目录然后上传到bootstrapper server
+# Initial configuration and prepare image files bootstrapper needs.
 
-获取sextant代码后，根据要初始化的整体集群规划，
-编辑cloud-config-server/template/cluster-desc.sample.yaml文件完成配置
-然后下载bootstrapper用到的文件到/bsroot目录下
+Complete the flowing steps that the enviromental preparation, configuration and build docker images.
+    - If no internet access, you can upload the prepared `./bsroot` directory to bootstrapper server.
+
+After getting the sextant code, initial the cluster planning, edit `cloud-config-server/template/cluster-desc.sample.yaml` and then build bootstrapper to the `./bsroot` directory.
+
 ```
 go get -u -d github.com/k8sp/sextant/...
 cd $GOPATH/src/github.com/k8sp/sextant
@@ -27,54 +26,65 @@ vim cloud-config-server/template/cluster-desc.sample.yaml
 ./bsroot.sh cloud-config-server/template/cluster-desc.sample.yaml
 ```
 
-## 上传到集群内部的bootstrapper机器
-如果上述步骤是在bootstrapper服务器上完成的，则可以跳过此步骤。
+# Uploaded to the bootstrapper server 
 
-1. 手动打包./bsroot目录：```tar czf bsroot.tar.gz ./bsroot```
-1. 将bsroot.tar.gz上传到你的bootstrapper机器上（使用scp或ftp等工具）
-1. 在bootstrapper机器上解压bsroot.tar.gz到/目录
+If the above steps is done on the bootstrapper server, you can skip this step.
 
-## 启动bootstrapper
+1. Packing direcotry `./bsroot`: `tar czvf bsroot.tar.gz ./bsroot`
+2. Upload `bsroot.tar.gz` to the bootstrapper server.(using tools such as SCP or FTP)
+3. Extract `bsroot.tar.gz` to `/` directory on bootstrapper server.
+
+# Start bootstrapper
+
 ```
 ssh root@bootstrapper
 cd /bsroot
 ./start_bootstrapper_container.sh /bsroot
 ```
 
-## 通过bootstrapper来初始化您的kubernetes集群
-***只需要设置kubernetes节点通过PXE网络引导，并开机(和bootstrapper网络联通)，就可以自动完成kubernetes和ceph安装***
+# Initial kubernetes cluster by bootstrapper
 
-## 使用集群
+Just set kubernetes node through PXE network boot, reboot the machine, it will completed Kubernetes and Ceph installation automatically.
 
-### 配置kubectl客户端
+# Using kubernetes cluster
+
+## Configurate kubctl client
+
 ```
 scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
 ./setup-kubectl.bash
 ```
 
-### 测试kubectl客户端可用
-执行下面的命令，观察返回结果是否正常，判断是否已经成客户端的正确配置：
+## Test kubectl is ready 
+
+Execute the following command, determine wheter the client has been property configured according to the return result.
+
 ```
 bootstrapper ~ # ./kubectl get nodes
 NAME                STATUS                     AGE
 08-00-27-4a-2d-a1   Ready,SchedulingDisabled   1m
 ```
 
-### 使用ceph集群
-在集群安装完成之后，可以使用下面的命令获得admin keyring作为后续使用
+## Using Ceph cluster
+
+After the cluster installation is complete, you can use the following command to obtain admin keyring for the subsequent configuration. 
+
 ```
 etcdctl --endpoints http://08-00-27-ef-d2-12:2379 get /ceph-config/ceph/adminKeyring
 ```
-比如，需要使用cephFS mount目录：
+
+For example, mount a directory with CephFS.
+
 ```
 mount -t ceph 192.168.8.112:/ /ceph -o name=admin,secret=[your secret]
 ```
 
-## 维护集群
+# Cluster maintenance
 
-### 集群初始化完成后如何更新master节点的证书
+## How to updating the cert after the cluster is running for some time.
 
-1.修改certgen.go中openssl.cnf的配置
+1. Edit the confuration `openssl.cnf` in `certgen.go`.
+
 ```
 [req]
 req_extensions = v3_req
@@ -92,7 +102,7 @@ DNS.4 = kubernetes.default.svc.cluster.local
 DNS.5 = 10.10.10.201
 IP.1 = 10.100.0.1
 ```
-1. 根据openssl.cnf，重新生成api-server.pem等文件：https://coreos.com/kubernetes/docs/latest/openssl.html
-1. 重启master的相关进程，包括api-server, controller-manager, scheduler, kube-proxy
-1. 使用kubectl delete secret删除kube-system/default namespace下的default secret
-1. 重新提交失败的service
+2. Regenerating api-server.pem and other files according the openssl.cnf: https://coreos.com/kubernetes/docs/latest/openssl.html
+3. Restart master processes, including api-server,controller-manager,scheduler,kube-proxy
+4. Delete default secret under kube-system/default namesapce using kubectl delete secret
+5. Resubmit failed service.
