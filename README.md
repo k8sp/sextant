@@ -3,21 +3,21 @@
 #Sextant
 <img src="logo/Sextant.png" width="250">
 
-Sextant provides a tool that initialize a cluster with CoreOS and Kubernetes crossing PXE technology.
+Sextant initialize a cluster installed with CoreOS and Kubernetes using PXE.
 
-# Enviroment Prepare
-Bootstrapper will running on a machine(bootstrapper server), which need to meet the following requirements
+# Enviroment setup
+Bootstrapper will be running on a machine(AKA: bootstrapper server), which need to meet the following requirements
 
-1. The kubernetes machine to be initialized need to be connected with bootstrapper server.
-2. Bootstrapper server is a linux server with `docker daemon`(more than 1.11 version) installed.
-3. Root permissions with bootstrapper server.
+1. The kubernetes machines waiting for install need to be connected with bootstrapper server.
+2. Bootstrapper server is a linux server with docker daemon(1.11 or later) installed.
+3. Have root access of the bootstrapper server.
 
-# Initial configuration and prepare image files bootstrapper needs.
+# Configurations and download image files that bootstrapper needs.
 
-Complete the flowing steps that the enviromental preparation, configuration and build docker images.
-    - If no internet access, you can upload the prepared `./bsroot` directory to bootstrapper server.
+***The following steps will prepare the environment, generate configurations and build docker images.***
+* if there's no internet access on the bootstrapper server, you can copy the pre-donwloaded `/bsroot` directory to it.
 
-After getting the sextant code, initial the cluster planning, edit `cloud-config-server/template/cluster-desc.sample.yaml` and then build bootstrapper to the `./bsroot` directory.
+After getting the sextant code, you need to plan the cluster installation details by editing `cloud-config-server/template/cluster-desc.sample.yaml`. Then build bootstrapper to the `./bsroot` directory.
 
 ```
 go get -u -d github.com/k8sp/sextant/...
@@ -26,7 +26,7 @@ vim cloud-config-server/template/cluster-desc.sample.yaml
 ./bsroot.sh cloud-config-server/template/cluster-desc.sample.yaml
 ```
 
-# Uploaded to the bootstrapper server 
+# Uploaded to the bootstrapper server
 
 If the above steps is done on the bootstrapper server, you can skip this step.
 
@@ -42,20 +42,20 @@ cd /bsroot
 ./start_bootstrapper_container.sh /bsroot
 ```
 
-# Initial kubernetes cluster by bootstrapper
+# Setup kubernetes cluster using the bootstrapper
 
-Just set kubernetes node through PXE network boot, reboot the machine, it will completed Kubernetes and Ceph installation automatically.
+Just set kubernetes nodes boot through PXE, reboot the machine, then it will completed Kubernetes and Ceph installation automatically.
 
 # Using kubernetes cluster
 
-## Configurate kubctl client
+## Configurate kubectl client
 
 ```
 scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
 ./setup-kubectl.bash
 ```
 
-## Test kubectl is ready 
+## Test kubectl if it's ready
 
 Execute the following command, determine wheter the client has been property configured according to the return result.
 
@@ -67,7 +67,7 @@ NAME                STATUS                     AGE
 
 ## Using Ceph cluster
 
-After the cluster installation is complete, you can use the following command to obtain admin keyring for the subsequent configuration. 
+After the cluster installation is complete, you can use the following command to obtain admin keyring for the later use.
 
 ```
 etcdctl --endpoints http://08-00-27-ef-d2-12:2379 get /ceph-config/ceph/adminKeyring
