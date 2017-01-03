@@ -57,7 +57,7 @@ scp root@bootstrapper:/bsroot/setup-kubectl.bash ./
 
 ## Verify kubectl configuration and connection
 
-Execute the following command, determine whether the client has been property configured according to the return result.
+Execute the following command, verify whether the client has been property configured according to the return result.
 
 ```
 bootstrapper ~ # ./kubectl get nodes
