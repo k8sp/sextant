@@ -31,6 +31,8 @@ ingress_hostnetwork: true
 
 # Ntpserver set_ntp option for the cluster configuration.
 set_ntp: y
+# Set DNSMASQ DHCP least time
+lease: "infinite"
 
 #OS type: CentOS or CoreOS
 os_name: "CentOS"

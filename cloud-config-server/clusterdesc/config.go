@@ -17,7 +17,7 @@ type Cluster struct {
 	// The following are for configuring the DHCP service on the
 	// PXE server.  For any node, if its MAC address and IP
 	// address are enlisted in Node.MAC and Node.IP, the generated
-	// /etc/dhcpd/dhcp.conf will bind the IP address to the MAC
+	// /etc/dnsmasq/dnsmasq.conf will bind the IP address to the MAC
 	// address; otherwise the node will be assigned an IP from
 	// within the range of [IPLow, IPHigh].  In practice, nodes
 	// running etcd members requires fixed IP addresses.
@@ -47,9 +47,10 @@ type Cluster struct {
 	CoreOSVersion            string   `yaml:"coreos_version"`
 	GPUDriversVersion        string   `yaml:"gpu_drivers_version"`
 	OSName                   string   `yaml:"os_name"`
-	SetNTP                   bool     `yaml:"set_ntp"`
 	KubeMasterIP             []string `yaml:"kube_master_ip"`
 	KubeMasterDNS            []string `yaml:"kube_master_dns"`
+	DNSMASQSetNTP            bool     `yaml:"set_ntp"`
+	DNSMASQLease             string   `yaml:"lease"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
