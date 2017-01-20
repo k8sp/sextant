@@ -30,6 +30,7 @@ type addonsConfig struct {
 	IngressHostNetwork  bool
 	MasterHostname      string
 	SetNTP              bool
+	DNSMASQLease        string
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -55,8 +56,10 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 		Images:              config.Images,
 		IngressHostNetwork:  config.IngressHostNetwork,
 		MasterHostname:      config.GetMasterHostname(),
-		SetNTP:              config.SetNTP,
+		SetNTP:              config.DNSMASQSetNTP,
+		DNSMASQLease:        config.DNSMASQLease,
 	}
+
 	candy.Must(tmpl.Execute(w, ac))
 }
 
@@ -69,7 +72,10 @@ func main() {
 	d, e := ioutil.ReadFile(*clusterDescFile)
 	candy.Must(e)
 
-	c := &clusterdesc.Cluster{}
+	c := &clusterdesc.Cluster{
+		DNSMASQSetNTP: false,
+		DNSMASQLease:  "24h",
+	}
 	candy.Must(yaml.Unmarshal(d, c))
 	candy.WithCreated(*configFile, func(w io.Writer) { execute(*templateFile, c, w) })
 }

@@ -1,6 +1,6 @@
 domain={{ .DomainName }}
 user=root
-dhcp-range={{ .IPLow }},{{ .IPHigh }},{{ .Netmask }},12h
+dhcp-range={{ .IPLow }},{{ .IPHigh }},{{ .Netmask }},{{ .DNSMASQLease }}
 log-dhcp
 
 {{- if .SetNTP }}
