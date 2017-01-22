@@ -22,7 +22,22 @@ update_kernel() {
     sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /etc/systemd/system/multi-user.target.wants/docker.service
 }
 
+set_ssh_config() {
+    mkdir -p /root/.ssh
+    chomd 700 /root/.ssh
+    cat > /root/.ssh/config <<EOF
+Host *
+GSSAPIAuthentication no
+StrictHostKeyChecking no
+UserKnownHostsFile=/dev/null
+
+    EOF
+
+    chomd 600 /root/.ssh/config
+
+}
 
 set_hostname
 update_kernel
+set_ssh_config
 
