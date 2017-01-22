@@ -13,13 +13,16 @@ set_hostname() {
     echo ${hostname_str} >/etc/hostname
 }
 
-update_kernel() {
+set_docker() {
     # For install multi-kernel, set the first line kernel in grub list as default to boot
     grub2-set-default 0
     # load overlay for docker storage driver
     echo "overlay" > /etc/modules-load.d/overlay.conf
     # set overaly as docker storage driver instead of devicemapper (the default one on centos)
-    sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /etc/systemd/system/multi-user.target.wants/docker.service
+    sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /usr/lib/systemd/system/docker.service
+
+    # Explicit Docker option
+    sed -i -e '/^ExecStart=/ s/$/ $DOCKER_OPT_BIP $DOCKER_OPT_IPMASQ $DOCKER_OPT_MTU $DOCKER_NETWORK_OPTIONS/' /usr/lib/systemd/system/docker.service
 }
 
 set_ssh_config() {
@@ -38,6 +41,6 @@ UserKnownHostsFile=/dev/null
 }
 
 set_hostname
-update_kernel
+set_docker
 set_ssh_config
 
