@@ -114,11 +114,8 @@ kernel-lt-devel
 
 %post --log=/root/ks-post-provision.log
 
-wget -P /root http://$BS_IP/static/CentOS7/set-hostname.sh
-bash -x /root/set-hostname.sh
-
-wget -P /root http://$BS_IP/static/CentOS7/update-kernel.sh
-bash -x /root/update-kernel.sh
+wget -P /root http://$BS_IP/static/CentOS7/post-process.sh
+bash -x /root/post-process.sh
 
 # Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
@@ -147,34 +144,7 @@ EOF
 generate_post_provision_script() {
     printf "Generating post provision script ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    cat > "$BSROOT/html/static/CentOS7/set-hostname.sh" <<'EOF'
-#!/bin/bash
-
-default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
-printf "Default interface: ${default_iface}\n"
-default_iface=`echo ${default_iface} | awk '{ print $1 }'`
-mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'`
-printf "Interface: ${default_iface} MAC address: ${mac_addr}\n"
-
-hostname_str=${mac_addr//:/-}
-echo ${hostname_str} >/etc/hostname
-
-EOF
-
-cat > $BSROOT/html/static/CentOS7/update-kernel.sh <<'EOF'
-#!/bin/bash
-
-# For install multi-kernel, set the first line kernel in grub list as default to boot
-grub2-set-default 0
-
-# load overlay for docker storage driver
-echo "overlay" > /etc/modules-load.d/overlay.conf
-
-# set overaly as docker storage driver instead of devicemapper (the default one on centos)
-sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /etc/systemd/system/multi-user.target.wants/docker.service
-
-EOF
-
+    cp $SEXTANT_DIR/scripts/centos/post-process.sh $BSROOT/html/static/CentOS7
     echo "Done"
 }
 
