@@ -126,11 +126,6 @@ bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
 %end
 
-%post --nochroot
-wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
-bash -x ./post_nochroot_provision.sh
-%end
-
 %post
 wget  -P /root http://$BS_IP/static/CentOS7/post_yum_repo.sh
 bash -x /root/post_yum_repo.sh
@@ -187,16 +182,6 @@ EOF
 
 }
 
-
-generate_post_nochroot_provision_script() {
-    printf "Generating post nochroot provision script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
-#!/bin/bash
-
-EOF
-    echo "Done"
-}
 
 generate_post_yum_repo_script() {
     printf "Generating post nochr  script ... "
