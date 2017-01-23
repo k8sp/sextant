@@ -34,13 +34,45 @@ GSSAPIAuthentication no
 StrictHostKeyChecking no
 UserKnownHostsFile=/dev/null
 
-    EOF
+EOF
 
     chomd 600 /root/.ssh/config
 
 }
 
+set_yum_repo(){
+
+BS_IP=$1
+cluster_desc_set_yum_repo=$2
+
+if [[ $cluster_desc_set_yum_repo == "bootstrapper" ]]; then
+
+cat >/etc/yum.repos.d/Local.repo << EOF
+[LocalRepo]
+name=Local Repository
+baseurl=http://$BS_IP/static/CentOS7/dvd_content/
+enabled=1
+gpgcheck=0
+
+EOF
+
+else
+
+    cp /etc/yum.repos.d/CentOS-Base.repo{,.bak}
+    sed -i -e 's/mirrorlist/#mirrorlist/@g' /etc/yum.repos.d/CentOS-Base.repo
+    sed -i -e 's@#baseurl=http://[^/]*@baseurl=http://$cluster_desc_set_yum_repo@g' /etc/yum.repos.d/CentOS-Base.repo
+
+fi
+
+yum clean all
+yum makecache
+
+}
+
+
+
 set_hostname
 set_docker
 set_ssh_config
+set_yum_repo
 

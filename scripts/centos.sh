@@ -115,7 +115,7 @@ kernel-lt-devel
 %post --log=/root/ks-post-provision.log
 
 wget -P /root http://$BS_IP/static/CentOS7/post-process.sh
-bash -x /root/post-process.sh
+bash -x /root/post-process.sh $BS_IP ${cluster_desc_set_yum_repo}
 
 # Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/nvidia-gpu-mkdev.sh
@@ -125,16 +125,6 @@ bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${
 wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
 bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
-%end
-
-%post --nochroot
-wget http://$BS_IP/static/CentOS7/post_nochroot_provision.sh
-bash -x ./post_nochroot_provision.sh
-%end
-
-%post
-wget  -P /root http://$BS_IP/static/CentOS7/post_yum_repo.sh
-bash -x /root/post_yum_repo.sh
 %end
 
 EOF
@@ -189,48 +179,9 @@ EOF
 }
 
 
-generate_post_nochroot_provision_script() {
-    printf "Generating post nochroot provision script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_nochroot_provision.sh <<'EOF'
-#!/bin/bash
-
-EOF
-    echo "Done"
-}
-
-generate_post_yum_repo_script() {
-    printf "Generating post nochr  script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_yum_repo.sh <<'EOF'
-#!/bin/bash
-BootStrapper_ip=$(grep nameserver /etc/resolv.conf|cut -d " " -f2)
-DownLoad_Files="CentOS7-Base-163.repo CentOS7-Base.repo"
-mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
-for i in $DownLoad_Files
-do
- wget -P /etc/yum.repos.d/   http://$BootStrapper_ip/static/CentOS7/repo/$i
-done
-yum clean all
-yum makecache
-EOF
-    echo "Done"
-}
-
 generate_rpmrepo_config() {
   printf "Generating rpm repo configuration files ..."
-  [ ! -d $BSROOT/html/static/CentOS7/repo ] && mkdir  -p $BSROOT/html/static/CentOS7/repo
-  if [[ $cluster_desc_set_yum_repo == "bootstrapper" ]]; then
-    cat > $BSROOT/html/static/CentOS7/repo/CentOS7-Base.repo <<EOF
-[Base]
-name=Base Packages for Enterprise Linux 7
-baseurl=http://$BS_IP/static/CentOS7/dvd_content/
-enabled=1
-gpgcheck=0
-EOF
-  elif [[ $cluster_desc_set_yum_repo == "mirrors.163.com" ]];then
-    wget -P $BSROOT/html/static/CentOS7/repo/ http://mirrors.163.com/.help/CentOS7-Base-163.repo
-  fi
+  mkdir -p $BSROOT/html/static/CentOS7/repo
 
    cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
 [Cloud-init]

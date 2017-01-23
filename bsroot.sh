@@ -37,9 +37,7 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     generate_pxe_centos_config
     generate_kickstart_config
     generate_post_provision_script
-    generate_post_nochroot_provision_script
     generate_post_cloudinit_script
-    generate_post_yum_repo_script
     generate_rpmrepo_config
     if [[ $cluster_desc_set_gpu == "y" ]];then
       download_centos_gpu_drivers
