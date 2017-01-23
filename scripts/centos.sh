@@ -115,7 +115,7 @@ kernel-lt-devel
 %post --log=/root/ks-post-provision.log
 
 wget -P /root http://$BS_IP/static/CentOS7/post-process.sh
-bash -x /root/post-process.sh
+bash -x /root/post-process.sh $BS_IP ${cluster_desc_set_yum_repo}
 
 # Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
@@ -124,9 +124,6 @@ bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${
 wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
 bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
-
-wget  -P /root http://$BS_IP/static/CentOS7/post_yum_repo.sh
-bash -x /root/post_yum_repo.sh
 %end
 
 EOF
@@ -181,26 +178,9 @@ EOF
 }
 
 
-generate_post_yum_repo_script() {
-    printf "Generating post nochr  script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cat > $BSROOT/html/static/CentOS7/post_yum_repo.sh <<EOF
-#!/usr/bin/env bash
-
-cp /etc/yum.repos.d/CentOS-Base.repo{,.bak}
-sed -i -e 's/mirrorlist/#mirrorlist/@g' /etc/yum.repos.d/CentOS-Base.repo
-sed -i -e 's@#baseurl=http://[^/]*@baseurl=http://$cluster_desc_set_yum_repo@g' /etc/yum.repos.d/CentOS-Base.repo
-yum clean all
-yum makecache
-EOF
-    echo "Done"
-}
-
 generate_rpmrepo_config() {
   printf "Generating rpm repo configuration files ..."
-  [ ! -d $BSROOT/html/static/CentOS7/repo ] && mkdir  -p $BSROOT/html/static/CentOS7/repo
-  if [[ $cluster_desc_set_yum_repo == "bootstrapper" ]]; then
-  fi
+  mkdir -p $BSROOT/html/static/CentOS7/repo
 
    cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
 [Cloud-init]
