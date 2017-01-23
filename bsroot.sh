@@ -51,6 +51,7 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     generate_pxe_config
     acquire_specify_version
     update_coreos_images
+    generate_install_script
     if [[ $cluster_desc_set_gpu == "y" ]];then
       build_coreos_nvidia_gpu_drivers
     fi
@@ -61,7 +62,6 @@ fi
 
 generate_registry_config
 generate_ceph_install_scripts
-prepare_cc_server_contents
 download_k8s_images
 build_bootstrapper_image
 generate_tls_assets
