@@ -16,7 +16,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/golang/glog"
 
