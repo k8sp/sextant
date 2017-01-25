@@ -9,27 +9,21 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/golang/glog"
 
 	"github.com/gorilla/mux"
-	"github.com/k8sp/sextant/cloud-config-server/cache"
 	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
 	cctemplate "github.com/k8sp/sextant/cloud-config-server/template"
 	"github.com/topicai/candy"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -85,16 +79,6 @@ func makeSafeHandler(h http.HandlerFunc) http.HandlerFunc {
 		}()
 		h(w, r)
 	}
-}
-
-func makeCacheGetter(url, fn string) func() []byte {
-	if len(fn) == 0 {
-		dir, e := ioutil.TempDir("", "")
-		candy.Must(e)
-		fn = path.Join(dir, "localfile")
-	}
-	c := cache.New(url, fn)
-	return func() []byte { return c.Get() }
 }
 
 func fileExist(fn string) error {
