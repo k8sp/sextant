@@ -154,8 +154,9 @@ func validation(clusterDescFile string, ccTemplateDir string, caKey, caCrt, dir 
 // fetching requests
 func makeCloudConfigHandler(clusterDescFile string, ccTemplateDir string, caKey, caCrt string) http.HandlerFunc {
 	return makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
-		mac := strings.ToLower(mux.Vars(r)["mac"])
-		candy.Must(cctemplate.Execute(w, mac, "cc-template", ccTemplateDir, clusterDescFile, caKey, caCrt))
+		hwAddr, err := net.ParseMAC(mux.Vars(r)["mac"])
+		candy.Must(err)
+		candy.Must(cctemplate.Execute(w, hwAddr.String(), "cc-template", ccTemplateDir, clusterDescFile, caKey, caCrt))
 	})
 }
 
