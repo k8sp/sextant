@@ -109,7 +109,7 @@ func GetConfigDataByMac(mac string, clusterdesc *clusterdesc.Cluster, caKey, caC
 
 func getNodeByMAC(c *clusterdesc.Cluster, mac string) clusterdesc.Node {
 	for _, n := range c.Nodes {
-		if n.MAC == mac {
+		if n.Mac() == mac {
 			return n
 		}
 	}
