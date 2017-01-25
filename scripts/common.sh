@@ -48,11 +48,6 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
 fi
 echo "Using bootstrapper server IP $BS_IP"
 
-KUBE_MASTER_HOSTNAME=`head -n $(grep -n 'kube_master\s*:\s*y' $CLUSTER_DESC | cut -d: -f1) $CLUSTER_DESC | grep mac: | tail | grep -o '..:..:..:..:..:..' | tr ':' '-'`
-if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == "" ]]; then
-  echo "The cluster-desc file should container kube-master node."
-  exit 1
-fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
@@ -73,19 +68,17 @@ function check_prerequisites() {
 
 
 check_cluster_desc_file() {
-    # Check cluster-desc file
-    printf "Cross-compiling cloud-config-server ... "
+    printf "Cross-compiling validate-yaml ... "
     docker run --rm -it \
           --volume $GOPATH:/go \
           -e CGO_ENABLED=0 \
           -e GOOS=linux \
           -e GOARCH=amd64 \
           golang:wheezy \
-          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+          go get github.com/k8sp/sextant/cloud-config-server/validate-yaml \
           || { echo "Build sextant failed..."; exit 1; }
     echo "Done"
 
-    printf "Checking cluster description file ..."
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
@@ -93,15 +86,15 @@ check_cluster_desc_file() {
     cp $CLUSTER_DESC $BSROOT/config
     echo "Done"
 
+    printf "Checking cluster description file ..."
     docker run -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
         golang:wheezy \
-          /go/bin/cloud-config-server \
-          -dir /bsroot/html/static \
+          /go/bin/validate-yaml \
           --cloud-config-dir /bsroot/config/templatefiles \
           -cluster-desc /bsroot/config/cluster-desc.yml \
-          -validate true  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
+          > /dev/null 2>&1 || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
@@ -207,6 +200,18 @@ build_bootstrapper_image() {
           golang:wheezy \
           sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
           || { echo "Complie Docker registry failed..."; exit 1; }
+
+    printf "Cross-compiling cloud-config-server, addons ... "
+    docker run --rm -it \
+          --volume $GOPATH:/go \
+          -e CGO_ENABLED=0 \
+          -e GOOS=linux \
+          -e GOARCH=amd64 \
+          golang:wheezy \
+          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+          || { echo "Build sextant failed..."; exit 1; }
+    echo "Done"
+
 
     rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons,registry}
     cp $GOPATH/bin/{cloud-config-server,addons,registry} $SEXTANT_DIR/docker
