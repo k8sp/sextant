@@ -66,10 +66,16 @@ type Execution struct {
 func GenerateRootCA(out string) (string, string) {
 	caKey := path.Join(out, "ca.key")
 	caCrt := path.Join(out, "ca.crt")
+	GenerateCA(caKey, caCrt)
+
+	return caKey, caCrt
+}
+
+func GenerateCA(caKey string, caCrt string) error {
 	Run("openssl", "genrsa", "-out", caKey, "2048")
 	Run("openssl", "req", "-x509", "-new", "-nodes", "-key", caKey, "-days", "10000", "-out", caCrt, "-subj", "/CN=kube-ca")
 
-	return caKey, caCrt
+	return nil
 }
 
 func openSSLCnfTmpl(master bool) *template.Template {
