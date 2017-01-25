@@ -3,7 +3,11 @@
 // file, which is used by config-bootstrapper and cloud-config-server.
 package clusterdesc
 
-import "strings"
+import (
+	"github.com/topicai/candy"
+	"net"
+	"strings"
+)
 
 // Cluster configures a cluster, which includes: (1) a
 // bootstrapper machine, (2) the Kubernetes cluster.
@@ -102,11 +106,13 @@ func (c Cluster) GetIngressReplicas() int {
 // Hostname is defined as a method of Node, so can be call in
 // template.  For more details, refer to const tmplDHCPConf.
 func (n Node) Hostname() string {
-	return strings.ToLower(strings.Replace(n.MAC, ":", "-", -1))
+	return strings.ToLower(strings.Replace(n.Mac(), ":", "-", -1))
 }
 
 // Mac is defined as a method of Node, so can be called in template.
 // For more details, refer to const tmplDHCPConf.
 func (n Node) Mac() string {
-	return strings.ToLower(n.MAC)
+	hwAddr, err := net.ParseMAC(n.MAC)
+	candy.Must(err)
+	return hwAddr.String()
 }

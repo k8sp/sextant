@@ -111,3 +111,21 @@ build_coreos_nvidia_gpu_drivers(){
     echo "Done"
 
 }
+
+
+generate_install_script() {
+    printf "Generating CoreOS install script ... "
+    mkdir -p $BSROOT/html/static/cloud-config
+    cp $SEXTANT_DIR/scripts/coreos/install.sh $BSROOT/html/static/cloud-config/
+    sed -i -e 's/BS_IP/$BS_IP/g' $BSROOT/html/static/cloud-config/install.sh
+
+    if [[ "$cluster_desc_zap_and_start_osd" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+        sed -i -e 's/ZSP_AND_START_OSD/1/g' $BSROOT/html/static/cloud-config/install.sh
+    else
+        sed -i -e 's/ZSP_AND_START_OSD/0/g' $BSROOT/html/static/cloud-config/install.sh
+    fi
+
+    echo "Done"
+
+}
+

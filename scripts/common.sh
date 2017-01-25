@@ -146,47 +146,6 @@ generate_ceph_install_scripts() {
 
 }
 
-prepare_cc_server_contents() {
-    printf "Copying load_yaml.sh ... "
-    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/ || { echo "Failed"; exit 1; }
-    echo "Done"
-    printf "Generating install.sh ... "
-    echo "#!/bin/bash" > $BSROOT/html/static/cloud-config/install.sh
-    if grep "zap_and_start_osd: y" $CLUSTER_DESC > /dev/null; then
-    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
-#Obtain devices
-devices=\$(lsblk -l |awk '\$6=="disk"{print \$1}')
-# Zap all devices
-# NOTICE: dd zero to device mbr will not affect parted printed table,
-#         so use parted to remove the part tables
-for d in \$devices
-do
-  for v_partition in \$(parted -s /dev/\${d} print|awk '/^ / {print \$1}')
-  do
-     parted -s /dev/\${d} rm \${v_partition}
-  done
-  # make sure to wipe out the GPT infomation, let ceph uses gdisk to init
-  dd if=/dev/zero of=/dev/\${d} bs=512 count=2
-  parted -s /dev/\${d} mklabel gpt
-done
-EOF
-    fi
-    cat >> $BSROOT/html/static/cloud-config/install.sh <<EOF
-# FIXME: default to install coreos on /dev/sda
-default_iface=\$(awk '\$2 == 00000000 { print \$1  }' /proc/net/route | uniq)
-
-printf "Default interface: \${default_iface}\n"
-default_iface=\`echo \${default_iface} | awk '{ print \$1 }'\`
-
-mac_addr=\`ip addr show dev \${default_iface} | awk '\$1 ~ /^link\// { print \$2 }'\`
-printf "Interface: \${default_iface} MAC address: \${mac_addr}\n"
-
-wget -O \${mac_addr}.yml http://$BS_IP/cloud-config/\${mac_addr}
-sudo coreos-install -d /dev/sda -c \${mac_addr}.yml -b http://$BS_IP/static -V current && sudo reboot
-EOF
-    echo "Done"
-}
-
 
 build_bootstrapper_image() {
     # cloud-config-server and addon compile moved to check_cluster_desc_file
@@ -223,10 +182,12 @@ build_bootstrapper_image() {
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
+    echo "Done"
 
-    cp $SEXTANT_DIR/start_bootstrapper_container.sh \
-       $BSROOT/start_bootstrapper_container.sh 2>&1 || { echo "Failed"; exit 1; }
+    printf "Copying bash scripts ... "
+    cp $SEXTANT_DIR/start_bootstrapper_container.sh $BSROOT/
     chmod +x $BSROOT/start_bootstrapper_container.sh
+    cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/
     echo "Done"
 }
 
