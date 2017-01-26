@@ -95,7 +95,7 @@ network --onboot on --bootproto dhcp --noipv6
 @Base
 @Core
 cloud-init
-docker-engine-${cluster_desc_docker_engine_version}
+docker-engine
 etcd
 flannel
 make
@@ -172,7 +172,7 @@ cloud-init init
 
 systemctl stop  NetworkManager
 systemctl disable  NetworkManager
-systemctl enable docker.service
+systemctl enable docker
 EOF
     echo "Done"
 
@@ -210,7 +210,7 @@ EOF
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
              /usr/bin/yumdownloader  --enablerepo=elrepo-kernel --resolve \
              --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init \
-             docker-engine-'${cluster_desc_docker_engine_version}' etcd flannel \
+             docker-engine etcd flannel \
              kernel-lt kernel-lt-devel && \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' || \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
