@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	clusterDescExampleFile = "src/github.com/k8sp/sextant/cloud-config-server/template/cluster-desc.sample.yaml"
+	clusterDescExampleFile = "src/github.com/k8sp/sextant/golang/template/cluster-desc.sample.yaml"
 )
 
 func TestInitialEtcdCluster(t *testing.T) {
@@ -26,4 +26,3 @@ func TestGetEtcdMachines(t *testing.T) {
 	candy.Must(e)
 	candy.Must(yaml.Unmarshal([]byte(clusterDescExample), c))
 }
-
