@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
+	"github.com/k8sp/sextant/golang/clusterdesc"
 	"github.com/topicai/candy"
 	yaml "gopkg.in/yaml.v2"
 )

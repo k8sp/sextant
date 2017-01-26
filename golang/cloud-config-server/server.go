@@ -20,8 +20,8 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/gorilla/mux"
-	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	cctemplate "github.com/k8sp/sextant/cloud-config-server/template"
+	"github.com/k8sp/sextant/golang/certgen"
+	cctemplate "github.com/k8sp/sextant/golang/template"
 	"github.com/topicai/candy"
 )
 
