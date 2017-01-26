@@ -48,6 +48,11 @@ if [[ "$?" -ne 0 ||  "$BS_IP" == "" ]]; then
 fi
 echo "Using bootstrapper server IP $BS_IP"
 
+KUBE_MASTER_HOSTNAME=`head -n $(grep -n 'kube_master\s*:\s*y' $CLUSTER_DESC | cut -d: -f1) $CLUSTER_DESC | grep mac: | tail | grep -o '..:..:..:..:..:..' | tr ':' '-'`
+if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == ""  ]]; then
+    echo "The cluster-desc file should container kube-master node."
+    exit 1
+ fi
 
 HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
 [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
