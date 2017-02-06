@@ -9,8 +9,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
+	"github.com/k8sp/sextant/golang/certgen"
+	"github.com/k8sp/sextant/golang/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"

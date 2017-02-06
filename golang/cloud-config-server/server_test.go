@@ -11,16 +11,17 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/k8sp/sextant/cloud-config-server/certgen"
-	"github.com/k8sp/sextant/cloud-config-server/clusterdesc"
+	"github.com/k8sp/sextant/golang/certgen"
+	"github.com/k8sp/sextant/golang/clusterdesc"
 	"github.com/stretchr/testify/assert"
 	"github.com/topicai/candy"
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	tmplFile               = "src/github.com/k8sp/sextant/cloud-config-server/template/cloud-config.template"
-	clusterDescExampleFile = "src/github.com/k8sp/sextant/cloud-config-server/template/cluster-desc.sample.yaml"
+	tmplFile               = "src/github.com/k8sp/sextant/golang/template/cloud-config.template"
+	templateDir            = "../template/templatefiles"
+	clusterDescExampleFile = "../template/cluster-desc.sample.yaml"
 	loadTimeout            = 15 * time.Second
 )
 
@@ -34,10 +35,8 @@ func TestCloudConfigHandler(t *testing.T) {
 		}
 	}()
 	caKey, caCrt := certgen.GenerateRootCA(out)
-	templateDir := "./template/templatefiles"
-	clusterDescFile := "./template/cluster-desc.sample.yaml"
 	// load ClusterDesc
-	config := candy.WithOpened(clusterDescFile, func(r io.Reader) interface{} {
+	config := candy.WithOpened(clusterDescExampleFile, func(r io.Reader) interface{} {
 		b, e := ioutil.ReadAll(r)
 		candy.Must(e)
 
@@ -55,7 +54,7 @@ func TestCloudConfigHandler(t *testing.T) {
 	// TODO: put route setups in a common function
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}",
-		makeCloudConfigHandler(clusterDescFile, templateDir, caKey, caCrt))
+		makeCloudConfigHandler(clusterDescExampleFile, templateDir, caKey, caCrt))
 	router.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {

@@ -86,7 +86,7 @@ export GOPATH=<GoPathDir>
 
 ```
 git config --global url."https://<GitHubPersonalAccessToken>:x-oauth-basic@github.com/".insteadOf "https://github.com/" 
-go get github.com/k8sp/sextant/cloud-config-server
+go get github.com/k8sp/sextant/golang
 
 ```
 
