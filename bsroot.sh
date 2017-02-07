@@ -47,7 +47,6 @@ elif [[ $cluster_desc_os_name == "CoreOS" ]]; then
     check_coreos_version
     download_pxe_images
     generate_pxe_config
-    acquire_specify_version
     update_coreos_images
     generate_install_script
     if [[ $cluster_desc_set_gpu == "y" ]];then

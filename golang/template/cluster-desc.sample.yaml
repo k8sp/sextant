@@ -62,7 +62,7 @@ ceph:
   osd_journal_size: 5000
 
 images:
-  hyperkube: "typhoon1986/hyperkube-amd64:v1.3.6"
+  hyperkube: "pineking/hyperkube-amd64:v1.6.0-alpha-2aa99"
   pause: "typhoon1986/pause-amd64:3.0"
   flannel: "typhoon1986/flannel:0.5.5"
   ingress: "yancey1989/nginx-ingress-controller:0.8.3"

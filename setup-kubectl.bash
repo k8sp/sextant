@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 
-# Remember fullpaths, so that it is not required to run bsroot.sh from its local Git repo.
-realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-}
-
 KUBE_MASTER_HOSTNAME=<KUBE_MASTER_HOSTNAME>
-HYPERKUBE_VERSION=<HYPERKUBE_VERSION>
 
 setup_kubectl() {
   # Download kubectl binary
-  OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-  wget --quiet -c -O "./kubectl" https://storage.googleapis.com/kubernetes-release/release/$HYPERKUBE_VERSION/bin/$OS/amd64/kubectl
+  wget --quiet -c -O "./kubectl" https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubectl
   chmod +x ./kubectl
   # Configure kubectl
   echo $KUBE_MASTER_HOSTNAME

@@ -54,9 +54,8 @@ if [[ "$?" -ne 0 || "$KUBE_MASTER_HOSTNAME" == ""  ]]; then
     exit 1
  fi
 
-HYPERKUBE_VERSION=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-[ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
-  cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml || { echo "Failed"; exit 1; }
+mkdir -p $BSROOT/config
+cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml
 
 # check_prerequisites checks for required software packages.
 function check_prerequisites() {
@@ -202,6 +201,22 @@ build_bootstrapper_image() {
 
 
 download_k8s_images() {
+    # Fetch release binary tarball from github accroding to the versions
+    # defined in "cluster-desc.yml"
+    # hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+    # printf "Downloading kubelet ${hyperkube_version} ... "
+    # wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
+    printf "Downloading kubelet ... "
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
+    echo "Done"
+
+    # setup-network-environment will fetch the default system IP infomation
+    # when using cloud-config file to initiate a kubernetes cluster node
+    printf "Downloading setup-network-environment file ... "
+    wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
+    echo "Done"
+
+
     for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
         # NOTE: if we updated remote image but didn't update its tag,
         # the following lines wouldn't pull because there is a local
@@ -242,9 +257,7 @@ generate_tls_assets() {
 
 prepare_setup_kubectl() {
   printf "Preparing setup kubectl ... "
-  sed "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash | \
-    sed "s/<HYPERKUBE_VERSION>/$HYPERKUBE_VERSION/g" \
-    > $BSROOT/setup_kubectl.bash 2>&1 || { echo "Prepare setup kubectl failed."; exit 1; }
+  sed -i -e "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash
   chmod +x $BSROOT/setup_kubectl.bash
   echo "Done"
 }
