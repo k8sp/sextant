@@ -67,7 +67,7 @@ images:
   flannel: "typhoon1986/flannel:0.5.5"
   ingress: "yancey1989/nginx-ingress-controller:0.8.3"
   kubednsmasq: "pineking/kube-dnsmasq-amd64:1.4"
-  healthz: "pineking/exechealthz:1.2"
+  healthz: "pineking/exechealthz-amd64:1.2"
   addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
   kubedns: "pineking/kubedns-amd64:1.9"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
