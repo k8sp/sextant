@@ -20,7 +20,7 @@ set -o pipefail
 
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
-    -template-file /golang/addons/template/dnsmasq.conf.template \
+    -template-file /addons/template/dnsmasq.conf.template \
     -config-file /bsroot/config/dnsmasq.conf
 
 
