@@ -257,7 +257,7 @@ generate_tls_assets() {
         printf "Generating bootstrapper TLS assets ... "
         openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1
         openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1
-        openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1
+        openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 3650 > /dev/null 2>&1
         echo "Done"
 
     fi
