@@ -261,5 +261,10 @@ generate_addons_config() {
             golang:wheezy \
             /bin/bash /addons.sh
 
+    for file in $(ls $SEXTANT_DIR/golang/addons/template/|grep \.yaml$)
+    do
+        cp $SEXTANT_DIR/golang/addons/template/$file $BSROOT/html/static/$file;
+    done
+
     echo "Done"
 }
