@@ -194,6 +194,10 @@ build_bootstrapper_image() {
     chmod +x $BSROOT/start_bootstrapper_container.sh
     cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/
     echo "Done"
+
+    printf "Make directory ... "
+    mkdir -p $BSROOT/dnsmasq
+    echo "Done"
 }
 
 
@@ -247,7 +251,6 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
-    [ ! -d $BSROOT/dnsmasq ] && mkdir  -p $BSROOT/dnsmasq
     QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
     SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
 
