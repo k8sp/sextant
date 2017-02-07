@@ -80,14 +80,14 @@ check_cluster_desc_file() {
           -e GOOS=linux \
           -e GOARCH=amd64 \
           golang:wheezy \
-          go get github.com/k8sp/sextant/cloud-config-server/validate-yaml \
+          go get github.com/k8sp/sextant/golang/validate-yaml \
           || { echo "Build sextant failed..."; exit 1; }
     echo "Done"
 
 
     printf "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
-    cp -r $SEXTANT_DIR/cloud-config-server/template/templatefiles $BSROOT/config
+    cp -r $SEXTANT_DIR/golang/template/templatefiles $BSROOT/config
     cp $CLUSTER_DESC $BSROOT/config
     echo "Done"
 
@@ -172,7 +172,7 @@ build_bootstrapper_image() {
           -e GOOS=linux \
           -e GOARCH=amd64 \
           golang:wheezy \
-          go get github.com/k8sp/sextant/cloud-config-server github.com/k8sp/sextant/addons \
+          go get github.com/k8sp/sextant/golang/cloud-config-server github.com/k8sp/sextant/golang/addons \
           || { echo "Build sextant failed..."; exit 1; }
     echo "Done"
 
@@ -257,7 +257,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/addons/template/ingress.template \
+        -template-file $SEXTANT_DIR_IN/golang/addons/template/ingress.template \
         -config-file /bsroot/html/static/ingress.yaml || \
         { echo 'Failed to generate ingress.yaml !' ; exit 1; }
 
@@ -267,7 +267,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/addons/template/skydns.template \
+        -template-file $SEXTANT_DIR_IN/golang/addons/template/skydns.template \
         -config-file /bsroot/html/static/skydns.yaml || \
         { echo 'Failed to generate skydns.yaml !' ; exit 1; }
 
@@ -277,7 +277,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/addons/template/skydns-service.template \
+        -template-file $SEXTANT_DIR_IN/golang/addons/template/skydns-service.template \
         -config-file /bsroot/html/static/skydns-service.yaml || \
         { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
 
@@ -287,7 +287,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/addons/template/dnsmasq.conf.template \
+        -template-file $SEXTANT_DIR_IN/golang/addons/template/dnsmasq.conf.template \
         -config-file /bsroot/config/dnsmasq.conf || \
         { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
 
@@ -297,7 +297,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/addons/template/default-backend.template \
+                -template-file $SEXTANT_DIR_IN/golang/addons/template/default-backend.template \
                 -config-file /bsroot/html/static/default-backend.yaml || \
             { echo 'Failed to generate default-backend.yaml !'; exit 1; }
 
@@ -307,7 +307,7 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/addons/template/heapster-controller.template \
+                -template-file $SEXTANT_DIR_IN/golang/addons/template/heapster-controller.template \
                 -config-file /bsroot/html/static/heapster-controller.yaml || \
             { echo 'Failed to generate default-backend.yaml !'; exit 1; }
 
@@ -317,14 +317,9 @@ generate_addons_config() {
             --volume $BSROOT:/bsroot \
             golang:wheezy \
             /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/addons/template/influxdb-grafana-controller.template \
+                -template-file $SEXTANT_DIR_IN/golang/addons/template/influxdb-grafana-controller.template \
                 -config-file /bsroot/html/static/influxdb-grafana-controller.yaml || \
             { echo 'Failed to generate default-backend.yaml !'; exit 1; }
 
-    files=`ls $SEXTANT_DIR/addons/template/|grep "yaml"`
-    for file in $files
-    do
-        cp $SEXTANT_DIR/addons/template/$file $BSROOT/html/static/$file;
-    done
     echo "Done"
 }
