@@ -251,78 +251,15 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
-    QUOTE_GOPATH=$(echo $GOPATH | sed 's/\//\\\//g')
-    SEXTANT_DIR_IN=$(echo $SEXTANT_DIR | sed "s/$QUOTE_GOPATH/\/go/g")
 
     docker run --rm -it \
             --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
+            --volume $CLUSTER_DESC:/cluster-desc.yaml \
             --volume $BSROOT:/bsroot \
+            --volume $SEXTANT_DIR/scripts/common/addons.sh:/addons.sh \
+            --volume $SEXTANT_DIR/golang/addons:/addons \
             golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/golang/addons/template/ingress.template \
-        -config-file /bsroot/html/static/ingress.yaml || \
-        { echo 'Failed to generate ingress.yaml !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/golang/addons/template/skydns.template \
-        -config-file /bsroot/html/static/skydns.yaml || \
-        { echo 'Failed to generate skydns.yaml !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/golang/addons/template/skydns-service.template \
-        -config-file /bsroot/html/static/skydns-service.yaml || \
-        { echo 'Failed to generate skydns-service.yaml !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-        -template-file $SEXTANT_DIR_IN/golang/addons/template/dnsmasq.conf.template \
-        -config-file /bsroot/config/dnsmasq.conf || \
-        { echo 'Failed to generate dnsmasq.conf !' ; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/golang/addons/template/default-backend.template \
-                -config-file /bsroot/html/static/default-backend.yaml || \
-            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/golang/addons/template/heapster-controller.template \
-                -config-file /bsroot/html/static/heapster-controller.yaml || \
-            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
-
-    docker run --rm -it \
-            --volume $GOPATH:/go \
-            --volume $CLUSTER_DESC:$CLUSTER_DESC \
-            --volume $BSROOT:/bsroot \
-            golang:wheezy \
-            /go/bin/addons -cluster-desc-file $CLUSTER_DESC \
-                -template-file $SEXTANT_DIR_IN/golang/addons/template/influxdb-grafana-controller.template \
-                -config-file /bsroot/html/static/influxdb-grafana-controller.yaml || \
-            { echo 'Failed to generate default-backend.yaml !'; exit 1; }
+            /bin/bash /addons.sh
 
     echo "Done"
 }
