@@ -27,11 +27,3 @@ func TestRunWithEnv(t *testing.T) {
 	b, _ := ioutil.ReadFile(tmpfile)
 	assert.Equal(t, "/tmp\n", string(b))
 }
-
-func ExampleRunWithEnv() {
-	RunWithEnv(map[string]string{
-		"GOPATH": "/tmp",
-		"GOOS":   "linux",
-		"GOARCH": "amd64"},
-		"go", "get", "-u", "github.com/skynetservices/skydns")
-}

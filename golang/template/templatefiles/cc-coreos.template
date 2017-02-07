@@ -202,8 +202,8 @@ coreos:
             [Service]
             ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-controller.yaml http://{{ .BootstrapperIP }}/static/kubedns-controller.yaml
+            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-svc.yaml http://{{ .BootstrapperIP }}/static/kubedns-svc.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend.yaml http://{{ .BootstrapperIP }}/static/default-backend.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend-svc.yaml http://{{ .BootstrapperIP }}/static/default-backend-svc.yaml
             ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-service.yaml http://{{ .BootstrapperIP }}/static/heapster-service.yaml
