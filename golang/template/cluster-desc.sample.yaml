@@ -25,7 +25,7 @@ centos_version: "7.3.1611"
 
 # gpu drivers version
 set_gpu: n
-gpu_drivers_version: "367.57"
+gpu_drivers_version: "375.20"
 
 ingress_hostnetwork: true
 
@@ -42,7 +42,7 @@ os_name: "CentOS"
 # Currently supports only add 163 repository.
 # for example: 163 repo:
 # set_yum_repo: "mirrors.163.com"
-set_yum_repo: "bootstrapper"
+set_yum_repo: "mirrors.aliyun.com"
 
 # kube master ip, there should be cluster ip
 kube_master_ip:
@@ -58,7 +58,7 @@ coreos:
   time_length: "3h"
 
 ceph:
-  zap_and_start_osd: y
+  zap_and_start_osd: n
   osd_journal_size: 5000
 
 images:
@@ -79,27 +79,27 @@ images:
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
-    ceph_monitor: y
+    ceph_monitor: n
     kube_master: y
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:bc"
-    ceph_monitor: y
+    ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:b8"
-    ceph_monitor: y
+    ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: y
   - mac: "00:25:90:c0:f6:ee"
-    ceph_monitor: y
+    ceph_monitor: n
     kube_master: n
     etcd_member: n
     ingress_label: n
   - mac: "00:25:90:c0:f6:d6"
-    ceph_monitor: y
+    ceph_monitor: n
     kube_master: n
     etcd_member: n
     ingress_label: n
