@@ -155,8 +155,8 @@
       [Service]
       ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
-      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns.yaml http://{{ .BootstrapperIP }}/static/skydns.yaml
-      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/skydns-service.yaml http://{{ .BootstrapperIP }}/static/skydns-service.yaml
+      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-controller.yaml http://{{ .BootstrapperIP }}/static/kubedns-controller.yaml
+      ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-svc.yaml http://{{ .BootstrapperIP }}/static/kubedns-svc.yaml
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-service.yaml http://{{ .BootstrapperIP }}/static/heapster-service.yaml
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-service.yaml http://{{ .BootstrapperIP }}/static/influxdb-service.yaml
       ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http://{{ .BootstrapperIP }}/static/grafana-service.yaml

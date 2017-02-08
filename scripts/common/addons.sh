@@ -10,13 +10,13 @@ set -o pipefail
 
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
-    -template-file /addons/template/skydns.template \
-    -config-file /bsroot/html/static/skydns.yaml
+    -template-file /addons/template/kubedns-controller.template \
+    -config-file /bsroot/html/static/kubdns-controller.yaml
 
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
-    -template-file /addons/template/skydns-service.template \
-    -config-file /bsroot/html/static/skydns-service.yaml
+    -template-file /addons/template/kubedns-svc.template \
+    -config-file /bsroot/html/static/kubedns-svc.yaml
 
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
