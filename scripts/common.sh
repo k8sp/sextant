@@ -251,7 +251,7 @@ generate_tls_assets() {
 
         printf "Generating CA TLS assets ... "
         openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1
-        openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1
+        openssl req -x509 -new -nodes -key ca-key.pem -days 3650 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1
         echo "Done"
 
         printf "Generating bootstrapper TLS assets ... "
