@@ -241,18 +241,26 @@ download_k8s_images() {
 generate_tls_assets() {
     mkdir -p $BSROOT/tls
     cd $BSROOT/tls
-    rm -rf $BSROOT/tls/*
 
-    printf "Generating CA TLS assets ... "
-    openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
+    if [[ -f ca.pem ]] && [[ -f ca-key.pem ]] && [[ -f bootstrapper.key ]] \
+        && [[ -f bootstrapper.csr ]] && [[ -f bootstrapper.crt ]]; then
 
-    printf "Generating bootstrapper TLS assets ... "
-    openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 365 > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
+        echo "Use exist CA TLS assets"
+
+    else
+
+        printf "Generating CA TLS assets ... "
+        openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1
+        openssl req -x509 -new -nodes -key ca-key.pem -days 3650 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1
+        echo "Done"
+
+        printf "Generating bootstrapper TLS assets ... "
+        openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1
+        openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1
+        openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 3650 > /dev/null 2>&1
+        echo "Done"
+
+    fi
 }
 
 prepare_setup_kubectl() {
