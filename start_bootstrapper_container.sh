@@ -50,10 +50,151 @@ docker run -d \
        redaphid/docker-ntp-server || { echo "Failed"; exit -1; }
 fi
 
-docker rm -f bootstrapper > /dev/null 2>&1
-docker rmi bootstrapper:latest > /dev/null 2>&1
-docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
-docker run -d \
+# Configure early-docker.service
+os_release=$(grep -w  NAME /etc/os-release |cut -d "=" -f2)
+if [[ $os_release != "CoreOS" ]];then
+ mkdir -p /usr/lib/centos
+ cat > /usr/lib/centos/dockerd <<EOF
+#!/bin/bash
+# Wrapper for launching docker daemons with an appropriate backend.
+
+set -e
+
+parse_docker_args() {
+    local flag
+    while [[ $# -gt 0 ]]; do
+        flag="$1"
+        shift
+
+        # treat --flag=foo and --flag foo identically
+        if [[ "${flag}" == *=* ]]; then
+            set -- "${flag#*=}" "$@"
+            flag="${flag%=*}"
+        fi
+
+        case "${flag}" in
+            -g|--graph)
+                ARG_ROOT="$1"
+                shift
+                ;;
+            -s|--storage-driver)
+                ARG_DRIVER="$1"
+                shift
+                ;;
+            --selinux-enabled)
+                ARG_SELINUX="$1"
+                shift
+                ;;
+            *)
+                # ignore everything else
+                ;;
+        esac
+    done
+}
+
+select_docker_driver() {
+    local fstype
+
+    # mimic docker's behavior to ensure we stat the right filesystem.
+    if [[ -L "${ARG_ROOT}" ]]; then
+        ARG_ROOT="$(readlink -f "${ARG_ROOT}")"
+    fi
+
+    mkdir --parents --mode=0700 "${ARG_ROOT}"
+    fstype=$(findmnt --noheadings --output FSTYPE --target "${ARG_ROOT}")
+
+    case "${fstype}" in
+        btrfs)
+            export DOCKER_DRIVER=btrfs
+            ;;
+        ext4|tmpfs|xfs) # As of 4.1
+            export DOCKER_DRIVER=overlay
+            ;;
+        *)
+            # Fall back to whatever docker's default behavior is.
+            ;;
+    esac
+}
+
+# Enable selinux except when known to be unsupported (btrfs).
+maybe_enable_selinux() {
+    case "${DOCKER_DRIVER}" in
+        btrfs)
+            USE_SELINUX=""
+            ;;
+        *)
+            # Enable for everything else.
+            #USE_SELINUX="--selinux-enabled"
+            ;;
+    esac
+}
+
+ARG_ROOT="/var/lib/docker"
+ARG_DRIVER=""
+parse_docker_args "$@"
+
+# Do not override the driver if it is already explicitly configured.
+if [[ -z "${ARG_DRIVER}" && -z "${DOCKER_DRIVER}" ]]; then
+    select_docker_driver
+fi
+
+USE_SELINUX=""
+# Do not override selinux if it is already explicitly configured.
+if [[ -z "${ARG_SELINUX}" ]]; then
+        maybe_enable_selinux
+fi
+
+exec docker "$@" ${USE_SELINUX}
+EOF
+  chmod +x /usr/lib/centos/dockerd
+
+  cat >/usr/lib/systemd/system/early-docker.target<<EOF
+[Unit]
+Description=Run Docker containers before main Docker starts up
+EOF
+
+  cat >/usr/lib/systemd/system/early-docker.socket<<EOF
+[Unit]
+Description=Early Docker Socket for the API
+PartOf=early-docker.service
+
+[Socket]
+ListenStream=/var/run/early-docker.sock
+
+[Install]
+WantedBy=sockets.target
+EOF
+
+  cat > /usr/lib/systemd/system/early-docker.service <<EOF
+# /usr/lib64/systemd/system/early-docker.service
+[Unit]
+Description=Early Docker Application Container Engine
+Documentation=http://docs.docker.com
+After=early-docker.socket
+Requires=early-docker.socket
+
+[Service]
+Environment="DOCKER_CGROUPS=--exec-opt native.cgroupdriver=systemd"
+Environment=TMPDIR=/var/tmp
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+ExecStart=/usr/lib/centos/dockerd daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid $DOCKER_OPTS $DOCKER_CGROUPS
+
+[Install]
+WantedBy=early-docker.target
+EOF
+# Reload  systemd manager configuration
+systemctl daemon-reload
+fi
+
+systemctl restart early-docker
+docker -H unix:///var/run/early-docker.sock rm -f bootstrapper > /dev/null 2>&1
+docker -H unix:///var/run/early-docker.sock rmi bootstrapper:latest > /dev/null 2>&1
+docker -H unix:///var/run/early-docker.sock \
+      load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
+docker -H unix:///var/run/early-docker.sock \
+       run -d \
        --name bootstrapper \
        --net=host \
        --privileged \
