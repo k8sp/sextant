@@ -69,8 +69,9 @@ load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
+  printf "docker load & push $LOCAL_DOCKER_URL ... "
   LOCAL_DOCKER_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
-  docker load < $DOCKER_TAR_FILE
-  docker tag $DOCKER_IMAGE $LOCAL_DOCKER_URL
-  docker push $LOCAL_DOCKER_URL
+  docker load < $DOCKER_TAR_FILE >/dev/null 2>&1
+  docker push $LOCAL_DOCKER_URL >/dev/null 2>&1
+  echo "Done."
 done
