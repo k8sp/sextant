@@ -55,6 +55,7 @@ type Cluster struct {
 	KubeMasterDNS            []string `yaml:"kube_master_dns"`
 	DNSMASQSetNTP            bool     `yaml:"set_ntp"`
 	DNSMASQLease             string   `yaml:"lease"`
+	CentOSYumRepo            string   `yaml:"set_yum_repo"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.

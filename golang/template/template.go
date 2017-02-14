@@ -27,6 +27,7 @@ type ExecutionConfig struct {
 	MasterIP                 string
 	MasterHostname           string
 	BootstrapperIP           string
+	CentOSYumRepo            string
 	CaCrt                    string
 	Crt                      string
 	Key                      string
@@ -86,6 +87,7 @@ func GetConfigDataByMac(mac string, clusterdesc *clusterdesc.Cluster, caKey, caC
 		MasterHostname:           clusterdesc.GetMasterHostname(),
 		EtcdEndpoints:            clusterdesc.GetEtcdEndpoints(),
 		BootstrapperIP:           clusterdesc.Bootstrapper,
+		CentOSYumRepo:            clusterdesc.CentOSYumRepo,
 		Dockerdomain:             clusterdesc.Dockerdomain,
 		K8sClusterDNS:            clusterdesc.K8sClusterDNS,
 		K8sServiceClusterIPRange: clusterdesc.K8sServiceClusterIPRange,
