@@ -39,17 +39,6 @@ if ! grep -q "127.0.0.1 bootstrapper" /etc/hosts
   then echo "127.0.0.1 bootstrapper" >> /etc/hosts
 fi
 
-ntp_set=$(grep '^set_ntp' $BSROOT/config/cluster-desc.yml|cut -d : -f2)
-if [[ $ntp_set == " y" ]]; then
-docker load < $BSROOT/docker-ntp-server.tar > /dev/null 2>&1 || { echo "Docker can not load ntpserver.tar!"; exit 1; }
-docker rm -f ntpserver > /dev/null 2>&1
-docker run -d \
-       --name ntpserver \
-       --net=host \
-       --privileged \
-       redaphid/docker-ntp-server || { echo "Failed"; exit -1; }
-fi
-
 docker rm -f bootstrapper > /dev/null 2>&1
 docker rmi bootstrapper:latest > /dev/null 2>&1
 docker load < $BSROOT/bootstrapper.tar > /dev/null 2>&1 || { echo "Docker can not load bootstrapper.tar!"; exit 1; }
@@ -69,8 +58,20 @@ load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $2}')
+  printf "docker load & push $LOCAL_DOCKER_URL ... "
   LOCAL_DOCKER_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
-  docker load < $DOCKER_TAR_FILE
-  docker tag $DOCKER_IMAGE $LOCAL_DOCKER_URL
-  docker push $LOCAL_DOCKER_URL
+  docker load < $DOCKER_TAR_FILE >/dev/null 2>&1
+  docker push $LOCAL_DOCKER_URL >/dev/null 2>&1
+  echo "Done."
 done
+
+if [[ $cluster_desc_set_ntp == " y" ]]; then
+docker rm -f ntpserver > /dev/null 2>&1
+NTP_DOCKER_IMAGE=$cluster_desc_dockerdomain:5000/${cluster_desc_images_ntp}
+docker run -d \
+       --name ntpserver \
+       --net=host \
+       --privileged \
+       $NTP_DOCKER_IMAGE || { echo "Failed"; exit -1; }
+fi
+
