@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+/sbin/modprobe -r nouveau
 /sbin/modprobe nvidia
 # Count the number of NVIDIA controllers found.
 NVDEVS=$(lspci | grep -i NVIDIA)
@@ -12,5 +13,5 @@ done
 mknod -m 666 /dev/nvidiactl c 195 255
 /sbin/modprobe nvidia-uvm
 # Find out the major device number used by the nvidia-uvm driver
-D=$(grep nvidia-uvm /proc/devices | awk '{print \$1}');
-mknod -m 666 /dev/nvidia-uvm c \$D 0
+D=$(grep nvidia-uvm /proc/devices | awk '{print $1}');
+mknod -m 666 /dev/nvidia-uvm c $D 0
