@@ -232,7 +232,7 @@ download_k8s_images() {
         local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
             printf "Exporting $DOCKER_TAR_FILE ... "
-            docker save $DOCKER_IMAGE > $DOCKER_TAR_FILE.progress
+            docker save $DOCKER_DOMAIN_IMAGE_URL > $DOCKER_TAR_FILE.progress
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
             echo "Done"
         fi
