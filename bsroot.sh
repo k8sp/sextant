@@ -36,7 +36,6 @@ if [[ $cluster_desc_os_name == "CentOS" ]]; then
     download_centos_images
     generate_pxe_centos_config
     generate_kickstart_config
-    generate_post_provision_script
     generate_post_cloudinit_script
     generate_rpmrepo_config
     if [[ $cluster_desc_set_gpu == "y" ]];then

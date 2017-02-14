@@ -114,8 +114,8 @@ kernel-lt-devel
 
 %post --log=/root/ks-post-provision.log
 
-wget -P /root http://$BS_IP/static/CentOS7/post-process.sh
-bash -x /root/post-process.sh $BS_IP ${cluster_desc_set_yum_repo}
+wget -O /root/post-process.sh http://$BS_IP/centos/post-script/00-00-00-00-00-00
+bash -x /root/post-process.sh
 
 # Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/nvidia-gpu-mkdev.sh
@@ -128,14 +128,6 @@ bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 %end
 
 EOF
-    echo "Done"
-}
-
-
-generate_post_provision_script() {
-    printf "Generating post provision script ... "
-    mkdir -p $BSROOT/html/static/CentOS7
-    cp $SEXTANT_DIR/scripts/centos/post-process.sh $BSROOT/html/static/CentOS7
     echo "Done"
 }
 
