@@ -27,7 +27,7 @@ set_docker() {
 
 set_ssh_config() {
     mkdir -p /root/.ssh
-    chomd 700 /root/.ssh
+    chmod 700 /root/.ssh
     cat > /root/.ssh/config <<EOF
 Host *
 GSSAPIAuthentication no
@@ -36,14 +36,14 @@ UserKnownHostsFile=/dev/null
 
 EOF
 
-    chomd 600 /root/.ssh/config
+    chmod 600 /root/.ssh/config
 
 }
 
-set_yum_repo(){
-
 BS_IP=$1
 cluster_desc_set_yum_repo=$2
+
+set_yum_repo(){
 
 if [[ $cluster_desc_set_yum_repo == "bootstrapper" ]]; then
 
@@ -59,8 +59,8 @@ EOF
 else
 
     cp /etc/yum.repos.d/CentOS-Base.repo{,.bak}
-    sed -i -e 's/mirrorlist/#mirrorlist/@g' /etc/yum.repos.d/CentOS-Base.repo
-    sed -i -e 's@#baseurl=http://[^/]*@baseurl=http://$cluster_desc_set_yum_repo@g' /etc/yum.repos.d/CentOS-Base.repo
+    sed -i -e 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Base.repo
+    sed -i -e "s@#baseurl=http://[^/]*@baseurl=http://$cluster_desc_set_yum_repo@g" /etc/yum.repos.d/CentOS-Base.repo
 
 fi
 
@@ -68,8 +68,6 @@ yum clean all
 yum makecache
 
 }
-
-
 
 set_hostname
 set_docker
