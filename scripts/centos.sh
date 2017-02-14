@@ -118,7 +118,6 @@ wget -P /root http://$BS_IP/static/CentOS7/post-process.sh
 bash -x /root/post-process.sh $BS_IP ${cluster_desc_set_yum_repo}
 
 # Imporant: gpu must be installed after the kernel has been installed
-wget -P /root $HTTP_GPU_DIR/nvidia-gpu-mkdev.sh
 wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
 bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR} ${cluster_desc_centos_version}
 
@@ -222,8 +221,8 @@ EOF
 download_centos_gpu_drivers() {
 
   printf "Downloading CentOS GPU drivers ...\n"
-  cp $SEXTANT_DIR/scripts/centos/gpu/nvidia-gpu-mkdev.sh $BSROOT/html/static/CentOS7
-  cp $SEXTANT_DIR/scripts/centos/gpu/build_centos_gpu_drivers.sh $BSROOT/html/static/CentOS7
+  cp $SEXTANT_DIR/scripts/centos/gpu/nvidia-gpu-mkdev.sh $HTTP_GPU_DIR
+  cp $SEXTANT_DIR/scripts/centos/gpu/build_centos_gpu_drivers.sh $HTTP_GPU_DIR
 
   DRIVER_VERSION=${cluster_desc_gpu_drivers_version}
   echo ${cluster_desc_gpu_drivers_version}

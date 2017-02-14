@@ -37,6 +37,7 @@ EOF
 disable_nouveau
 download_install_nvidia_gpu_drivers
 
+wget -P /root ${HTTP_GPU_DIR}/nvidia-gpu-mkdev.sh
 /bin/bash /root/nvidia-gpu-mkdev.sh
 echo "/bin/bash /root/nvidia-gpu-mkdev.sh" >>/etc/rc.local
 chmod +x /etc/rc.local
