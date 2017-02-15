@@ -11,7 +11,7 @@ set -o pipefail
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
     -template-file /addons/template/kubedns-controller.template \
-    -config-file /bsroot/html/static/kubdns-controller.yaml
+    -config-file /bsroot/html/static/kubedns-controller.yaml
 
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
