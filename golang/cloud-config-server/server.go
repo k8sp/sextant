@@ -55,6 +55,7 @@ func main() {
 	// start and run the HTTP server
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/cloud-config/{mac}", makeCloudConfigHandler(*clusterDesc, *ccTemplateDir, *caKey, *caCrt))
+	router.HandleFunc("/centos/post-script/{mac}", makeCentOSPostScriptHandler(*clusterDesc, *ccTemplateDir, *caKey, *caCrt))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(*staticDir))))
 
 	glog.Fatal(http.Serve(l, router))
@@ -67,6 +68,14 @@ func makeCloudConfigHandler(clusterDescFile string, ccTemplateDir string, caKey,
 		hwAddr, err := net.ParseMAC(mux.Vars(r)["mac"])
 		candy.Must(err)
 		candy.Must(cctemplate.Execute(w, hwAddr.String(), "cc-template", ccTemplateDir, clusterDescFile, caKey, caCrt))
+	})
+}
+
+func makeCentOSPostScriptHandler(clusterDescFile string, ccTemplateDir string, caKey, caCrt string) http.HandlerFunc {
+	return makeSafeHandler(func(w http.ResponseWriter, r *http.Request) {
+		hwAddr, err := net.ParseMAC(mux.Vars(r)["mac"])
+		candy.Must(err)
+		candy.Must(cctemplate.Execute(w, hwAddr.String(), "centos-post-script", ccTemplateDir, clusterDescFile, caKey, caCrt))
 	})
 }
 
