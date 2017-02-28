@@ -6,7 +6,7 @@ setup_kubectl() {
   # Download kubectl binary
   wget --quiet -c -O "./kubectl" http://$BS_IP/static/kubectl
   chmod +x ./kubectl
-  if [[ ! -d $BSROOT ]]; then
+  if [[ ! -d ~/bin ]]; then
     mkdir ~/bin
   fi
   cp ./kubectl ~/bin/
