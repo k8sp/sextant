@@ -235,7 +235,7 @@ download_k8s_images() {
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
             echo "Done"
         else 
-            echo “Use existing $DOCKER_TAR_FILE” 
+            echo "Use existing $DOCKER_TAR_FILE"
         fi
     done
 }
