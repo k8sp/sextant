@@ -207,7 +207,7 @@ download_k8s_images() {
     # printf "Downloading kubelet ${hyperkube_version} ... "
     # wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     printf "Downloading kubelet ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
     echo "Done"
     
     # setup-network-environment will fetch the default system IP infomation
@@ -221,23 +221,16 @@ download_k8s_images() {
         # NOTE: if we updated remote image but didn't update its tag,
         # the following lines wouldn't pull because there is a local
         # image with the same tag.
-        DOCKER_DOMAIN_IMAGE_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
-#        if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
-#            printf "Pulling image ${DOCKER_IMAGE} ... "
-#            docker pull $DOCKER_IMAGE > /dev/null 2>&1
-#            docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
-#            echo "Done"
-#        fi
-
+        local DOCKER_DOMAIN_IMAGE_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
         local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
             if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
                 printf "Pulling image ${DOCKER_IMAGE} ... "
                 docker pull $DOCKER_IMAGE > /dev/null 2>&1
-                docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
                 echo "Done"
             fi
             printf "Exporting $DOCKER_TAR_FILE ... "
+            docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
             docker save $DOCKER_DOMAIN_IMAGE_URL > $DOCKER_TAR_FILE.progress
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
             echo "Done"
