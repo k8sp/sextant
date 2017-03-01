@@ -91,7 +91,7 @@ check_cluster_desc_file() {
     echo "Done"
 
     printf "Checking cluster description file ..."
-    docker run -it \
+    docker run --rm -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
         golang:wheezy \
@@ -209,7 +209,7 @@ download_k8s_images() {
     printf "Downloading kubelet ... "
     wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
     echo "Done"
-
+    
     # setup-network-environment will fetch the default system IP infomation
     # when using cloud-config file to initiate a kubernetes cluster node
     printf "Downloading setup-network-environment file ... "
@@ -221,20 +221,21 @@ download_k8s_images() {
         # NOTE: if we updated remote image but didn't update its tag,
         # the following lines wouldn't pull because there is a local
         # image with the same tag.
-        DOCKER_DOMAIN_IMAGE_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
-        if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
-            printf "Pulling image ${DOCKER_IMAGE} ... "
-            docker pull $DOCKER_IMAGE > /dev/null 2>&1
-            docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
-            echo "Done"
-        fi
-
+        local DOCKER_DOMAIN_IMAGE_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
         local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
+            if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
+                printf "Pulling image ${DOCKER_IMAGE} ... "
+                docker pull $DOCKER_IMAGE > /dev/null 2>&1
+                echo "Done"
+            fi
             printf "Exporting $DOCKER_TAR_FILE ... "
+            docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
             docker save $DOCKER_DOMAIN_IMAGE_URL > $DOCKER_TAR_FILE.progress
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
             echo "Done"
+        else 
+            echo "Use existing $DOCKER_TAR_FILE"
         fi
     done
 }
@@ -266,10 +267,16 @@ generate_tls_assets() {
 }
 
 prepare_setup_kubectl() {
-  printf "Preparing setup kubectl ... "
-  sed -i -e "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash
-  chmod +x $BSROOT/setup_kubectl.bash
-  echo "Done"
+    printf "Downloading kubectl ... "
+    wget --quiet -c -N -O $BSROOT/html/static/kubectl https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubectl || { echo "Failed"; exit 1; }
+    echo "Done"
+
+    printf "Preparing setup kubectl ... "
+    sed -i -e "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash
+    sed -i -e "s/<BS_IP>/$BS_IP/g" $SEXTANT_DIR/setup-kubectl.bash
+    cp $SEXTANT_DIR/setup-kubectl.bash $BSROOT/setup_kubectl.bash
+    chmod +x $BSROOT/setup_kubectl.bash
+    echo "Done"
 }
 
 generate_addons_config() {
