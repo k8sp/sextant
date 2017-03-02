@@ -2,7 +2,7 @@
 
 # start dnsmasq
 mkdir -p /bsroot/dnsmasq
-dnsmasq --log-facility=- -q --conf-file=/bsroot/config/dnsmasq.conf \
+dnsmasq --log-facility=-  --conf-file=/bsroot/config/dnsmasq.conf \
   --dhcp-leasefile=/bsroot/dnsmasq/dnsmasq.leases
 
 # start cloud-config-server
