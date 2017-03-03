@@ -10,8 +10,8 @@ HTTP_GPU_DIR=$2
 NVIDIA_RUN_NAME=NVIDIA-Linux-x86_64-${DRIVER_VERSION}
 NVIDIA_RUN_FILE=${NVIDIA_RUN_NAME}.run
 NVIDIA_DIR=/usr/local/nvidia
-NVIDIA_BIN_DIR=/usr/local/nvidia/bin
-NVIDIA_LIB_DIR=/usr/local/nvidia/lib64
+NVIDIA_BIN_DIR=${NVIDIA_DIR}/bin
+NVIDIA_LIB_DIR=${NVIDIA_DIR}/lib64
 LIBS_FILES=libraries-${DRIVER_VERSION}.tar.bz2
 TOOLS_FILES=tools-${DRIVER_VERSION}.tar.bz2
 TOOLS="nvidia-debugdump nvidia-cuda-mps-control nvidia-xconfig nvidia-modprobe nvidia-smi nvidia-cuda-mps-server nvidia-persistenced nvidia-settings"
@@ -66,7 +66,7 @@ EOF
 }
 
 
-#disable_nouveau
+disable_nouveau
 build_lib_and_ko
 install_lib_and_ko
 
