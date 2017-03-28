@@ -37,4 +37,6 @@ set -o pipefail
     -template-file /addons/template/influxdb-grafana-controller.template \
     -config-file /bsroot/html/static/influxdb-grafana-controller.yaml
 
-
+/go/bin/addons -cluster-desc-file /cluster-desc.yaml \
+    -template-file /addons/template/dashboard-controller.template \
+    -config-file /bsroot/html/static/dashboard-controller.yaml

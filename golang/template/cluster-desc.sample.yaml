@@ -62,13 +62,13 @@ ceph:
   osd_journal_size: 5000
 
 images:
-  hyperkube: "pineking/hyperkube-amd64:v1.6.0-alpha-2aa99"
+  hyperkube: "pineking/hyperkube-amd64:2169be"
   pause: "typhoon1986/pause-amd64:3.0"
   flannel: "typhoon1986/flannel:0.5.5"
   ingress: "yancey1989/nginx-ingress-controller:0.8.3"
   kubednsmasq: "pineking/kube-dnsmasq-amd64:1.4"
   healthz: "pineking/exechealthz-amd64:1.2"
-  addon_manager: "yancey1989/kube-addon-manager-amd64:v5.1"
+  addon_manager: "pineking/kube-addon-manager-amd64:v6.4-alpha.3"
   kubedns: "pineking/kubedns-amd64:1.9"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
   default_backend: "yancey1989/defaultbackend:1.0"
@@ -76,6 +76,7 @@ images:
   heapster: "kubernetes/heapster:canary"
   grafana: "lupan/heapster_grafana:v2.6.0-2"
   influxdb: "lupan/heapster_influxdb:v0.5"
+  dashboard: "zhanghui/kubernetes-dashboard-amd64:v1.6.0"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
