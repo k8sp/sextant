@@ -281,6 +281,7 @@ prepare_setup_kubectl() {
 
 generate_addons_config() {
     printf "Generating configuration files ..."
+    mkdir -p $BSROOT/html/static/addons-config/
 
     docker run --rm -it \
             --volume $GOPATH:/go \
@@ -293,8 +294,9 @@ generate_addons_config() {
 
     for file in $(ls $SEXTANT_DIR/golang/addons/template/|grep \.yaml$)
     do
-        cp $SEXTANT_DIR/golang/addons/template/$file $BSROOT/html/static/$file;
+        cp $SEXTANT_DIR/golang/addons/template/$file $BSROOT/html/static/addons-config/$file;
     done
 
     echo "Done"
 }
+
