@@ -21,6 +21,9 @@ set_docker() {
     # set overaly as docker storage driver instead of devicemapper (the default one on centos)
     sed -i -e '/^ExecStart=/ s/$/ --storage-driver=overlay/' /usr/lib/systemd/system/docker.service
 
+    # set iptables to false for docker version >=1.13, to solve the iptables FORWARD drop
+    sed -i -e '/^ExecStart=/ s/$/ --iptables=false/' /usr/lib/systemd/system/docker.service
+
     # Explicit Docker option
     sed -i -e '/^ExecStart=/ s/$/ $DOCKER_OPT_BIP $DOCKER_OPT_IPMASQ $DOCKER_OPT_MTU $DOCKER_NETWORK_OPTIONS/' /usr/lib/systemd/system/docker.service
 }
