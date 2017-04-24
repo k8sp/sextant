@@ -22,7 +22,7 @@ coreos_channel: "stable"
 coreos_version: "1122.2.0"
 
 # centos version
-download_centos: n
+download_kernel: n
 centos_version: "7.3.1611"
 
 # gpu drivers version

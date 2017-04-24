@@ -192,10 +192,10 @@ gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
 EOF
 
-  if [[ ${cluster_desc_download_centos} == n ]] ; then
-      REPO_IMAGES='cloud-init docker-engine etcd flannel kernel-lt kernel-lt-devel'
-  else
+  if [[ ${cluster_desc_download_kernel:-y} == n ]] ; then
       REPO_IMAGES='cloud-init docker-engine etcd flannel'
+  else
+      REPO_IMAGES='cloud-init docker-engine etcd flannel kernel-lt kernel-lt-devel'
   fi 
 
   docker run --rm -it \
