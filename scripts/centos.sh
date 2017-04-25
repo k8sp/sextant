@@ -4,6 +4,7 @@ GPU_DIR='gpu_drivers'
 ABSOLUTE_GPU_DIR="$BSROOT/html/static/CentOS7/$GPU_DIR"
 HTTP_GPU_DIR="http://$BS_IP/static/CentOS7/$GPU_DIR"
 
+
 download_centos_images() {
     VERSION=CentOS7
     mkdir -p $BSROOT/tftpboot
@@ -191,19 +192,29 @@ gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
 EOF
 
+  if [[ ${cluster_desc_download_kernel:-y} == n ]] ; then
+      REPO_IMAGES='cloud-init docker-engine etcd flannel'
+  else
+      REPO_IMAGES='cloud-init docker-engine etcd flannel kernel-lt kernel-lt-devel'
+  fi 
+
+  # download kernel if the kernel-lt and kernel_lt_devel does not in dir 
+  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
+  if [[ -n ${KERNEL_LT} ]]; then
+      REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
+  fi
+
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
              centos:$cluster_desc_centos_version \
-             sh -c  'mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
+             sh -c  "mv /bsroot/docker.repo  /etc/yum.repos.d/ && \
              /usr/bin/yum -y install epel-release yum-utils createrepo  && \
              /usr/bin/rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org && \
              /usr/bin/rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm && \
              /usr/bin/mkdir  -p /broot/html/static/CentOS7/repo/cloudinit  && \
              /usr/bin/yumdownloader  --enablerepo=elrepo-kernel --resolve \
-             --destdir=/bsroot/html/static/CentOS7/repo/cloudinit cloud-init \
-             docker-engine etcd flannel \
-             kernel-lt kernel-lt-devel && \
-             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/' || \
+             --destdir=/bsroot/html/static/CentOS7/repo/cloudinit ${REPO_IMAGES} && \
+             /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/" || \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
   echo "Done"
@@ -228,3 +239,4 @@ download_centos_gpu_drivers() {
     || { echo "Failed"; exit 1; }
   echo "Done"
 }
+
