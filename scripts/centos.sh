@@ -198,6 +198,12 @@ EOF
       REPO_IMAGES='cloud-init docker-engine etcd flannel kernel-lt kernel-lt-devel'
   fi 
 
+  # download kernel if the kernel-lt and kernel_lt_devel does not in dir 
+  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
+  if [[ -n ${KERNEL_LT} ]]; then
+      REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
+  fi
+
   docker run --rm -it \
              --volume $BSROOT:/bsroot \
              centos:$cluster_desc_centos_version \
