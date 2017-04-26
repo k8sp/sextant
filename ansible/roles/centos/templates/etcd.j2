@@ -1,0 +1,25 @@
+[Unit]
+Description=etcd key-value store
+Conflicts=etcd.service
+After=network.target
+
+[Service]
+Type=notify
+User=etcd
+Environment=ETCD_NAME=%H
+Environment=ETCD_DATA_DIR=/var/lib/etcd
+Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
+Environment=ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
+Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://0c-c4-7a-15-e1-9c:2380
+Environment=ETCD_LISTEN_PEER_URLS=http://0c-c4-7a-15-e1-9c:2380,http://0c-c4-7a-15-e1-9c:7001
+Environment=ETCD_ADVERTISE_CLIENT_URLS=http://0c-c4-7a-15-e1-9c:2379
+Environment=ETCD_INITIAL_CLUSTER_STATE=new
+Environment=ETCD_INITIAL_CLUSTER=0c-c4-7a-15-e1-9c=http://0c-c4-7a-15-e1-9c:2380
+ExecStart=/usr/bin/etcd
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

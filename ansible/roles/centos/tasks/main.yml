@@ -1,0 +1,19 @@
+---
+- name: copy systemd service
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items:
+    - { src: systemd/etcd.j2, dest: /usr/lib/systemd/system/etcd.service }
+
+- name: /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    
+

@@ -1,0 +1,7 @@
+
+bootstrapper_ip: 10.10.15.253
+
+docker_domain: bootstrapper
+images_hyperkube; pineking/hyperkube-amd64:a94c67
+
+service_cluster_ip_range: 10.100.0.0/24

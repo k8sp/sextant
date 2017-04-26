@@ -1,0 +1,29 @@
+---
+- name: copy woker cert and key 
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items:
+    - { src: tls/worker.pem, dest: /etc/kubernetes/ssl/worker.pem }
+    - { src: tls/worker-key.pem, dest: /etc/kubernetes/ssl/worker-key.pem }
+
+- name: copy worker-kubeconfig.yaml
+  copy:
+    src: worker-kubeconfig.yaml
+    dest: /etc/kubernetes/config/worker-kubeconfig.yaml
+    mode: 0644
+    owner: root
+    group: root
+
+- name: copy kube-proxy.manifest
+  template:
+    src: kube_proxy_manifest.j2
+    dest: /etc/kubernetes/manifest/kube-proxy.manifest
+    mode: 0644
+    owner: root
+    group: root
+
+

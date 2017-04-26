@@ -1,0 +1,50 @@
+---
+- name:  copy cret and key of apiserver and kubelet
+  copy :
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items: 
+    - { src: tls/apiserver.pem, dest: /etc/kubernetes/ssl/apiserver.pem }
+    - { src: tls/apiserver-key.pem, dest: /etc/kubernetes/ssl/apiserver-key.pem }
+    - { src: tls/kubelet.pem, dest: /etc/kubernetes/ssl/kubelet.pem }
+    - { src: tls/kubelet-key.pem, dest: /etc/kubernetes/ssl/kubelet-key.pem }
+
+- name: mkdir /etc/kubernetes/basic
+  file:
+    path: /etc/kubernetes/basic
+    state: directory
+    mode: 0755
+    owner: root
+
+- name: copy Basic Token csv
+  copy:
+    src: basic/
+    dest: /etc/kubernetes/basic
+    mode: 0600
+    owner: root
+
+- name: copy ABAC policy file
+  copy:
+    src: abac/
+    dest: /etc/kubernetes/abac
+    mode: 0600
+    owner: root
+
+- name: copy local-kubeconfig.yml
+  copy:
+    src: config/local-kubeconfig.yaml
+    dest: /etc/kubernetes/config/local-kubeconfig.yaml
+    mode: 0644
+    owner: root
+    group: root
+
+- name: copy kubernetes master manifest
+  template:
+    src: kubernetes_master_manifest.j2
+    dest: /etc/kubernetes/manifest/kubernetes_master.manifest
+    mode: 0644
+    owner: root
+    group: root

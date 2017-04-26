@@ -1,0 +1,13 @@
+---
+- host: k8s-15 
+  roles: 
+    - role: common
+
+- host: master
+  roles:
+    - role: master 
+
+- host: worker
+  roles:
+    - role: worker
+
