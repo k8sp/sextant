@@ -1,0 +1,10 @@
+---
+# is etcd cluster member
+etcd_member: true
+
+# is kubernetes master
+kube_master: true
+
+ingress_label: n
+
+

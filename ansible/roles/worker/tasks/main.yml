@@ -9,21 +9,23 @@
   with_items:
     - { src: tls/worker.pem, dest: /etc/kubernetes/ssl/worker.pem }
     - { src: tls/worker-key.pem, dest: /etc/kubernetes/ssl/worker-key.pem }
+  tags: tls
 
-- name: copy worker-kubeconfig.yaml
-  copy:
-    src: worker-kubeconfig.yaml
-    dest: /etc/kubernetes/config/worker-kubeconfig.yaml
-    mode: 0644
-    owner: root
-    group: root
-
-- name: copy kube-proxy.manifest
+- name: template worker-kubeconfig.yaml, kube-proxy.manifest and kubelet.service
   template:
-    src: kube_proxy_manifest.j2
-    dest: /etc/kubernetes/manifest/kube-proxy.manifest
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: 0644
     owner: root
     group: root
+  with_items:
+    - { src: worker-kubeconfig.j2 , dest: /etc/kubernetes/config/worker-kubeconfig.yaml }
+    - { src: kube-proxy-manifest.j2 , dest: /etc/kubernetes/manifest/kube-proxy.manifest }
+    - { src: worker-kubelet-service.j2 , dest: /etc/systemd/system/kubelet.service }
+  tags: k8s, systemd
 
-
+- name: enable worker service
+  debug:
+    msg: send notify
+  notify:
+    - enable service

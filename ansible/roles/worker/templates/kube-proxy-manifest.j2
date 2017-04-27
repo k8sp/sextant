@@ -10,7 +10,6 @@ spec:
     command:
     - /hyperkube
     - proxy
-    - --master=https://{{ groups['master'] }}:443
     - --kubeconfig=/etc/kubernetes/config/worker-kubeconfig.yaml
     - --proxy-mode=iptables
     securityContext:

@@ -11,6 +11,7 @@
     - { src: tls/apiserver-key.pem, dest: /etc/kubernetes/ssl/apiserver-key.pem }
     - { src: tls/kubelet.pem, dest: /etc/kubernetes/ssl/kubelet.pem }
     - { src: tls/kubelet-key.pem, dest: /etc/kubernetes/ssl/kubelet-key.pem }
+  tags: tls
 
 - name: mkdir /etc/kubernetes/basic
   file:
@@ -18,6 +19,7 @@
     state: directory
     mode: 0755
     owner: root
+  tags: auth
 
 - name: copy Basic Token csv
   copy:
@@ -25,6 +27,7 @@
     dest: /etc/kubernetes/basic
     mode: 0600
     owner: root
+  tags: auth
 
 - name: copy ABAC policy file
   copy:
@@ -32,7 +35,9 @@
     dest: /etc/kubernetes/abac
     mode: 0600
     owner: root
+  tags: auth
 
+# kubeconfig hypekube
 - name: copy local-kubeconfig.yml
   copy:
     src: config/local-kubeconfig.yaml
@@ -40,11 +45,39 @@
     mode: 0644
     owner: root
     group: root
+  tags: k8s
 
-- name: copy kubernetes master manifest
+# kubeconfig addons
+- name: copy addons-manager.yaml && master-kubelet.yaml
   template:
-    src: kubernetes_master_manifest.j2
-    dest: /etc/kubernetes/manifest/kubernetes_master.manifest
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: 0644
     owner: root
     group: root
+  with_items:
+    - { src: master-kubelet-kubeconfig.j2, dest: /etc/kubernetes/config/master-kubelet.yaml}
+    - { src: addons-manager-kubeconfig.j2, dest: /etc/kubernetes/config/addons-manager.yaml}
+  tags: k8s
+
+- name: template kube-addons service , kubelet master and kubernetes-master.manifest
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifest/kubernetes_master.manifest }
+    - { src: kube-addons-service.j2, dest: /etc/systemd/system/kube-addons.service }
+    - { src: kubelet-master-service.j2, dest: /etc/systemd/system/kubelet.service }
+  tags: systemd, k8s
+
+
+- name: enable master service
+  debug: 
+    msg: "send notify"
+  notify:
+    - enable service
+  tags: systemd, k8s
+

@@ -1,0 +1,34 @@
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/kubernetes/kubernetes
+After=docker.service
+Requires=docker.service
+[Service]
+EnvironmentFile=/etc/network-environment
+Environment=KUBELET_VERSION=v1.2.4_coreos.1
+ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ bootstrapper_ip }}/static/kubelet
+ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+ExecStart=/opt/bin/kubelet \
+--pod_infra_container_image={{ docker_domain }}:5000/{{ images_pause }} \
+--address=0.0.0.0 \
+--allow-privileged=true \
+--cluster-dns={{ cluster_dns }} \
+--cluster-domain=cluster.local \
+--pod-manifest-path=/etc/kubernetes/manifests \
+--hostname-override={{ inventory_hostname }} \
+--api-servers=https://{{ groups['master'][0] }}:443 \
+--kubeconfig=/etc/kubernetes/config/worker-kubeconfig.yaml \
+--tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+--tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
+{% if ingress_label == y %}
+--logtostderr=true \
+--node-labels=role=ingress \
+{% else %}
+--logtostderr=true \
+{% endif %}
+--network-plugin= \
+--network-plugin-dir=/etc/cni/net.d
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target

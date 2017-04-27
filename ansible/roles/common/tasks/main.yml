@@ -8,8 +8,9 @@
     group: root
   with_items:
     - { src: tls/ca.pem, dest: /etc/kubernetes/ssl/ca.pem }
-    - { src: tls/ca.pem, dest: /etc/docker/certs.d/{{ docker_domain }}:5000/ca.crt }
+    - { src: tls/ca.pem, dest: "/etc/docker/certs.d/{{ docker_domain }}:5000/ca.crt" }
     - { src: tls/ca-key.pem, dest: /etc/kubernetes/ssl/ca-key.pem }
+  tags: tls
 
 - name: /etc/hosts
   template:
@@ -17,5 +18,6 @@
     dest: /etc/hosts
     owner: root
     group: root
+  tags: hosts
     
 

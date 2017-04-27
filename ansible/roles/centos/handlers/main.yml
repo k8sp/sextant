@@ -5,3 +5,7 @@
 - name: enable docker
   service: name=docker enabled=yes
 
+- name: reboot 
+  command: reboot 
+
+

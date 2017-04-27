@@ -1,7 +1,14 @@
 ---
-- name: stop and diable NetworkManager
-  service: name=NetworkManager state=stopped enabled=no
-
-- name: enable docker
-  service: name=docker enabled=yes
+- name: enable service
+  service: 
+    name: "{{ item }}"
+    enabled: yes 
+    state: reloaded
+  with_items:
+    - etcd
+    - flanneld
+    - kubelet
+    - setup-network-environment
+    - settimezone
+    - kube-addons
 

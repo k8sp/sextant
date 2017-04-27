@@ -1,0 +1,31 @@
+# /usr/lib/systemd/system/flanneld.service
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network.target
+After=network-online.target
+Wants=network-online.target
+After=etcd.service
+Before=docker.service
+
+[Service]
+Type=notify
+RestartSec=5
+EnvironmentFile=/etc/sysconfig/flanneld
+EnvironmentFile=-/etc/sysconfig/docker-network
+
+{% if kube_master %}
+ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": {{ flannel_backend }} }}'
+{% endif %}
+
+{% if flannel_iface %}
+ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ groups['master'][0] }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS -iface={{ flannel_iface }}
+{% else %}
+ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ groups['master'][0] }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS
+{% endif %}
+
+ExecStartPost=/usr/libexec/flannel/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=docker.service
