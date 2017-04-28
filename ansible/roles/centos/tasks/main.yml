@@ -26,6 +26,7 @@
     group: root
   with_items:
     - { src: settimezone.service, dest: /etc/systemd/system/settimezone.service }
+    - { src: docker.service, dest: /usr/lib/systemd/system/docker.service }
   tags: systemd
   notify:
     - stop and diable NetworkManager
