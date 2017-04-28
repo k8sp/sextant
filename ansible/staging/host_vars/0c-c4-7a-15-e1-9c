@@ -1,9 +1,9 @@
 ---
 # is etcd cluster member
-etcd_member: true
+etcd_member: y
 
 # is kubernetes master
-kube_master: true
+kube_master: y
 
 ingress_label: n
 

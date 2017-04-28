@@ -31,11 +31,10 @@
   with_file:
     - authorized_keys
 
-- name: notify
+- name: enable docker and reboot
   debug: 
     msg: "send notify"
   notify:
     - stop and diable NetworkManager
     - enable docker
-#    - reboot
-
+    - reboot

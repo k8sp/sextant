@@ -13,11 +13,11 @@ RestartSec=5
 EnvironmentFile=/etc/sysconfig/flanneld
 EnvironmentFile=-/etc/sysconfig/docker-network
 
-{% if kube_master %}
+{% if kube_master is defined and kube_master == 'y' %}
 ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": {{ flannel_backend }} }}'
 {% endif %}
 
-{% if flannel_iface %}
+{% if flannel_iface is defined %}
 ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ groups['master'][0] }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS -iface={{ flannel_iface }}
 {% else %}
 ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ groups['master'][0] }}:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS

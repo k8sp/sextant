@@ -20,12 +20,10 @@ ExecStart=/opt/bin/kubelet \
 --kubeconfig=/etc/kubernetes/config/worker-kubeconfig.yaml \
 --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
 --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
-{% if ingress_label == y %}
---logtostderr=true \
+{% if ingress_label == 'y' %}
 --node-labels=role=ingress \
-{% else %}
---logtostderr=true \
 {% endif %}
+--logtostderr=true \
 --network-plugin= \
 --network-plugin-dir=/etc/cni/net.d
 Restart=always

@@ -11,12 +11,12 @@ fi
 
 case $1 in
     check)
-        ansible-playbook site.yml -f 5 -i staging/hosts --syntax-check 
-        ansible-playbook site.yml -f 5 -i staging/hosts --list-hosts 
-        ansible-playbook site.yml -f 5 -i staging/hosts --list-tasks
+        ansible-playbook site.yml -f 5 -i staging/hosts --syntax-check -l worker
+        ansible-playbook site.yml -f 5 -i staging/hosts --list-hosts  -l worker
+        ansible-playbook site.yml -f 5 -i staging/hosts --list-tasks -l worker
         ;;
     run)
-        ansible-playbook site.yml -f 5 -i staging/hosts 
+        ansible-playbook site.yml -f 5 -i staging/hosts  -l worker
         ;;
     *)
         echo "usage: $0 [run|check]"
