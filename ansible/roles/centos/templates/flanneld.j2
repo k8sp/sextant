@@ -14,7 +14,7 @@ EnvironmentFile=/etc/sysconfig/flanneld
 EnvironmentFile=-/etc/sysconfig/docker-network
 
 {% if kube_master is defined and kube_master == 'y' %}
-ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": {{ flannel_backend }} }}'
+ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ flannel_backend }}" }}'
 {% endif %}
 
 {% if flannel_iface is defined %}

@@ -11,7 +11,7 @@
     - /etc/kubernetes/basic
     - /etc/kubernetes/abac
     - /etc/kubernetes/config
-    - /etc/kubernetes/manifest 
+    - /etc/kubernetes/manifests
   tags: k8s, tls, auth
 
 - name:  copy cret and key of apiserver and kubelet
@@ -60,7 +60,7 @@
   with_items:
     - { src: master-kubelet-kubeconfig.j2, dest: /etc/kubernetes/config/master-kubelet.yaml}
     - { src: addons-manager-kubeconfig.j2, dest: /etc/kubernetes/config/addons-manager.yaml}
-    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifest/kubernetes_master.manifest }
+    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifests/kubernetes_master.manifest }
   tags: k8s
 
 - name: template kube-addons service , kubelet master and kubernetes-master.manifest

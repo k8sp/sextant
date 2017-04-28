@@ -8,7 +8,7 @@
     - /etc/kubernetes
     - /etc/kubernetes/ssl
     - /etc/kubernetes/config
-    - /etc/kubernetes/manifest
+    - /etc/kubernetes/manifests
 
 # Generate an OpenSSL private key with a size (2048 bits)
 - name: generate private key
@@ -47,7 +47,7 @@
     group: root
   with_items:
     - { src: worker-kubeconfig.j2 , dest: /etc/kubernetes/config/worker-kubeconfig.yaml }
-    - { src: kube-proxy-manifest.j2 , dest: /etc/kubernetes/manifest/kube-proxy.manifest }
+    - { src: kube-proxy-manifest.j2 , dest: /etc/kubernetes/manifests/kube-proxy.manifest }
     - { src: worker-kubelet-service.j2 , dest: /etc/systemd/system/kubelet.service }
   tags: k8s, systemd
   notify:

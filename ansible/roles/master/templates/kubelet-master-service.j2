@@ -9,20 +9,20 @@ EnvironmentFile=/etc/network-environment
 ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ bootstrapper_ip }}/static/kubelet
 ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
 ExecStart=/opt/bin/kubelet \
- --pod_infra_container_image={{ docker_domain }}:5000/{{ images_pause }} \
- --register-node=true \
- --kubeconfig=/etc/kubernetes/config/master-kubelet.yaml \
- --require-kubeconfig \
- --network-plugin-dir=/etc/kubernetes/cni/net.d \
- --network-plugin= {{ network_plugin }} \
- --register-schedulable=true \
- --allow-privileged=true \
- --pod-manifest-path=/etc/kubernetes/manifests \
- --hostname-override= {{ inventory_hostname }} \
- --cluster-dns= {{ cluster_dns }} \
- --cluster-domain=cluster.local \
- --feature-gates=Accelerators=true \
- --v=0
+  --pod_infra_container_image={{ docker_domain }}:5000/{{ images_pause }} \
+  --register-node=true \
+  --kubeconfig=/etc/kubernetes/config/master-kubelet.yaml \
+  --require-kubeconfig \
+  --network-plugin-dir=/etc/kubernetes/cni/net.d \
+  --network-plugin={{ network_plugin }} \
+  --register-schedulable=true \
+  --allow-privileged=true \
+  --pod-manifest-path=/etc/kubernetes/manifests \
+  --hostname-override= {{- inventory_hostname }} \
+  --cluster-dns= {{- cluster_dns }} \
+  --cluster-domain=cluster.local \
+  --feature-gates=Accelerators=true \
+  --v=0
 Restart=always
 RestartSec=10
 [Install]

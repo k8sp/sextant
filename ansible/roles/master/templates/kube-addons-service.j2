@@ -14,15 +14,13 @@ ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http:/
 ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-grafana-controller.yaml http://{{ bootstrapper_ip }}/static/influxdb-grafana-controller.yaml
 ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-controller.yaml http://{{ bootstrapper_ip }}/static/heapster-controller.yaml
 
-ExecStartPre=/usr/bin/docker ps | /bin/grep kube-addon-manager | /usr/bin/awk '{ print $1 }' | /usr/bin/xargs /usr/bin/docker rm -f -
-
 # depend on /etc/kubernetes/config/addons-manger.yaml file
 ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
--v /etc/kubernetes/ssl/:/etc/kubernetes/ssl/\
--v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
--v /etc/kubernetes/config/addons-manager.yaml:/etc/kubernetes/config/addons-manager.yaml \
--e KUBECTL_OPTS=--kubeconfig=/etc/kubernetes/config/addons-manager.yaml \
-{{ docker_domain }}:5000/{{ images_addon_manager }}
+  -v /etc/kubernetes/ssl/:/etc/kubernetes/ssl/\
+  -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
+  -v /etc/kubernetes/config/addons-manager.yaml:/etc/kubernetes/config/addons-manager.yaml \
+  -e KUBECTL_OPTS=--kubeconfig=/etc/kubernetes/config/addons-manager.yaml \
+  {{ docker_domain }}:5000/{{ images_addon_manager }}
 
 [Install]
 WantedBy=multi-user.target
