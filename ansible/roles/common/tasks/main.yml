@@ -1,4 +1,14 @@
 ---
+- name: mkdir dir
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/ssl
+
 - name: copy kubernetes CA and key to k8s and docker
   copy: 
     src: "{{ item.src }}"

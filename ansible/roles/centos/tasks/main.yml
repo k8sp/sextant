@@ -11,6 +11,11 @@
     - { src: flanneld.j2, dest: /usr/lib/systemd/system/flanneld.service }
     - { src: setup-network-enviroment.j2, dest: /etc/systemd/system/setup-network-environment.service }
   tags: systemd
+  notify:
+    - stop and diable NetworkManager
+    - enable docker
+    - enable service
+    - reboot
 
 - name: copy systemd service
   copy: 
@@ -22,6 +27,11 @@
   with_items:
     - { src: settimezone.service, dest: /etc/systemd/system/settimezone.service }
   tags: systemd
+  notify:
+    - stop and diable NetworkManager
+    - enable docker
+    - enable service
+    - reboot
 
 - name: set up authorized_keys
   authorized_key:
@@ -31,10 +41,3 @@
   with_file:
     - authorized_keys
 
-- name: enable docker and reboot
-  debug: 
-    msg: "send notify"
-  notify:
-    - stop and diable NetworkManager
-    - enable docker
-    - reboot

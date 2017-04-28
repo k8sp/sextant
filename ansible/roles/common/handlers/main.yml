@@ -1,7 +1,3 @@
 ---
-- name: stop and diable NetworkManager
-  service: name=NetworkManager state=stopped enabled=no
-
-- name: enable docker
-  service: name=docker enabled=yes
-
+- name: debug 
+  debug: msg="call handler"

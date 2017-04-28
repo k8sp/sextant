@@ -1,14 +1,20 @@
 ---
 - name: enable service
-  service: 
+  systemd: 
     name: "{{ item }}"
     enabled: yes 
-    state: reloaded
+    daemon_reload: yes
   with_items:
-    - etcd
-    - flanneld
     - kubelet
-    - setup-network-environment
-    - settimezone
     - kube-addons
+
+- name: restart service
+  systemd: 
+    name: "{{ item }}"
+    state: restarted 
+    daemon_reload: yes
+  with_items:
+    - kubelet
+    - kube-addons
+
 

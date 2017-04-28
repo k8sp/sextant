@@ -9,7 +9,7 @@ User=etcd
 Environment=ETCD_NAME=%H
 Environment=ETCD_DATA_DIR=/var/lib/etcd
 Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379,http://0.0.0.0:4001
-{% if etcd_member is defined and etc_member == 'y' %}
+{% if etcd_member is defined and etcd_member == 'y' %}
 Environment=ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
 Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{ groups['master'][0] }}:2380
 Environment=ETCD_LISTEN_PEER_URLS=http://{{ groups['master'][0] }}:2380,http://{{ groups['master'][0] }}:7001

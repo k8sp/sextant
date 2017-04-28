@@ -1,4 +1,19 @@
 ---
+- name: mkdir dir
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/ssl
+    - /etc/kubernetes/basic
+    - /etc/kubernetes/abac
+    - /etc/kubernetes/config
+    - /etc/kubernetes/manifest 
+  tags: k8s, tls, auth
+
 - name:  copy cret and key of apiserver and kubelet
   copy :
     src: "{{ item.src }}"
@@ -13,28 +28,15 @@
     - { src: tls/kubelet-key.pem, dest: /etc/kubernetes/ssl/kubelet-key.pem }
   tags: tls
 
-- name: mkdir /etc/kubernetes/basic
-  file:
-    path: /etc/kubernetes/basic
-    state: directory
-    mode: 0755
-    owner: root
-  tags: auth
-
-- name: copy Basic Token csv
+- name: copy Basic Token csv and ABAC policy file
   copy:
-    src: basic/
-    dest: /etc/kubernetes/basic
+    src: "{{ item.src }}" 
+    dest: "{{ item.dest }}"
     mode: 0600
     owner: root
-  tags: auth
-
-- name: copy ABAC policy file
-  copy:
-    src: abac/
-    dest: /etc/kubernetes/abac
-    mode: 0600
-    owner: root
+  with_items:
+    - { src: basic/ , dest: /etc/kubernetes/basic }
+    - { src: abac/ , dest: /etc/kubernetes/abac }
   tags: auth
 
 # kubeconfig hypekube
@@ -58,6 +60,7 @@
   with_items:
     - { src: master-kubelet-kubeconfig.j2, dest: /etc/kubernetes/config/master-kubelet.yaml}
     - { src: addons-manager-kubeconfig.j2, dest: /etc/kubernetes/config/addons-manager.yaml}
+    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifest/kubernetes_master.manifest }
   tags: k8s
 
 - name: template kube-addons service , kubelet master and kubernetes-master.manifest
@@ -68,16 +71,9 @@
     owner: root
     group: root
   with_items:
-    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifest/kubernetes_master.manifest }
     - { src: kube-addons-service.j2, dest: /etc/systemd/system/kube-addons.service }
     - { src: kubelet-master-service.j2, dest: /etc/systemd/system/kubelet.service }
   tags: systemd, k8s
-
-
-- name: enable master service
-  debug: 
-    msg: "send notify"
   notify:
     - enable service
-  tags: systemd, k8s
-
+ 
