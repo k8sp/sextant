@@ -22,8 +22,8 @@ After getting the sextant code, you need to plan the cluster installation detail
 ```
 go get -u -d github.com/k8sp/sextant/...
 cd $GOPATH/src/github.com/k8sp/sextant
-vim cloud-config-server/template/cluster-desc.sample.yaml
-./bsroot.sh cloud-config-server/template/cluster-desc.sample.yaml
+vim golang/template/cluster-desc.sample.yaml
+./bsroot.sh golang/template/cluster-desc.sample.yaml
 ```
 
 # Uploaded to the bootstrapper server

@@ -222,7 +222,7 @@ download_k8s_images() {
         # the following lines wouldn't pull because there is a local
         # image with the same tag.
         local DOCKER_DOMAIN_IMAGE_URL=$cluster_desc_dockerdomain:5000/${DOCKER_IMAGE}
-        local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $2}'`
+        local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $NF}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
             if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
                 printf "Pulling image ${DOCKER_IMAGE} ... "
