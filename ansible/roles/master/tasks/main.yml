@@ -1,0 +1,79 @@
+---
+- name: mkdir dir
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/ssl
+    - /etc/kubernetes/basic
+    - /etc/kubernetes/abac
+    - /etc/kubernetes/config
+    - /etc/kubernetes/manifests
+  tags: k8s, tls, auth
+
+- name:  copy cret and key of apiserver and kubelet
+  copy :
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items: 
+    - { src: tls/apiserver.pem, dest: /etc/kubernetes/ssl/apiserver.pem }
+    - { src: tls/apiserver-key.pem, dest: /etc/kubernetes/ssl/apiserver-key.pem }
+    - { src: tls/kubelet.pem, dest: /etc/kubernetes/ssl/kubelet.pem }
+    - { src: tls/kubelet-key.pem, dest: /etc/kubernetes/ssl/kubelet-key.pem }
+  tags: tls
+
+- name: copy Basic Token csv and ABAC policy file
+  copy:
+    src: "{{ item.src }}" 
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+  with_items:
+    - { src: basic/ , dest: /etc/kubernetes/basic }
+    - { src: abac/ , dest: /etc/kubernetes/abac }
+  tags: auth
+
+# kubeconfig hypekube
+- name: copy local-kubeconfig.yml
+  copy:
+    src: config/local-kubeconfig.yaml
+    dest: /etc/kubernetes/config/local-kubeconfig.yaml
+    mode: 0644
+    owner: root
+    group: root
+  tags: k8s
+
+# kubeconfig addons
+- name: copy addons-manager.yaml && master-kubelet.yaml
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - { src: master-kubelet-kubeconfig.j2, dest: /etc/kubernetes/config/master-kubelet.yaml}
+    - { src: addons-manager-kubeconfig.j2, dest: /etc/kubernetes/config/addons-manager.yaml}
+    - { src: kubernetes-master-manifest.j2, dest: /etc/kubernetes/manifests/kubernetes_master.manifest }
+  tags: k8s
+
+- name: template kube-addons service , kubelet master and kubernetes-master.manifest
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - { src: kube-addons-service.j2, dest: /etc/systemd/system/kube-addons.service }
+    - { src: kubelet-master-service.j2, dest: /etc/systemd/system/kubelet.service }
+  tags: systemd, k8s
+  notify:
+    - enable service
+ 

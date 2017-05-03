@@ -1,0 +1,9 @@
+[Unit]
+Description=Set the time zone
+
+[Service]
+ExecStart=/usr/bin/timedatectl set-timezone Asia/Shanghai
+RemainAfterExit=no
+Type=oneshot
+[Install]
+WantedBy=multi-user.target

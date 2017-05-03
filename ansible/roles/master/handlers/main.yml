@@ -1,0 +1,20 @@
+---
+- name: enable service
+  systemd: 
+    name: "{{ item }}"
+    enabled: yes 
+    daemon_reload: yes
+  with_items:
+    - kubelet
+    - kube-addons
+
+- name: restart service
+  systemd: 
+    name: "{{ item }}"
+    state: restarted 
+    daemon_reload: yes
+  with_items:
+    - kubelet
+    - kube-addons
+
+

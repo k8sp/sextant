@@ -1,0 +1,22 @@
+---
+- name: stop and diable NetworkManager
+  systemd: name=NetworkManager state=stopped enabled=no
+
+- name: enable docker
+  systemd: name=docker enabled=yes
+
+- name: enable service
+  systemd: 
+    name: "{{ item }}"
+    enabled: yes 
+    daemon_reload: yes
+  with_items:
+    - etcd
+    - flanneld
+    - setup-network-environment
+    - settimezone
+
+- name: reboot 
+  command: reboot 
+
+
