@@ -1,0 +1,33 @@
+---
+- name: mkdir dir
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/ssl
+
+- name: copy kubernetes CA and key to k8s and docker
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items:
+    - { src: tls/ca.pem, dest: /etc/kubernetes/ssl/ca.pem }
+    - { src: tls/ca.pem, dest: "/etc/docker/certs.d/{{ docker_domain }}:5000/ca.crt" }
+    - { src: tls/ca-key.pem, dest: /etc/kubernetes/ssl/ca-key.pem }
+  tags: tls
+
+- name: /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+  tags: hosts
+    
+
