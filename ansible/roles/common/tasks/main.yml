@@ -22,12 +22,18 @@
     - { src: tls/ca-key.pem, dest: /etc/kubernetes/ssl/ca-key.pem }
   tags: tls
 
-- name: /etc/hosts
+- name: add docker domain local hosts 
   template:
     src: hosts.j2
     dest: /etc/hosts
     owner: root
     group: root
   tags: hosts
-    
 
+# TODO: fix regexp
+#- name: set flannel iterface option
+#  lineinfile:
+#    path: /etc/sysconfig/flanneld
+#    regexp: '^FLANNEL_OPTIONS='
+#    line: "FLANNEL_OPTIONS=\"-iface={{- ansible_default_ipv4.alias }}\""
+#  tags: sysconfig 
