@@ -20,4 +20,6 @@ images_pause: 'typhoon1986/pause-amd64:3.0'
 
 network_plugin: 
 
+# yum rep: not used
+yum_repo: "mirrors.aliyun.com"
 

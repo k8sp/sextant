@@ -9,13 +9,7 @@
     - /etc/kubernetes/ssl
     - /etc/kubernetes/config
     - /etc/kubernetes/manifests
-
-# Generate an OpenSSL private key with a size (2048 bits)
-- name: generate private key
-  shell: openssl genrsa -out /etc/kubernetes/ssl/worker-key.pem 2048
-  args:
-    chdir: /etc/kubernetes/ssl
-  tags: tls
+  tags: tls, k8s 
 
 - name: generate openssl.conf
   template:
@@ -23,6 +17,13 @@
     dest: /etc/kubernetes/ssl/openssl.conf
     mode: 0644
     owner: root
+  tags: tls
+
+# Generate an OpenSSL private key with a size (2048 bits)
+- name: generate private key
+  shell: openssl genrsa -out /etc/kubernetes/ssl/worker-key.pem 2048
+  args:
+    chdir: /etc/kubernetes/ssl
   tags: tls
 
 # Generate an OpenSSL Certificate Signing Request
