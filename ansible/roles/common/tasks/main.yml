@@ -28,6 +28,7 @@
     path: /etc/modules-load.d/overlay.conf
     state: present
     line: 'overlay'
+  tags: os, docker
 
 - name: make /root/.ssh dir
   file:
@@ -55,10 +56,10 @@
     regexp: '^mirrorlist'
     replace: '#mirrorlist'
     backup: yes
-  tags: os, yum
   notify:
     - yum-clean-all
     - yum-makecache
+  tags: os, yum
 
 - name: set yum repo 2
   replace: 
@@ -66,10 +67,10 @@
     regexp: '^#baseurl=http://[^/]*'
     replace: "baseurl=http://{{ yum_repo }}"
     backup: yes
-  tags: os, yum
   notify:
     - yum-clean-all
     - yum-makecache
+  tags: os, yum
 
 - name: mkdir /etc/kubernetes dir
   file: 
@@ -103,10 +104,3 @@
     group: root
   tags: hosts
 
-# TODO: fix regexp
-#- name: set flannel iterface option
-#  lineinfile:
-#    path: /etc/sysconfig/flanneld
-#    regexp: '^FLANNEL_OPTIONS='
-#    line: "FLANNEL_OPTIONS=\"-iface={{- ansible_default_ipv4.alias }}\""
-#  tags: sysconfig 
