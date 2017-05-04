@@ -144,3 +144,7 @@ $ ./run.sh run
         ├── 0c-c4-7a-15-e1-9c
         └── 0c-c4-7a-e5-59-40
 ```
+# 参考
+
+[Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)
+[Ansible Docs](http://docs.ansible.com/ansible/list_of_all_modules.html)
