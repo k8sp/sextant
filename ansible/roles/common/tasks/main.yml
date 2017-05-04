@@ -5,9 +5,73 @@
     state: present 
   with_items:
     - [ docker-engine, etcd, flannel, make, kernel-devel, gcc, wget ]
-  tags: yum
+  tags: os, package 
 
-- name: mkdir dir
+- name: set hostname
+  hostname:
+      name: "{{ ansible_default_ipv4.macaddress | replace(':', '-') }}"
+  tags: os, hostname
+
+- name: set the first line kernel in grub list as default to boot
+  command: grub2-set-default 0
+  tags: os, grub
+
+- name: load overlay for docker storage driver 1 
+  lineinfile: 
+    path: /etc/modules-load.d/overlay.conf
+    state: absent
+    regexp: '^$'
+  tags: os, docker
+
+- name: load overlay for docker storage driver 2
+  lineinfile:
+    path: /etc/modules-load.d/overlay.conf
+    state: present
+    line: 'overlay'
+
+- name: make /root/.ssh dir
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0700
+    owner: root
+  with_items:
+    - /root/.ssh
+  tags: os, ssh
+
+- name: ssh config 
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+  with_items:
+    - { src: ssh_config, dest: /root/.ssh/config }
+  tags: os, ssh
+
+- name: set yum repo 1
+  replace: 
+    path: /etc/yum.repos.d/CentOS-Base.repo
+    regexp: '^mirrorlist'
+    replace: '#mirrorlist'
+    backup: yes
+  tags: os, yum
+  notify:
+    - yum-clean-all
+    - yum-makecache
+
+- name: set yum repo 2
+  replace: 
+    path: /etc/yum.repos.d/CentOS-Base.repo
+    regexp: '^#baseurl=http://[^/]*'
+    replace: "baseurl=http://{{ yum_repo }}"
+    backup: yes
+  tags: os, yum
+  notify:
+    - yum-clean-all
+    - yum-makecache
+
+- name: mkdir /etc/kubernetes dir
   file: 
     path: "{{ item }}"
     state: directory

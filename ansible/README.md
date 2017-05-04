@@ -1,9 +1,15 @@
 # ansible 目标
 
-* 重构 cloud-init 。
 * 在已安装操作系统的集群上二次部署。
 * 实现 PXE 安装和集群部署分离。
 * 重构 sextant 的目录和架构，实现资源准备，PXE安装和集群部署分离。
+
+# ansible 任务分解
+
+* 安装 package。
+* 重构 post-process.sh。
+* 重构 GPU 安装。
+* 重构 cloud-init 。
 
 # ansible 安装与使用
 
@@ -138,4 +144,3 @@ $ ./run.sh run
         ├── 0c-c4-7a-15-e1-9c
         └── 0c-c4-7a-e5-59-40
 ```
-
