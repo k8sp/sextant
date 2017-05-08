@@ -1,4 +1,5 @@
 ---
+# post-process
 - name: install package
   yum: 
     name: "{{ item }}"
@@ -72,6 +73,23 @@
     - yum-makecache
   tags: os, yum
 
+# instal gpu
+- name: copy gpu driver build shell script
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+  with_items:
+    - { src: build_centos_gpu_drivers.sh, dest: /root/build_centos_gpu_drivers.sh }
+  tags: os, gpu
+
+- name: install gpu drvier
+  command: bash -x build_centos_gpu_drivers.sh {{ gpu_version }} http://{{ bootstrapper_ip }}/static/CentOS7/gpu_drivers 
+  ignore_errors: yes
+  tags: os , gpu
+
+# cloud-init
 - name: mkdir /etc/kubernetes dir
   file: 
     path: "{{ item }}"
