@@ -1,0 +1,21 @@
+---
+- name: enable service 
+  systemd: 
+    name: "{{ item }}"
+    enabled: yes 
+  with_items:
+    - kubelet
+
+- name: restart service 
+  systemd: 
+    name: "{{ item }}"
+    state: restarted 
+    daemon_reload: yes
+  with_items:
+    - kubelet
+
+- name: reboot
+  command: reboot
+
+- name: debug
+  debug: msg="call handler"
