@@ -157,7 +157,8 @@
       [Service]
       ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
       ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ http://{{ .BootstrapperIP }}/static/addons-config/*.yaml
-      ExecStart=/usr/bin/docker run --rm --net=host \
+      ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
+      ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
       -e KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080 \
       -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
       {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
