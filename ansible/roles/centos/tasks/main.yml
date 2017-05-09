@@ -9,7 +9,6 @@
   with_items:
     - { src: etcd.j2, dest: /usr/lib/systemd/system/etcd.service }
     - { src: flanneld.j2, dest: /usr/lib/systemd/system/flanneld.service }
-    - { src: setup-network-enviroment.j2, dest: /etc/systemd/system/setup-network-environment.service }
   tags: systemd
   notify:
     - stop and diable NetworkManager
@@ -27,6 +26,7 @@
   with_items:
     - { src: settimezone.service, dest: /etc/systemd/system/settimezone.service }
     - { src: docker.service, dest: /usr/lib/systemd/system/docker.service }
+    - { src: setup-network-environment.service, dest: /etc/systemd/system/setup-network-environment.service }
   tags: systemd
   notify:
     - stop and diable NetworkManager

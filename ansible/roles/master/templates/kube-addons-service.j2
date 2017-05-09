@@ -5,22 +5,12 @@ Requires=kubelet.service
 
 [Service]
 ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ bootstrapper_ip }}/static/ingress.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-controller.yaml http://{{ bootstrapper_ip }}/static/kubedns-controller.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-svc.yaml http://{{ bootstrapper_ip }}/static/kubedns-svc.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-service.yaml http://{{ bootstrapper_ip }}/static/heapster-service.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-service.yaml http://{{ bootstrapper_ip }}/static/influxdb-service.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http://{{ bootstrapper_ip }}/static/grafana-service.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-grafana-controller.yaml http://{{ bootstrapper_ip }}/static/influxdb-grafana-controller.yaml
-ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-controller.yaml http://{{ bootstrapper_ip }}/static/heapster-controller.yaml
-ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
+ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ http://bootstrapper/static/addons-config/*.yaml
 
 # depend on /etc/kubernetes/config/addons-manger.yaml file
 ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
-  -v /etc/kubernetes/ssl/:/etc/kubernetes/ssl/\
   -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
-  -v /etc/kubernetes/config/addons-manager.yaml:/etc/kubernetes/config/addons-manager.yaml \
-  -e KUBECTL_OPTS=--kubeconfig=/etc/kubernetes/config/addons-manager.yaml \
+  -e KUBECTL_OPTS=--server=http://{{ groups['master'][0]  }}:8080 \
   {{ docker_domain }}:5000/{{ images_addon_manager }}
 
 [Install]
