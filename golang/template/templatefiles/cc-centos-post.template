@@ -49,7 +49,7 @@ if [[ {{ .CentOSYumRepo }} == "bootstrapper" ]]; then
 cat >/etc/yum.repos.d/Local.repo << EOF
 [LocalRepo]
 name=Local Repository
-baseurl=http://{{ .BootstrapperIP }}/static/CentOS7/dvd_content/
+baseurl=http://bootstrapper/static/CentOS7/dvd_content/
 enabled=1
 gpgcheck=0
 

@@ -15,7 +15,6 @@
     owner: root
     content: |
       127.0.0.1 localhost
-      {{ .BootstrapperIP }} {{ .Dockerdomain }}
   {{/* ********************************************************* */}}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem

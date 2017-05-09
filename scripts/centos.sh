@@ -2,7 +2,7 @@
 
 GPU_DIR='gpu_drivers'
 ABSOLUTE_GPU_DIR="$BSROOT/html/static/CentOS7/$GPU_DIR"
-HTTP_GPU_DIR="http://$BS_IP/static/CentOS7/$GPU_DIR"
+HTTP_GPU_DIR="http://bootstrapper/static/CentOS7/$GPU_DIR"
 
 
 download_centos_images() {
@@ -41,7 +41,7 @@ default CentOS7
 label CentOS7
   menu label ^Install CentOS 7
   kernel CentOS7/vmlinuz
-  append initrd=CentOS7/initrd.img ks=http://$BS_IP/static/CentOS7/ks.cfg
+  append initrd=CentOS7/initrd.img ks=http://bootstrapper/static/CentOS7/ks.cfg
 EOF
     echo "Done"
 }
@@ -62,7 +62,7 @@ rootpw --plaintext atlas
 # System timezone
 timezone Asia/Shanghai
 # Use network installation
-url --url="http://$BS_IP/static/CentOS7/dvd_content"
+url --url="http://bootstrapper/static/CentOS7/dvd_content"
 # System language
 lang en_US
 # Firewall configuration
@@ -89,7 +89,7 @@ clearpart --all
 part / --fstype="xfs" --grow --ondisk=sda --size=1
 part swap --fstype="swap" --ondisk=sda --size=8000
 
-repo --name=cloud-init --baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
+repo --name=cloud-init --baseurl=http://bootstrapper/static/CentOS7/repo/cloudinit/
 network --onboot on --bootproto dhcp --noipv6
 
 %packages # --ignoremissing
@@ -115,14 +115,14 @@ kernel-lt-devel
 
 %post --log=/root/ks-post-provision.log
 
-wget -O /root/post-process.sh http://$BS_IP/centos/post-script/00-00-00-00-00-00
+wget -O /root/post-process.sh http://bootstrapper/centos/post-script/00-00-00-00-00-00
 bash -x /root/post-process.sh
 
 # Imporant: gpu must be installed after the kernel has been installed
 wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
 bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR}
 
-wget  -P /root http://$BS_IP/static/CentOS7/post_cloudinit_provision.sh
+wget  -P /root http://bootstrapper/static/CentOS7/post_cloudinit_provision.sh
 bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
 %end
@@ -178,7 +178,7 @@ generate_rpmrepo_config() {
    cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
 [Cloud-init]
 name=Cloud init Packages for Enterprise Linux 7
-baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
+baseurl=http://bootstrapper/static/CentOS7/repo/cloudinit/
 enabled=1
 gpgcheck=0
 EOF
