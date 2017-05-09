@@ -1,0 +1,14 @@
+[Unit]
+Description=Setup Network Environment
+Documentation=https://github.com/kelseyhightower/setup-network-environment
+Requires=network-online.target
+After=network-online.target
+[Service]
+ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://bootstrapper/static/setup-network-environment-1.0.1
+ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
+ExecStart=/opt/bin/setup-network-environment
+RemainAfterExit=yes
+Type=oneshot
+[Install]
+WantedBy=multi-user.target

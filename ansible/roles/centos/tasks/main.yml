@@ -1,0 +1,44 @@
+---
+- name: template systemd service
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - { src: etcd.j2, dest: /usr/lib/systemd/system/etcd.service }
+    - { src: flanneld.j2, dest: /usr/lib/systemd/system/flanneld.service }
+  tags: systemd
+  notify:
+    - stop and diable NetworkManager
+    - enable docker
+    - enable service
+    - reboot
+
+- name: copy systemd service
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - { src: settimezone.service, dest: /etc/systemd/system/settimezone.service }
+    - { src: docker.service, dest: /usr/lib/systemd/system/docker.service }
+    - { src: setup-network-environment.service, dest: /etc/systemd/system/setup-network-environment.service }
+  tags: systemd
+  notify:
+    - stop and diable NetworkManager
+    - enable docker
+    - enable service
+    - reboot
+
+- name: set up authorized_keys
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ item }}" 
+  with_file:
+    - authorized_keys
+

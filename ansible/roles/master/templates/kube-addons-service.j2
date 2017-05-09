@@ -1,0 +1,17 @@
+[Unit]
+Description=Install Kubernetes addons
+After=kubelet.service
+Requires=kubelet.service
+
+[Service]
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
+ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ http://bootstrapper/static/addons-config/*.yaml
+
+# depend on /etc/kubernetes/config/addons-manger.yaml file
+ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
+  -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
+  -e KUBECTL_OPTS=--server=http://{{ groups['master'][0]  }}:8080 \
+  {{ docker_domain }}:5000/{{ images_addon_manager }}
+
+[Install]
+WantedBy=multi-user.target

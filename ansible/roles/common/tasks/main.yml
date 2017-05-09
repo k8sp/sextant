@@ -1,0 +1,116 @@
+---
+# post-process
+- name: install package
+  yum: 
+    name: "{{ item }}"
+    state: present 
+  with_items:
+    - [ docker-engine, etcd, flannel, make, kernel-devel, gcc, wget ]
+  tags: os, package 
+
+- name: set hostname
+  hostname:
+      name: "{{ ansible_default_ipv4.macaddress | replace(':', '-') }}"
+  tags: os, hostname
+
+- name: set the first line kernel in grub list as default to boot
+  command: grub2-set-default 0
+  tags: os, grub
+
+- name: load overlay for docker storage driver 1 
+  lineinfile: 
+    path: /etc/modules-load.d/overlay.conf
+    state: absent
+    regexp: '^$'
+  tags: os, docker
+
+- name: load overlay for docker storage driver 2
+  lineinfile:
+    path: /etc/modules-load.d/overlay.conf
+    state: present
+    line: 'overlay'
+  tags: os, docker
+
+- name: make /root/.ssh dir
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0700
+    owner: root
+  with_items:
+    - /root/.ssh
+  tags: os, ssh
+
+- name: ssh config 
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+  with_items:
+    - { src: ssh_config, dest: /root/.ssh/config }
+  tags: os, ssh
+
+- name: set yum repo 1
+  replace: 
+    path: /etc/yum.repos.d/CentOS-Base.repo
+    regexp: '^mirrorlist'
+    replace: '#mirrorlist'
+    backup: yes
+  notify:
+    - yum-clean-all
+    - yum-makecache
+  tags: os, yum
+
+- name: set yum repo 2
+  replace: 
+    path: /etc/yum.repos.d/CentOS-Base.repo
+    regexp: '^#baseurl=http://[^/]*'
+    replace: "baseurl=http://{{ yum_repo }}"
+    backup: yes
+  notify:
+    - yum-clean-all
+    - yum-makecache
+  tags: os, yum
+
+# instal gpu
+- name: copy gpu driver build shell script
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+  with_items:
+    - { src: build_centos_gpu_drivers.sh, dest: /root/build_centos_gpu_drivers.sh }
+  tags: os, gpu
+
+- name: install gpu drvier
+  command: bash -x build_centos_gpu_drivers.sh {{ gpu_version }} http://bootstrapper/static/CentOS7/gpu_drivers 
+  ignore_errors: yes
+  tags: os , gpu
+
+# cloud-init
+- name: mkdir /etc/kubernetes dir
+  file: 
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: root
+  with_items:
+    - /etc/kubernetes
+    - /etc/kubernetes/ssl
+  tags: k8s, tls
+
+- name: copy kubernetes CA and key to k8s and docker
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0600
+    owner: root
+    group: root
+  with_items:
+    - { src: tls/ca.pem, dest: /etc/kubernetes/ssl/ca.pem }
+    - { src: tls/ca.pem, dest: "/etc/docker/certs.d/{{ docker_domain }}:5000/ca.crt" }
+    - { src: tls/ca-key.pem, dest: /etc/kubernetes/ssl/ca-key.pem }
+  tags: tls
+
