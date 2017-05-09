@@ -13,6 +13,7 @@ ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-service.yaml http:
 ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http://{{ bootstrapper_ip }}/static/grafana-service.yaml
 ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-grafana-controller.yaml http://{{ bootstrapper_ip }}/static/influxdb-grafana-controller.yaml
 ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-controller.yaml http://{{ bootstrapper_ip }}/static/heapster-controller.yaml
+ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
 
 # depend on /etc/kubernetes/config/addons-manger.yaml file
 ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
