@@ -200,19 +200,10 @@ coreos:
             After=kubelet.service
             Requires=kubelet.service
             [Service]
-            ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://bootstrapper/static/ingress.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-controller.yaml http://bootstrapper/static/kubedns-controller.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-svc.yaml http://bootstrapper/static/kubedns-svc.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend.yaml http://bootstrapper/static/default-backend.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend-svc.yaml http://bootstrapper/static/default-backend-svc.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-service.yaml http://bootstrapper/static/heapster-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-service.yaml http://bootstrapper/static/influxdb-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http://bootstrapper/static/grafana-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-grafana-controller.yaml http://bootstrapper/static/influxdb-grafana-controller.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-controller.yaml http://bootstrapper/static/heapster-controller.yaml
+            ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons && /usr/bin/wget -P /etc/kubernetes/addons/ http://bootstrapper/static/addons-config/*.yaml
+            ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
 
-            ExecStart=/usr/bin/docker run --rm --net=host \
+            ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
             -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
             -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
             {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
