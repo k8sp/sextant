@@ -4,11 +4,12 @@ After=kubelet.service
 Requires=kubelet.service
 
 [Service]
-ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons && /usr/bin/wget -P /etc/kubernetes/addons/ http://bootstrapper/static/addons-config/*.yaml
-ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons 
+ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ -A yaml -r -l 1 -nd http://bootstrapper/static/addons-config/
+ExecStartPre=-/usr/bin/docker rm -f kube-addon-manager
 
 # depend on /etc/kubernetes/config/addons-manger.yaml file
-ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
+ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager \
   -v /etc/kubernetes/ssl/:/etc/kubernetes/ssl/ \
   -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
   -v /etc/kubernetes/config/addons-manager.yaml:/etc/kubernetes/config/addons-manager.yaml \
