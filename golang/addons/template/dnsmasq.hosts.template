@@ -1,0 +1,2 @@
+{{ .Bootstrapper }} bootstrapper
+{{ .Register }}  harbor.ail.unisound.com 

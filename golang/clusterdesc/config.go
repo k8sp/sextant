@@ -18,6 +18,9 @@ type Cluster struct {
 	// (https://github.com/k8sp/sextant/tree/master/dns).
 	Bootstrapper string
 
+	// docker register ip, e.g: harbor register 10.10.15.252
+	Register string `yaml:"register,omitempty"`
+
 	// The following are for configuring the DHCP service on the
 	// PXE server.  For any node, if its MAC address and IP
 	// address are enlisted in Node.MAC and Node.IP, the generated

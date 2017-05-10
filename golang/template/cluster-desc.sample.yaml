@@ -1,4 +1,6 @@
 bootstrapper: 10.10.14.253
+# docker register 
+register: 10.10.14.252
 subnet: 10.10.14.0
 netmask: 255.255.255.0
 iplow: 10.10.14.1
