@@ -1,2 +1,2 @@
 {{ .Bootstrapper }} bootstrapper
-{{ .Harbor }}  harbor.ail.unisound.com 
+{{ .Register }}  harbor.ail.unisound.com 

@@ -14,6 +14,7 @@ import (
 
 type addonsConfig struct {
 	Bootstrapper        string
+	Register            string
 	DomainName          string
 	IPLow               string
 	IPHigh              string
@@ -41,6 +42,7 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 
 	ac := addonsConfig{
 		Bootstrapper:        config.Bootstrapper,
+		Register:            config.Register,
 		DomainName:          config.DomainName,
 		IPLow:               config.IPLow,
 		IPHigh:              config.IPHigh,
