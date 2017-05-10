@@ -32,6 +32,9 @@ type addonsConfig struct {
 	MasterHostname      string
 	SetNTP              bool
 	DNSMASQLease        string
+	UsersSMTPAddr       string
+	UsersMailUser       string
+	UsersMailPass       string
 }
 
 func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
@@ -60,6 +63,9 @@ func execute(templateFile string, config *clusterdesc.Cluster, w io.Writer) {
 		MasterHostname:      config.GetMasterHostname(),
 		SetNTP:              config.DNSMASQSetNTP,
 		DNSMASQLease:        config.DNSMASQLease,
+		UsersSMTPAddr:       config.UsersSMTPAddr,
+		UsersMailUser:       config.UsersMailUser,
+		UsersMailPass:       config.UsersMailPass,
 	}
 
 	candy.Must(tmpl.Execute(w, ac))

@@ -59,6 +59,9 @@ type Cluster struct {
 	DNSMASQSetNTP            bool     `yaml:"set_ntp"`
 	DNSMASQLease             string   `yaml:"lease"`
 	CentOSYumRepo            string   `yaml:"set_yum_repo"`
+	UsersSMTPAddr            string   `yaml:users_smtp_addr`
+	UsersMailUser            string   `yaml:users_mail_user`
+	UsersMailPass            string   `yaml:users_mail_pass`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
