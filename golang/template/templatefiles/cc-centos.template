@@ -91,7 +91,7 @@
       After=network-online.target
       [Service]
       ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-      ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}/static/setup-network-environment-1.0.1
+      ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://bootstrapper/static/setup-network-environment-1.0.1
       ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
       ExecStart=/opt/bin/setup-network-environment
       RemainAfterExit=yes
@@ -113,7 +113,7 @@
       [Service]
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget --quiet -O /opt/bin/install-mon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+      ExecStart=/usr/bin/wget --quiet -O /opt/bin/install-mon.sh http://bootstrapper/static/ceph/install-mon.sh
       ExecStart=/bin/bash /opt/bin/install-mon.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
@@ -137,7 +137,7 @@
       [Service]
       ExecStartPre=/usr/bin/mkdir -p /opt/bin
       ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-      ExecStart=/usr/bin/wget -O /opt/bin/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+      ExecStart=/usr/bin/wget -O /opt/bin/install-osd.sh http://bootstrapper/static/ceph/install-osd.sh
       ExecStart=/bin/bash /opt/bin/install-osd.sh {{ .Dockerdomain }}:5000
       RemainAfterExit=no
       Type=oneshot
@@ -155,9 +155,10 @@
       After=kubelet.service
       Requires=kubelet.service
       [Service]
-      ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
-      ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ http://{{ .BootstrapperIP }}/static/addons-config/*.yaml
-      ExecStart=/usr/bin/docker run --rm --net=host \
+      ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons 
+      ExecStartPre=/usr/bin/wget -P /etc/kubernetes/addons/ -A yaml -r -l 1 -nd http://bootstrapper/static/addons-config/
+      ExecStartPre=-/usr/bin/docker rm -f kube-addon-manager
+      ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
       -e KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080 \
       -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
       {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
@@ -176,7 +177,7 @@
       [Service]
       Environment=KUBELET_VERSION=v1.2.4_coreos.1
       EnvironmentFile=/etc/network-environment
-      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://bootstrapper/static/kubelet
       ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
       ExecStart=/opt/bin/kubelet \
       --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
@@ -208,7 +209,7 @@
       [Service]
       EnvironmentFile=/etc/network-environment
       Environment=KUBELET_VERSION=v1.2.4_coreos.1
-      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+      ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://bootstrapper/static/kubelet
       ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
       ExecStart=/opt/bin/kubelet \
       --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \

@@ -6,7 +6,7 @@ Requires=docker.service
 [Service]
 EnvironmentFile=/etc/network-environment
 Environment=KUBELET_VERSION=v1.2.4_coreos.1
-ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ bootstrapper_ip }}/static/kubelet
+ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://bootstrapper/static/kubelet
 ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
 ExecStart=/opt/bin/kubelet \
 --pod_infra_container_image={{ docker_domain }}:5000/{{ images_pause }} \

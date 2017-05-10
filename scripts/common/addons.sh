@@ -18,6 +18,9 @@ set -o pipefail
     -template-file /addons/template/kubedns-svc.template \
     -config-file /bsroot/html/static/addons-config/kubedns-svc.yaml
 
+/go/bin/addons -cluster-desc-file /cluster-desc.yaml \
+    -template-file /addons/template/dnsmasq.hosts.template \
+    -config-file /bsroot/config/dnsmasq.hosts
 
 /go/bin/addons -cluster-desc-file /cluster-desc.yaml \
     -template-file /addons/template/dnsmasq.conf.template \

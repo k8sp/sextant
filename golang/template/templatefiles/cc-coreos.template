@@ -108,7 +108,7 @@ coreos:
             After=network-online.target
             [Service]
             ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-            ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://{{ .BootstrapperIP }}/static/setup-network-environment-1.0.1
+            ExecStartPre=-/usr/bin/wget --quiet -O /opt/bin/setup-network-environment http://bootstrapper/static/setup-network-environment-1.0.1
             ExecStartPre=-/usr/bin/chmod +x /opt/bin/setup-network-environment
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
@@ -123,7 +123,7 @@ coreos:
             After=network.target
             [Service]
             ExecStartPre=/usr/bin/mkdir -p /opt/gpu
-            ExecStartPre=/usr/bin/wget -P /opt/gpu -r -nd http://{{ .BootstrapperIP }}/static/gpu-drivers/coreos/{{ .CoreOSVersion }}
+            ExecStartPre=/usr/bin/wget -P /opt/gpu -r -nd http://bootstrapper/static/gpu-drivers/coreos/{{ .CoreOSVersion }}
             ExecStart=/bin/bash /opt/gpu/setup_gpu.sh {{ .CoreOSVersion }} {{ .GPUDriversVersion }}
             RemainAfterExit=no
             Type=oneshot
@@ -154,7 +154,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget --quiet -O /home/core/install-emon.sh http://{{ .BootstrapperIP }}/static/ceph/install-mon.sh
+            ExecStart=/usr/bin/wget --quiet -O /home/core/install-emon.sh http://bootstrapper/static/ceph/install-mon.sh
             ExecStart=/bin/bash /home/core/install-mon.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
@@ -174,7 +174,7 @@ coreos:
 
             [Service]
             ExecStart=/bin/bash -c 'while ! etcdctl cluster-health >/dev/null 2&>1 ; do sleep 5; done'
-            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://{{ .BootstrapperIP }}/static/ceph/install-osd.sh
+            ExecStart=/usr/bin/wget -O /home/core/install-osd.sh http://bootstrapper/static/ceph/install-osd.sh
             ExecStart=/bin/bash /home/core/install-osd.sh {{ .Dockerdomain }}:5000
             RemainAfterExit=no
             Type=oneshot
@@ -200,19 +200,10 @@ coreos:
             After=kubelet.service
             Requires=kubelet.service
             [Service]
-            ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/ingress.yaml http://{{ .BootstrapperIP }}/static/ingress.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-controller.yaml http://{{ .BootstrapperIP }}/static/kubedns-controller.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/kubedns-svc.yaml http://{{ .BootstrapperIP }}/static/kubedns-svc.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend.yaml http://{{ .BootstrapperIP }}/static/default-backend.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/default-backend-svc.yaml http://{{ .BootstrapperIP }}/static/default-backend-svc.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-service.yaml http://{{ .BootstrapperIP }}/static/heapster-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-service.yaml http://{{ .BootstrapperIP }}/static/influxdb-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/grafana-service.yaml http://{{ .BootstrapperIP }}/static/grafana-service.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/influxdb-grafana-controller.yaml http://{{ .BootstrapperIP }}/static/influxdb-grafana-controller.yaml
-            ExecStartPre=/usr/bin/wget -O /etc/kubernetes/addons/heapster-controller.yaml http://{{ .BootstrapperIP }}/static/heapster-controller.yaml
+            ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/addons && /usr/bin/wget -P /etc/kubernetes/addons/ http://bootstrapper/static/addons-config/*.yaml
+            ExecStartPre=/usr/bin/docker rm -f kube-addon-manager
 
-            ExecStart=/usr/bin/docker run --rm --net=host \
+            ExecStart=/usr/bin/docker run --rm --net=host --name=kube-addon-manager\
             -e "KUBECTL_OPTS=--server=http://{{ .MasterHostname }}:8080" \
             -v /etc/kubernetes/addons/:/etc/kubernetes/addons/  \
             {{ .Dockerdomain }}:5000/{{ .Images.addon_manager }}
@@ -229,7 +220,7 @@ coreos:
             [Service]
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
             EnvironmentFile=/etc/network-environment
-            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://bootstrapper/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \
@@ -263,7 +254,7 @@ coreos:
             [Service]
             EnvironmentFile=/etc/network-environment
             Environment=KUBELET_VERSION=v1.2.4_coreos.1
-            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://{{ .BootstrapperIP }}/static/kubelet
+            ExecStartPre=/bin/wget --quiet -O /opt/bin/kubelet http://bootstrapper/static/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
             --pod_infra_container_image={{ .Dockerdomain }}:5000/{{ .Images.pause }} \

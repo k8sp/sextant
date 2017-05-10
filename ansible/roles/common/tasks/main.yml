@@ -85,7 +85,7 @@
   tags: os, gpu
 
 - name: install gpu drvier
-  command: bash -x build_centos_gpu_drivers.sh {{ gpu_version }} http://{{ bootstrapper_ip }}/static/CentOS7/gpu_drivers 
+  command: bash -x build_centos_gpu_drivers.sh {{ gpu_version }} http://bootstrapper/static/CentOS7/gpu_drivers 
   ignore_errors: yes
   tags: os , gpu
 
@@ -113,12 +113,4 @@
     - { src: tls/ca.pem, dest: "/etc/docker/certs.d/{{ docker_domain }}:5000/ca.crt" }
     - { src: tls/ca-key.pem, dest: /etc/kubernetes/ssl/ca-key.pem }
   tags: tls
-
-- name: add docker domain local hosts 
-  template:
-    src: hosts.j2
-    dest: /etc/hosts
-    owner: root
-    group: root
-  tags: hosts
 
