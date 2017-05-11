@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: kubernetes-users
+    namespace: kube-system
+    labels:
+        k8s-app: kubernetes-users
+        kubernetes.io/cluster-service: "true"
+spec:
+    selector:
+        matchLabels:
+            k8s-app: kubernetes-users
+    template:
+        metadata:
+            labels:
+                k8s-app: kubernetes-users
+        spec:
+            nodeName: {{ .MasterHostname }} 
+            containers:
+              - name: kubernetes-users
+                image: {{ .Dockerdomain }}:5000/{{ .Images.users }}
+                ports:
+                - containerPort: 8080
+                  protocol: TCP
+                env:
+                 - name: ABAC_POLICY_FILE
+                   value: /etc/kubernetes/abac/policy.jsonl
+                 - name: ROOT_CA_CERT 
+                   value: /etc/kubernetes/ssl/ca.pem
+                 - name: ROOT_CA_KEY
+                   value: /etc/kubernetes/ssl/ca-key.pem
+                 - name: SMTP_SVC_ADDR 
+                   value: {{ .UsersSMTPAddr }}
+                 - name: ADMIN_EMAIL 
+                   value: {{ .UsersMailUser }}
+                 - name: ADMIN_SECRT 
+                   value: {{ .UsersMailPass }} 
+                 - name:  ADDR 
+                   value: ":8080" 
+                volumeMounts:
+                - name: ssl-ca
+                  readOnly: true
+                  mountPath: /etc/ssl/certs
+                - name: docker-sock 
+                  mountPath: /var/run
+                - name: kube-config
+                  mountPath: /etc/kubernetes
+            volumes: 
+             - name: kube-config 
+               hostPath:
+                  path:  /etc/kubernetes
+             - name: ssl-ca
+               hostPath:
+                  path:  /etc/ssl/certs
+             - name: docker-sock
+               hostPath:
+                  path:  /var/run
+

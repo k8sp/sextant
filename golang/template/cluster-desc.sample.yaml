@@ -14,6 +14,11 @@ dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
 
+# users params
+users_smtp_addr: "smtp.partner.outlook.cn:587"
+users_mail_user: "admin"
+users_mail_pass: "xxxx"
+
 # Flannel backend only support "host-gw", "vxlan" and "udp" for now.
 flannel_backend: "host-gw"
 
