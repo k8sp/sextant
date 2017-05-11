@@ -86,6 +86,7 @@ images:
   grafana: "lupan/heapster_grafana:v2.6.0-2"
   influxdb: "lupan/heapster_influxdb:v0.5"
   dashboard: "pineking/kubernetes-dashboard-amd64:v1.6.0"
+  users: "zhanghui/k8s-users"
 
 nodes:
   - mac: "00:25:90:c0:f7:80"
