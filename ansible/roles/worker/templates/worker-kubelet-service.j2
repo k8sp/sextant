@@ -20,7 +20,7 @@ ExecStart=/opt/bin/kubelet \
 --kubeconfig=/etc/kubernetes/config/worker-kubeconfig.yaml \
 --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
 --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
-{% if ingress_label == 'y' %}
+{% if ingress_label is defined and ingress_label == 'y' %}
 --node-labels=role=ingress \
 {% endif %}
 --logtostderr=true \

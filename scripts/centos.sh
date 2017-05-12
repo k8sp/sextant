@@ -95,14 +95,6 @@ network --onboot on --bootproto dhcp --noipv6
 %packages # --ignoremissing
 @Base
 @Core
-cloud-init
-docker-engine
-etcd
-flannel
-make
-kernel-devel
-gcc
-wget
 #update kernel
 kernel-lt
 kernel-lt-devel
@@ -114,16 +106,6 @@ kernel-lt-devel
 %end
 
 %post --log=/root/ks-post-provision.log
-
-wget -O /root/post-process.sh http://bootstrapper/centos/post-script/00-00-00-00-00-00
-bash -x /root/post-process.sh
-
-# Imporant: gpu must be installed after the kernel has been installed
-wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
-bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR}
-
-wget  -P /root http://bootstrapper/static/CentOS7/post_cloudinit_provision.sh
-bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
 %end
 
