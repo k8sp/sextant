@@ -31,7 +31,7 @@ parse_yaml() {
       for (i in vname) {if (i > indent) {delete vname[i]}}
       if (length($3) > 0) {
               vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-              printf("%s%s%s%s=(\"%s\")\n", "'"$prefix"'",vn, $2, conj[indent-1],$3);
+              printf("%s%s%s%s=('\''%s'\'')\n", "'"$prefix"'",vn, $2, conj[indent-1],$3);
       }
     }' | sed 's/_=/+=/g'
 }
@@ -49,6 +49,6 @@ function load_yaml() {
     local prefix=$2
     local parsedYaml=$(mktemp /tmp/bsroot-parse-yaml.XXXXX)
     parse_yaml $yaml $prefix > $parsedYaml
-    source $parsedYaml
+    source $parsedYaml || true
     rm $parsedYaml
 }

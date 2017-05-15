@@ -174,6 +174,8 @@ gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
 EOF
 
+  mkdir -p ${BSROOT}/html/static/CentOS7/repo/cloudinit
+
   if [[ ${cluster_desc_download_kernel:-y} == n ]] ; then
       REPO_IMAGES='cloud-init docker-engine etcd flannel'
   else
@@ -181,7 +183,8 @@ EOF
   fi 
 
   # download kernel if the kernel-lt and kernel_lt_devel does not in dir 
-  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
+  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/ | grep kernel-lt-*) || true
+  echo ${KERNEL_LT} 
   if [[ -n ${KERNEL_LT} ]]; then
       REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
   fi

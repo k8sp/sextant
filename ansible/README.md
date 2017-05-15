@@ -77,9 +77,9 @@ $ ./run.sh run
 │   ├── common  # pre start common role
 │   │   ├── defaults
 │   │   ├── files
-│   │   │   └── tls
-│   │   │       ├── ca-key.pem
-│   │   │       └── ca.pem
+│   │   │   └── tls           # this ca is copy from /bsroot/tls
+│   │   │       ├── ca-key.pem   
+│   │   │       └── ca.pem       
 │   │   ├── handlers
 │   │   │   └── main.yml
 │   │   ├── meta
@@ -98,7 +98,7 @@ $ ./run.sh run
 │   │   │   │   └── basic_auth.csv
 │   │   │   ├── config
 │   │   │   │   └── local-kubeconfig.yaml
-│   │   │   └── tls
+│   │   │   └── tls          # this ca is copy from /bsroot/tls
 │   │   │       ├── apiserver-key.pem
 │   │   │       ├── apiserver.pem
 │   │   │       ├── kubelet-key.pem
