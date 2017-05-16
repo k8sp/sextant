@@ -26,19 +26,18 @@ $ cd ./ansible
 $ source ./hacking/env-setup
 ```
 
-* 使用ssh-agent
+* ssh-agent
 
-​    确保你的 public SSH key 必须在集群系统的*authorized_keys*中。
+确保你的 public SSH key 必须在集群系统的 *authorized_keys* 中。
 
-​    使用SSH Key来授权，为了避免在建立SSH连接时，重复输入密码你可以这么做:
+使用SSH Key来授权，为了避免在建立SSH连接时，重复输入密码你可以这么做:
 
 ```bash
 $ ssh-agent bash
 $ ssh-add ~/.ssh/id_rsa
 ```
 
-* 项目
-
+* 运行 
 
 ```bash
 $ cd /work/go-work/src/github.com/k8sp/sextant/ansible
@@ -140,11 +139,28 @@ $ ./run.sh run
         └── 0c-c4-7a-e5-59-40
 ```
 
+# 状态
+
+* 在已安装 OS 的集群上自动部署 kubernetes 。 
+* 集群支持 TLS 。
+* 只测试了单节点 etcd 集群部署。
+
+
 # 注意
 
-* 集群的 CA 和 key 放在 common/files/tls 中。 其他需要的证书在 task/main.yaml 中生成。
+* 集群的 CA 和 key 放在 `ansible/roles/common/files/tls` 中。 其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
+
 
 # 参考
 
-[Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)
-[Ansible Docs](http://docs.ansible.com/ansible/list_of_all_modules.html)
+* [Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)
+* [Ansible Docs](http://docs.ansible.com/ansible/list_of_all_modules.html)
+* [etcd configuration flags](https://github.com/coreos/etcd/blob/master/Documentation/op-guide/configuration.md)
+* [flannel configuration](https://github.com/coreos/flannel/blob/master/Documentation/configuration.md)
+* [Docker register](https://github.com/docker/docker.github.io/blob/master/registry/index.md)
+* [docker register deployment instructions](https://github.com/docker/docker.github.io/blob/master/registry/deploying.md)
+* [Configuring a DHCP Client](https://www.centos.org/docs/5/html/Deployment_Guide-en-US/s1-dhcp-configuring-client.html)
+* [Using environment variables in systemd units](https://coreos.com/os/docs/latest/using-environment-variables-in-systemd-units.html)
+* [systemd.unit — Unit configuration](https://www.freedesktop.org/software/systemd/man/systemd.unit.html)
+
+
