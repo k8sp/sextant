@@ -28,7 +28,7 @@
 
 # Generate an OpenSSL Certificate Signing Request
 - name: generate CSR 
-  shell: openssl req -new -key worker-key.pem -out worker.csr -subj "/CN={{ inventory_hostname }}" -config openssl-cli.conf
+  shell: openssl req -new -key worker-key.pem -out worker.csr -subj "/CN=worker" -config openssl-cli.conf
   args:
     chdir: /etc/kubernetes/ssl
   tags: tls

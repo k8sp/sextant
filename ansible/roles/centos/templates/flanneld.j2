@@ -17,7 +17,7 @@ EnvironmentFile=-/etc/sysconfig/docker-network
 ExecStartPre=/usr/bin/etcdctl set /flannel/network/config '{ "Network": "10.1.0.0/16", "Backend": {"Type": "{{ flannel_backend }}" }}'
 {% endif %}
 
-ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ ansible_default_ipv4.address }}:2379,http://127.0.0.1:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS -iface={{ ansible_default_ipv4.alias }}
+ExecStart=/usr/bin/flanneld -etcd-endpoints=http://{{ ansible_default_ipv4.address }}:2379,http://127.0.0.1:2379 -etcd-prefix=/flannel/network $FLANNEL_OPTIONS
 
 ExecStartPost=/usr/libexec/flannel/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
 Restart=always

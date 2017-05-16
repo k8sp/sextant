@@ -16,9 +16,9 @@ DNS.4 = kubernetes.default.svc.cluster.local
 DNS.5 = localhost 
 DNS.6 = aa-bb-cc-dd 
 DNS.7 = {{ groups['master'][0] }} 
-DNS.8 = {% if ansible_hostname == groups['master'][0] %} {{ ansible_default_ipv4.address }} {% endif %}
 IP.1 = 127.0.0.1 
 IP.2 = 10.100.0.1 
 IP.3 = 192.168.61.73
 IP.3 = 192.168.48.23
+IP.4 = {% if ansible_hostname == groups['master'][0] %} {{ ansible_default_ipv4.address }} {% endif %}
 

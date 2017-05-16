@@ -1,6 +1,6 @@
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"zhanghui","apiGroup":"*","namespace":"*","resource":"*"}}
-{"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"xiaoming","apiGroup":"*","namespace":"*","resource":"*"}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"kubelet","apiGroup":"*","namespace":"*","resource":"*"}}
+{"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"worker","apiGroup":"*","namespace":"*","resource":"*"}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"bootstrapper","apiGroup":"*","namespace":"*","resource":"*"}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"0c-c4-7a-e5-59-40","apiGroup":"*","namespace":"*","resource":"*"}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"00-e0-81-ee-82-5b","apiGroup":"*","namespace":"*","resource":"*"}}
@@ -9,5 +9,3 @@
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"system:serviceaccount:kube-system:default","apiGroup":"*","namespace":"*","resource":"*"}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"group":"system:authenticated","nonResourcePath":"*","readonly":true}}
 {"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"group":"system:unauthenticated","nonResourcePath":"*","readonly":true}}
-{"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"admin","group":"system:authenticated","apiGroup":"*","namespace":"admin","resource":"*","nonResourcePath":"*"}}
-{"apiVersion":"abac.authorization.kubernetes.io/v1beta1","kind":"Policy","spec":{"user":"test","group":"system:authenticated","apiGroup":"*","namespace":"test","resource":"*","nonResourcePath":"*"}}
