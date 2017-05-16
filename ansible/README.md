@@ -98,11 +98,6 @@ $ ./run.sh run
 │   │   │   │   └── basic_auth.csv
 │   │   │   ├── config
 │   │   │   │   └── local-kubeconfig.yaml
-│   │   │   └── tls          # this ca is copy from /bsroot/tls
-│   │   │       ├── apiserver-key.pem
-│   │   │       ├── apiserver.pem
-│   │   │       ├── kubelet-key.pem
-│   │   │       └── kubelet.pem
 │   │   ├── handlers
 │   │   │   └── main.yml
 │   │   ├── meta
@@ -144,6 +139,11 @@ $ ./run.sh run
         ├── 0c-c4-7a-15-e1-9c
         └── 0c-c4-7a-e5-59-40
 ```
+
+# 注意
+
+* 集群的 CA 和 key 放在 common/files/tls 中。 其他需要的证书在 task/main.yaml 中生成。
+
 # 参考
 
 [Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)

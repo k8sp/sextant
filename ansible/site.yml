@@ -1,5 +1,5 @@
 ---
-- hosts: k8s-15 
+- hosts: all 
   roles:
     - role: common
   tags: cluster
@@ -14,7 +14,7 @@
     - role: worker
   tags: worker
 
-- hosts: k8s-15
+- hosts: all 
   roles: 
     - role: centos
   tags: cluster 

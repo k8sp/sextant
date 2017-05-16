@@ -14,19 +14,56 @@
     - /etc/kubernetes/manifests
   tags: k8s, tls, auth
 
-- name:  copy cret and key of apiserver and kubelet
-  copy :
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: 0600
+- name: generate openssl-srv.conf
+  template:
+    src: openssl-srv-conf.j2
+    dest: /etc/kubernetes/ssl/openssl-srv.conf
+    mode: 0644
     owner: root
-    group: root
-  with_items: 
-    - { src: tls/apiserver.pem, dest: /etc/kubernetes/ssl/apiserver.pem }
-    - { src: tls/apiserver-key.pem, dest: /etc/kubernetes/ssl/apiserver-key.pem }
-    - { src: tls/kubelet.pem, dest: /etc/kubernetes/ssl/kubelet.pem }
-    - { src: tls/kubelet-key.pem, dest: /etc/kubernetes/ssl/kubelet-key.pem }
   tags: tls
+
+# apiserver
+# Generate an OpenSSL private key with a size (2048 bits)
+- name: generate private key, apiserver
+  shell: openssl genrsa -out /etc/kubernetes/ssl/apiserver-key.pem 2048
+  args:
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
+# Generate an OpenSSL Certificate Signing Request
+- name: generate CSR , apiserver
+  shell: openssl req -new -key apiserver-key.pem -out apiserver.csr -subj "/CN=kube-apiserver" -config openssl-srv.conf
+  args:      
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
+- name: create certificate, apiserver
+  shell: openssl x509 -req -in apiserver.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out apiserver.pem -days 3650 -extensions v3_req -extfile openssl-srv.conf
+  args: 
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
+# kubelet
+# Generate an OpenSSL private key with a size (2048 bits)
+- name: generate private key, kubelet
+  shell: openssl genrsa -out /etc/kubernetes/ssl/kubelet-key.pem 2048
+  args:
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
+# Generate an OpenSSL Certificate Signing Request
+- name: generate CSR , kubelet
+  shell: openssl req -new -key kubelet-key.pem -out kubelet.csr -subj "/CN=kubelet"
+  args:                                                                        
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
+- name: create certificate, kubelet
+  shell: openssl x509 -req -in kubelet.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out kubelet.pem -days 3650 
+  args:                                      
+    chdir: /etc/kubernetes/ssl
+  tags: tls
+
 
 - name: copy Basic Token csv and ABAC policy file
   copy:
