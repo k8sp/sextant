@@ -95,6 +95,13 @@ network --onboot on --bootproto dhcp --noipv6
 %packages # --ignoremissing
 @Base
 @Core
+docker-engine
+etcd
+flannel
+make
+kernel-devel
+gcc
+wget
 #update kernel
 kernel-lt
 kernel-lt-devel
