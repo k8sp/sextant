@@ -34,30 +34,11 @@
     - enable service
     - reboot
 
-- name: iptables chains of nat table ACCEPT
-  iptables:
-    table: nat
-    chain: "{{ item }}" 
-    policy: ACCEPT
+- name: ipatables chain FORWARD target ACCEPT
+  lineinfile:
+    dest: /etc/rc.d/rc.local
+    line: 'iptables -P FORWARD ACCEPT'
     state: present
-  become: yes
-  with_items:
-    - PREROUTING
-    - POSTROUTING
-    - OUTPUT
-  tags: iptables
-
-- name: iptables chains ACCEPT
-  iptables:
-    chain: "{{ item }}"
-    policy: ACCEPT
-    state: present
-  become: yes
-  with_items:
-    - INPUT
-    - OUTPUT
-    - FORWARD
-  tags: iptables
 
 - name: set up authorized_keys
   authorized_key:
