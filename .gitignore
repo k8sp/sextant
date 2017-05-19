@@ -8,3 +8,5 @@ cluster-desc.yml
 site.retry
 site.retry
 tags
+*.pem
+*.key

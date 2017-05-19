@@ -148,7 +148,7 @@ $ ./run.sh run
 
 # 注意
 
-* 集群的 CA 和 key 放在 `ansible/roles/common/files/tls` 中。 其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
+* 集群的 CA `ca.pem` 和 key `ca-key.pem` 放在 `ansible/roles/common/files/tls` 中。 其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
 
 
 # 参考
