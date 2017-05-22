@@ -89,6 +89,11 @@
   ignore_errors: yes
   tags: os , gpu
 
+# k8s
+- name: rm /etc/kubernetes dir
+  command: rm -rf /etc/kubernetes
+  tags: k8s
+
 # cloud-init
 - name: mkdir /etc/kubernetes dir
   file: 
