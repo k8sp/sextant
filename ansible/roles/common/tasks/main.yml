@@ -91,7 +91,9 @@
 
 # k8s
 - name: rm /etc/kubernetes dir
-  command: rm -rf /etc/kubernetes
+  file: 
+    path: /etc/kubernetes
+    state: absent
   tags: k8s
 
 # cloud-init

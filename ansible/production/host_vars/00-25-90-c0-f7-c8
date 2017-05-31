@@ -1,0 +1,7 @@
+---
+ingress_label: y
+
+# is etcd cluster member    
+etcd_member: n
+
+

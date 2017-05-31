@@ -145,11 +145,13 @@ $ ./run.sh run
 * 集群支持 TLS 。
 * 只测试了单节点 etcd 集群部署。
 
+# 部署
 
-# 注意
-
-* 集群的 CA `ca.pem` 和 key `ca-key.pem` 放在 `ansible/roles/common/files/tls` 中。 其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
-
+* [安装 ansible](#ansible 安装与使用)。 
+* 修改 hosts 文件和对应的 host_vars.
+* 目前只配置了一个 etcd member.
+* 集群的 CA `ca.pem` 和 key `ca-key.pem` 放在 `ansible/roles/common/files/tls` 中。
+其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
 
 # 参考
 

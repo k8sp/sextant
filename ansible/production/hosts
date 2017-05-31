@@ -1,0 +1,14 @@
+[worker]
+00-e0-81-ee-82-5b 
+00-25-90-c0-f7-c8 
+00-25-90-c0-f7-88 
+
+# now must be one master
+[master]
+0c-c4-7a-15-e1-9c 
+
+# cluster 15
+[all:children]
+master
+worker
+
