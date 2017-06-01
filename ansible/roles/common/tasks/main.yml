@@ -92,7 +92,7 @@
 # k8s
 - name: rm /etc/kubernetes dir
   file: 
-    path: "{{ .item }}"
+    path: "{{ item }}"
     state: absent
   with_items:
     - /etc/kubernetes/ssl
