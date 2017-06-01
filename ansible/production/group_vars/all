@@ -24,4 +24,4 @@ network_plugin:
 yum_repo: "mirrors.aliyun.com"
 
 # gpu version
-gpu_version: '375.20'
+gpu_version: '375.39'
