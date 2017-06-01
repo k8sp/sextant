@@ -94,6 +94,12 @@
   file: 
     path: /etc/kubernetes
     state: absent
+  with_items:
+    - /etc/kubernetes/ssl
+    - /etc/kubernetes/abac
+    - /etc/kubernetes/config
+    - /etc/kubernetes/manifests
+    - /etc/kubernetes/basic
   tags: k8s
 
 # cloud-init
