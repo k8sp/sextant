@@ -145,13 +145,28 @@ $ ./run.sh run
 * 集群支持 TLS 。
 * 只测试了单节点 etcd 集群部署。
 
-# 部署
 
-* [安装 ansible](#ansible 安装与使用)。 
-* 修改 hosts 文件和对应的 host_vars.
-* 目前只配置了一个 etcd member.
+# 部署注意事项
+
 * 集群的 CA `ca.pem` 和 key `ca-key.pem` 放在 `ansible/roles/common/files/tls` 中。
 其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
+
+* 确保启动正确的 `bootstrapper` 服务, 否则可能会出现镜像拉取时证书错误。
+
+* 确保集群中各个主机能够 ping 通。
+
+* [安装 ansible](#ansible 安装与使用)。 
+
+* 修改 hosts 文件和对应的 host_vars.
+
+* 目前只配置了一个 etcd member.
+
+* 配置完成后需要删除所有 namespace 下的 serviceaccounts 和 pod. 
+
+* 由于 addons 下的 yaml 是生成 bsroot 时从模板中生成的，所以可能有部分参数与实际使用不一致，需要手动更改。
+或者按实际配置重新生成 bsroot 或 yaml 配置文件.
+
+
 
 # 参考
 

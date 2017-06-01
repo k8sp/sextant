@@ -5,7 +5,7 @@ set -e
 set -o nounset
 
 function usage() {
-    echo "usage: $0 {run|check|limit-run|limit-check} {production|$2} [limted hosts, eg: (master|worker|00-25-90-c0-f7-88)]"
+    echo "usage: $0 {run|check|limit-run|limit-check} {production|staging} [limted hosts, eg: (master|worker|00-25-90-c0-f7-88)]"
 }
 
 if [[ $# == 0 ]]; then
@@ -19,7 +19,7 @@ WHICH_HOSTS=$2
 case $2 in 
     production)
         ;;
-    $2)
+    staging)
         ;;
     *)
         usage
