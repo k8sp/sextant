@@ -8,7 +8,7 @@ function usage() {
     echo "usage: $0 {run|check|limit-run|limit-check} {production|staging} [limted hosts, eg: (master|worker|00-25-90-c0-f7-88)]"
 }
 
-if [[ $# == 0 ]]; then
+if [[ $# < 2 ]]; then
     usage
     exit 1
 fi

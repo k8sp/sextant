@@ -34,12 +34,6 @@
     - enable service
     - reboot
 
-- name: ipatables chain FORWARD target ACCEPT
-  lineinfile:
-    dest: /etc/rc.d/rc.local
-    line: 'iptables -P FORWARD ACCEPT'
-    state: present
-
 - name: set up authorized_keys
   authorized_key:
     user: root
