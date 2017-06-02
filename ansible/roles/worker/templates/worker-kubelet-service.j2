@@ -25,7 +25,8 @@ ExecStart=/opt/bin/kubelet \
 {% endif %}
 --logtostderr=true \
 --network-plugin= \
---network-plugin-dir=/etc/cni/net.d
+--network-plugin-dir=/etc/cni/net.d \
+--feature-gates=Accelerators=true
 Restart=always
 RestartSec=10
 [Install]
