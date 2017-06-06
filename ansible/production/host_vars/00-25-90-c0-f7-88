@@ -2,8 +2,8 @@
 ingress_label: n
 
 # is etcd cluster member  
-etcd_member: y
+etcd_member: n
 
 # is kubernetes master
-kube_master: y
+kube_master: n
 

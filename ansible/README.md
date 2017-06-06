@@ -26,19 +26,18 @@ $ cd ./ansible
 $ source ./hacking/env-setup
 ```
 
-* 使用ssh-agent
+* ssh-agent
 
-​    确保你的 public SSH key 必须在集群系统的*authorized_keys*中。
+确保你的 public SSH key 必须在集群系统的 *authorized_keys* 中。
 
-​    使用SSH Key来授权，为了避免在建立SSH连接时，重复输入密码你可以这么做:
+使用SSH Key来授权，为了避免在建立SSH连接时，重复输入密码你可以这么做:
 
 ```bash
 $ ssh-agent bash
 $ ssh-add ~/.ssh/id_rsa
 ```
 
-* 项目
-
+* 运行 
 
 ```bash
 $ cd /work/go-work/src/github.com/k8sp/sextant/ansible
@@ -77,9 +76,9 @@ $ ./run.sh run
 │   ├── common  # pre start common role
 │   │   ├── defaults
 │   │   ├── files
-│   │   │   └── tls
-│   │   │       ├── ca-key.pem
-│   │   │       └── ca.pem
+│   │   │   └── tls           # this ca is copy from /bsroot/tls
+│   │   │       ├── ca-key.pem   
+│   │   │       └── ca.pem       
 │   │   ├── handlers
 │   │   │   └── main.yml
 │   │   ├── meta
@@ -98,11 +97,6 @@ $ ./run.sh run
 │   │   │   │   └── basic_auth.csv
 │   │   │   ├── config
 │   │   │   │   └── local-kubeconfig.yaml
-│   │   │   └── tls
-│   │   │       ├── apiserver-key.pem
-│   │   │       ├── apiserver.pem
-│   │   │       ├── kubelet-key.pem
-│   │   │       └── kubelet.pem
 │   │   ├── handlers
 │   │   │   └── main.yml
 │   │   ├── meta
@@ -144,7 +138,46 @@ $ ./run.sh run
         ├── 0c-c4-7a-15-e1-9c
         └── 0c-c4-7a-e5-59-40
 ```
+
+# 状态
+
+* 在已安装 OS 的集群上自动部署 kubernetes 。 
+* 集群支持 TLS 。
+* 只测试了单节点 etcd 集群部署。
+
+
+# 部署注意事项
+
+* 集群的 CA `ca.pem` 和 key `ca-key.pem` 放在 `ansible/roles/common/files/tls` 中。
+其他需要的证书在 `ansible/roles/[master|woker]/task/main.yaml` 中生成。
+
+* 确保启动正确的 `bootstrapper` 服务, 否则可能会出现镜像拉取时证书错误。
+
+* 确保集群中各个主机能够 ping 通。
+
+* [安装 ansible](#ansible 安装与使用)。 
+
+* 修改 hosts 文件和对应的 host_vars.
+
+* 目前只配置了一个 etcd member.
+
+* 配置完成后需要删除所有 namespace 下的 serviceaccounts 和 pod. 
+
+* 由于 addons 下的 yaml 是生成 bsroot 时从模板中生成的，所以可能有部分参数与实际使用不一致，需要手动更改。
+或者按实际配置重新生成 bsroot 或 yaml 配置文件.
+
+
+
 # 参考
 
-[Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)
-[Ansible Docs](http://docs.ansible.com/ansible/list_of_all_modules.html)
+* [Ansible 中文权威指南](http://ansible-tran.readthedocs.io/en/latest/)
+* [Ansible Docs](http://docs.ansible.com/ansible/list_of_all_modules.html)
+* [etcd configuration flags](https://github.com/coreos/etcd/blob/master/Documentation/op-guide/configuration.md)
+* [flannel configuration](https://github.com/coreos/flannel/blob/master/Documentation/configuration.md)
+* [Docker register](https://github.com/docker/docker.github.io/blob/master/registry/index.md)
+* [docker register deployment instructions](https://github.com/docker/docker.github.io/blob/master/registry/deploying.md)
+* [Configuring a DHCP Client](https://www.centos.org/docs/5/html/Deployment_Guide-en-US/s1-dhcp-configuring-client.html)
+* [Using environment variables in systemd units](https://coreos.com/os/docs/latest/using-environment-variables-in-systemd-units.html)
+* [systemd.unit — Unit configuration](https://www.freedesktop.org/software/systemd/man/systemd.unit.html)
+
+

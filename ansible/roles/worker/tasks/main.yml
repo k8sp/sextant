@@ -11,10 +11,10 @@
     - /etc/kubernetes/manifests
   tags: tls, k8s 
 
-- name: generate openssl.conf
+- name: generate openssl-cli.conf
   template:
-    src: openssl-conf.j2
-    dest: /etc/kubernetes/ssl/openssl.conf
+    src: openssl-cli-conf.j2
+    dest: /etc/kubernetes/ssl/openssl-cli.conf
     mode: 0644
     owner: root
   tags: tls
@@ -28,13 +28,13 @@
 
 # Generate an OpenSSL Certificate Signing Request
 - name: generate CSR 
-  shell: openssl req -new -key worker-key.pem -out worker.csr -subj "/CN={{ inventory_hostname }}" -config openssl.conf
+  shell: openssl req -new -key worker-key.pem -out worker.csr -subj "/CN=worker" -config openssl-cli.conf
   args:
     chdir: /etc/kubernetes/ssl
   tags: tls
 
 - name: create certificate
-  shell: openssl x509 -req -in worker.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out worker.pem -days 3650 -extensions v3_req -extfile openssl.conf
+  shell: openssl x509 -req -in worker.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out worker.pem -days 3650 -extensions v3_req -extfile openssl-cli.conf
   args:
     chdir: /etc/kubernetes/ssl
   tags: tls

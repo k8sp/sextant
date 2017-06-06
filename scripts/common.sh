@@ -264,6 +264,8 @@ generate_tls_assets() {
         echo "Done"
 
     fi
+
+    cp ca-key.pem ca.pem ${SEXTANT_DIR}/ansible/roles/common/files/tls
 }
 
 prepare_setup_kubectl() {

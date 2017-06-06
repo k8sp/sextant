@@ -95,7 +95,6 @@ network --onboot on --bootproto dhcp --noipv6
 %packages # --ignoremissing
 @Base
 @Core
-cloud-init
 docker-engine
 etcd
 flannel
@@ -114,16 +113,6 @@ kernel-lt-devel
 %end
 
 %post --log=/root/ks-post-provision.log
-
-wget -O /root/post-process.sh http://bootstrapper/centos/post-script/00-00-00-00-00-00
-bash -x /root/post-process.sh
-
-# Imporant: gpu must be installed after the kernel has been installed
-wget -P /root $HTTP_GPU_DIR/build_centos_gpu_drivers.sh
-bash -x /root/build_centos_gpu_drivers.sh ${cluster_desc_gpu_drivers_version} ${HTTP_GPU_DIR}
-
-wget  -P /root http://bootstrapper/static/CentOS7/post_cloudinit_provision.sh
-bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 
 %end
 
@@ -192,6 +181,8 @@ gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
 EOF
 
+  mkdir -p ${BSROOT}/html/static/CentOS7/repo/cloudinit
+
   if [[ ${cluster_desc_download_kernel:-y} == n ]] ; then
       REPO_IMAGES='cloud-init docker-engine etcd flannel'
   else
@@ -199,7 +190,8 @@ EOF
   fi 
 
   # download kernel if the kernel-lt and kernel_lt_devel does not in dir 
-  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
+  KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/ | grep kernel-lt-*) || true
+  echo ${KERNEL_LT} 
   if [[ -n ${KERNEL_LT} ]]; then
       REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
   fi

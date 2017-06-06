@@ -89,6 +89,19 @@
   ignore_errors: yes
   tags: os , gpu
 
+# k8s
+- name: rm /etc/kubernetes dir
+  file: 
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/kubernetes/ssl
+    - /etc/kubernetes/abac
+    - /etc/kubernetes/config
+    - /etc/kubernetes/manifests
+    - /etc/kubernetes/basic
+  tags: k8s
+
 # cloud-init
 - name: mkdir /etc/kubernetes dir
   file: 

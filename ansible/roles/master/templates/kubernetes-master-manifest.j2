@@ -35,9 +35,9 @@ spec:
         - --allow-privileged=true
         - --bind-address=0.0.0.0
         - --secure-port=443
-        - --etcd-servers=http://{{ groups['master'][0] }}:4001
+        - --etcd-servers=http://{{ groups['master'][0] }}:2379
         - --service-cluster-ip-range={{ service_cluster_ip_range }}
-        - --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+        - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds
         - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
         - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
         - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem

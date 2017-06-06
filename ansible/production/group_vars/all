@@ -1,0 +1,27 @@
+---
+# the global variable file
+
+# boot strapper ip
+bootstrapper_ip: '10.10.15.253'
+# docker domain name
+docker_domain: "bootstrapper"
+# Flannel backend only support "host-gw", "vxlan" and "udp" for now.
+flannel_backend: "host-gw"
+# service Cluster Ip range 
+service_cluster_ip_range:  '10.100.0.0/24'
+# cluster dns Service
+cluster_dns: 10.100.0.10
+
+
+# hyperkube image tag
+images_hyperkube: 'pineking/hyperkube-amd64:a94c67'
+images_addon_manager: 'pineking/kube-addon-manager-amd64:v6.4-alpha.3'
+images_pause: 'typhoon1986/pause-amd64:3.0'
+
+network_plugin: 
+
+# yum rep: not used
+yum_repo: "mirrors.aliyun.com"
+
+# gpu version
+gpu_version: '375.39'

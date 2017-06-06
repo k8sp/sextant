@@ -1,9 +1,10 @@
 ---
-ingress_label: n
-
-# is etcd cluster member  
+# is etcd cluster member
 etcd_member: y
 
 # is kubernetes master
 kube_master: y
+
+ingress_label: n
+
 
