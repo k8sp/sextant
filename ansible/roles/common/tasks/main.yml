@@ -24,13 +24,6 @@
     regexp: '^$'
   tags: os, docker
 
-- name: load overlay for docker storage driver 2
-  lineinfile:
-    path: /etc/modules-load.d/overlay.conf
-    state: present
-    line: 'overlay'
-  tags: os, docker
-
 - name: make /root/.ssh dir
   file:
     path: "{{ item }}"
