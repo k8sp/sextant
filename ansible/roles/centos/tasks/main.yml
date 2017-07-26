@@ -42,3 +42,10 @@
   with_file:
     - authorized_keys
 
+- name: docker prune 
+  cron:
+    day: "*/2"
+    hour: "3"
+    minute: "0"
+    job: docker system prune --force 
+

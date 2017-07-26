@@ -37,6 +37,13 @@ $ ssh-agent bash
 $ ssh-add ~/.ssh/id_rsa
 ```
 
+* 准备 ansible 依赖
+
+```bash
+
+$ ./init.sh
+```
+
 * 运行 
 
 ```bash
