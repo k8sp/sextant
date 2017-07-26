@@ -1,11 +1,21 @@
 ---
 # post-process
+- name: cp docker repo 
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: root
+  with_items:
+    - { src: docker.repo, dest: /etc/yum.repos.d/ }
+  tags: os, package 
+
 - name: install package
   yum: 
     name: "{{ item }}"
     state: present 
   with_items:
-    - [ docker-engine, etcd, flannel, make, kernel-devel, gcc, wget ]
+  - [ docker-engine, etcd, flannel, make, kernel-devel, gcc, wget ]
   tags: os, package 
 
 - name: set hostname
