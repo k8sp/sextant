@@ -199,10 +199,12 @@ EOF
   fi 
 
   # download kernel if the kernel-lt and kernel_lt_devel does not in dir 
+  set +e
   KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
   if [[ -n ${KERNEL_LT} ]]; then
       REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
   fi
+  set -e
 
   docker run --rm -it \
              --volume $BSROOT:/bsroot \

@@ -22,12 +22,12 @@ coreos_channel: "stable"
 coreos_version: "1122.2.0"
 
 # centos version
-download_kernel: n
+download_kernel: y
 centos_version: "7.3.1611"
 
 # gpu drivers version
-set_gpu: n
-gpu_drivers_version: "375.20"
+set_gpu: y
+gpu_drivers_version: "375.51"
 
 ingress_hostnetwork: true
 
