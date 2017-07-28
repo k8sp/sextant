@@ -165,7 +165,7 @@ build_bootstrapper_image() {
     echo "Done"
 
 
-    rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons,}
+    rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons}
     cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
     echo "Done"
 
