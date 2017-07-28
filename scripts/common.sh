@@ -133,7 +133,7 @@ EOF
 }
 
 generate_ceph_install_scripts() {
-  printf "Generating Ceph installation scripts..."
+  printf "${GREEN}Generating Ceph installation scripts...${RESET}"
   mkdir -p $BSROOT/html/static/ceph
   # update install-mon.sh and set OSD_JOURNAL_SIZE
   OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
@@ -154,7 +154,7 @@ generate_ceph_install_scripts() {
 build_bootstrapper_image() {
     # cloud-config-server and addon compile moved to check_cluster_desc_file
     # Compile registry and build docker image here
-    printf "Cross-compiling Docker registry ... "
+    printf "${GREEN}Cross-compiling Docker registry ... ${RESET}"
     docker run --rm -it --name=registry_build \
           --volume $GOPATH:/go \
           -e CGO_ENABLED=0 \
@@ -206,13 +206,13 @@ download_k8s_images() {
     # hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     # printf "Downloading kubelet ${hyperkube_version} ... "
     # wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    printf "Downloading kubelet ... "
+    printf "${GREEN}Downloading kubelet ... ${RESET}"
     #wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
     echo "Done"
     
     # setup-network-environment will fetch the default system IP infomation
     # when using cloud-config file to initiate a kubernetes cluster node
-    printf "Downloading setup-network-environment file ... "
+    printf "${GREEN}Downloading setup-network-environment file ... ${RESET}"
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
     echo "Done"
 
@@ -225,12 +225,12 @@ download_k8s_images() {
         local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $NF}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
             if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
-                printf "Pulling image ${DOCKER_IMAGE} ... "
+                printf "${GREEN}Pulling image ${DOCKER_IMAGE} ... ${RESET}"
                 docker pull $DOCKER_IMAGE > /dev/null 2>&1
+                docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
                 echo "Done"
             fi
             printf "Exporting $DOCKER_TAR_FILE ... "
-            docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
             docker save $DOCKER_DOMAIN_IMAGE_URL > $DOCKER_TAR_FILE.progress
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
             echo "Done"
