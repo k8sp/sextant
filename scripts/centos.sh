@@ -21,13 +21,13 @@ download_centos_images() {
     printf "Downloading CentOS 7 PXE vmlinuz image ... "
     cd $BSROOT/tftpboot
     mkdir -p $BSROOT/tftpboot/CentOS7
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Downloading CentOS 7 ISO ... "
     mkdir -p $BSROOT/html/static/CentOS7
-    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 http://mirrors.163.com/centos/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso || { echo "Failed"; exit 1; }
     echo "Done"
 }
 
