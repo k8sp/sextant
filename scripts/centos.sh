@@ -202,7 +202,8 @@ EOF
   set +e
   KERNEL_LT=$(ls ${BSROOT}/html/static/CentOS7/repo/cloudinit/kernel-lt-*)
   if [[ -n ${KERNEL_LT} ]]; then
-      REPO_IMAGES=${REPO_IMAGES} + 'kernel-lt kernel-devel'
+      REPO_IMAGES=${REPO_IMAGES}' kernel-lt kernel-devel'
+      echo ${REPO_IMAGES}
   fi
   set -e
 

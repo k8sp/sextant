@@ -207,7 +207,7 @@ download_k8s_images() {
     # printf "Downloading kubelet ${hyperkube_version} ... "
     # wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
     printf "Downloading kubelet ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
+    #wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
     echo "Done"
     
     # setup-network-environment will fetch the default system IP infomation
