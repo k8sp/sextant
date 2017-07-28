@@ -153,18 +153,7 @@ generate_ceph_install_scripts() {
 
 build_bootstrapper_image() {
     # cloud-config-server and addon compile moved to check_cluster_desc_file
-    # Compile registry and build docker image here
-    printf "${GREEN}Cross-compiling Docker registry ... ${RESET}"
-    docker run --rm -it --name=registry_build \
-          --volume $GOPATH:/go \
-          -e CGO_ENABLED=0 \
-          -e GOOS=linux \
-          -e GOARCH=amd64 \
-          golang:wheezy \
-          sh -c "go get -u -d github.com/docker/distribution/cmd/registry && cd /go/src/github.com/docker/distribution && make PREFIX=/go clean /go/bin/registry >/dev/null" \
-          || { echo "Complie Docker registry failed..."; exit 1; }
-
-    printf "Cross-compiling cloud-config-server, addons ... "
+    printf "${GREEN}Cross-compiling cloud-config-server, addons ... ${RESET}"
     docker run --rm -it \
           --volume $GOPATH:/go \
           -e CGO_ENABLED=0 \
@@ -176,11 +165,11 @@ build_bootstrapper_image() {
     echo "Done"
 
 
-    rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons,registry}
-    cp $GOPATH/bin/{cloud-config-server,addons,registry} $SEXTANT_DIR/docker
+    rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons,}
+    cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
     echo "Done"
 
-    printf "Building bootstrapper image ... "
+    printf "${GREEN}Building bootstrapper image ... ${RESET}"
     docker rm -f bootstrapper > /dev/null 2>&1 || echo "No such container: bootstrapper ,Pass..."
     docker rmi bootstrapper:latest > /dev/null 2>&1 || echo "No such images: bootstrapper ,Pass..."
     cd $SEXTANT_DIR/docker
@@ -188,13 +177,13 @@ build_bootstrapper_image() {
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
     echo "Done"
 
-    printf "Copying bash scripts ... "
+    printf "${GREEN}Copying bash scripts ... ${RESET}"
     cp $SEXTANT_DIR/start_bootstrapper_container.sh $BSROOT/
     chmod +x $BSROOT/start_bootstrapper_container.sh
     cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/
     echo "Done"
 
-    printf "Make directory ... "
+    printf "${GREEN}Make directory ...${RESET}"
     mkdir -p $BSROOT/dnsmasq
     echo "Done"
 }
