@@ -192,11 +192,9 @@ build_bootstrapper_image() {
 download_k8s_images() {
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
-    # hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-    # printf "Downloading kubelet ${hyperkube_version} ... "
-    # wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet
-    printf "${GREEN}Downloading kubelet ... ${RESET}"
-    #wget --quiet -c -N -O $BSROOT/html/static/kubelet https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubelet
+    hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+    printf "${GREEN}Downloading kubelet ${hyperkube_version} ... ${RESET}"
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet || { echo "Failed"; exit 1; }
     echo "Done"
     
     # setup-network-environment will fetch the default system IP infomation
@@ -256,8 +254,9 @@ generate_tls_assets() {
 }
 
 prepare_setup_kubectl() {
-    printf "Downloading kubectl ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubectl https://dl.dropboxusercontent.com/u/27178121/kubelet.v1.6.0/kubectl || { echo "Failed"; exit 1; }
+    hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
+    printf "${GREEN}Downloading kubectl ${hyperkube_version} ... ${RESET}"
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl || { echo "Failed"; exit 1; }
     echo "Done"
 
     printf "Preparing setup kubectl ... "

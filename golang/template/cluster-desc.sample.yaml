@@ -1,3 +1,6 @@
+# NOTICE:If you change version of them such as kube,centos, it's better to 
+#    delete the bsroot directory because it does't update a exist file.
+
 bootstrapper: 10.10.14.253
 subnet: 10.10.14.0
 netmask: 255.255.255.0

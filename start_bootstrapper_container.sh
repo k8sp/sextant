@@ -21,12 +21,15 @@ if [[ $BSROOT != /* ]]; then
   exit 1
 fi
 
-if [[ -e "$BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-1611.iso" ]]; then
+source $BSROOT/load_yaml.sh
+load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
+
+if [[ -e "$BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso" ]]; then
     if [[ ! -d "$BSROOT/html/static/CentOS7/dvd_content" ]]; then
         mkdir -p $BSROOT/html/static/CentOS7/dvd_content
     fi
     if [[ ! -f "$BSROOT/html/static/CentOS7/dvd_content/.treeinfo" ]]; then
-        sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-1611.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
+        sudo mount -t iso9660 -o loop $BSROOT/html/static/CentOS7/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso $BSROOT/html/static/CentOS7/dvd_content || { echo "Mount iso failed"; exit 1; }
     fi
 fi
 
@@ -53,8 +56,6 @@ docker run -d \
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
 
-source $BSROOT/load_yaml.sh
-load_yaml $BSROOT/config/cluster-desc.yml cluster_desc_
 
 for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
   DOCKER_TAR_FILE=$BSROOT/$(echo ${DOCKER_IMAGE}.tar | sed "s/:/_/g" |awk -F'/' '{print $NF}')
