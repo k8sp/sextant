@@ -1,9 +1,16 @@
 #!/bin/sh
 
-# start dnsmasq
-mkdir -p /bsroot/dnsmasq
-dnsmasq --log-facility=-  --conf-file=/bsroot/config/dnsmasq.conf \
-  --dhcp-leasefile=/bsroot/dnsmasq/dnsmasq.leases
+if [[ $# != 1 ]]; then
+    echo "need to set start_pxe"
+    exit 1
+fi
+
+if [[ $1 == " y" ]]; then
+    # start dnsmasq
+    mkdir -p /bsroot/dnsmasq
+    dnsmasq --log-facility=-  --conf-file=/bsroot/config/dnsmasq.conf \
+      --dhcp-leasefile=/bsroot/dnsmasq/dnsmasq.leases
+fi
 
 # start cloud-config-server
 /go/bin/cloud-config-server -addr ":80" \

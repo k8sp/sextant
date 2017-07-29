@@ -15,6 +15,9 @@ dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
 
+#start pxe?
+start_pxe: n
+
 # Flannel backend only support "host-gw", "vxlan" and "udp" for now.
 flannel_backend: "host-gw"
 
