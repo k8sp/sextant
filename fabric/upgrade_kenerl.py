@@ -43,7 +43,6 @@ def reboot():
 def display():
     run("uname -a")
 
-
 import yaml
 
 with open("hosts.yaml", 'r') as stream:

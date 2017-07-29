@@ -1,5 +1,5 @@
 user: "root"
-password: "paddle@123"
+password: "passwd"
 hosts:
   - 192.168.16.23
   - 192.168.16.24
