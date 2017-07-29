@@ -30,7 +30,9 @@ download_centos_images() {
 
     printf "${GREEN}Downloading CentOS 7 ISO ... ${RESET}"
     mkdir -p $BSROOT/html/static/CentOS7
-    wget --quiet -c -N -P $BSROOT/html/static/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso || { echo "Failed"; exit 1; }
+    centos7_src=$cluster_desc_mirror_site/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso
+    echo $centos7_src
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7  ${centos7_src} || { echo "Failed"; exit 1; }
     echo "Done"
 }
 

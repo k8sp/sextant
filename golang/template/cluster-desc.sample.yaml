@@ -29,14 +29,13 @@ download_kernel: y
 # mirror_site, please check that $mirror_site/$centos_version/(isos|os) exist.
 # sunch as:
 #   http://mirrors.163.com/centos
-#   http://vault.centos.org/
-mirror_site: http://vault.centos.org
+mirror_site: http://archive.kernel.org/centos-vault
 # please note this version number, it's important.
 centos_version: "7.2.1511"
 
 # gpu drivers version
 set_gpu: y
-gpu_drivers_version: "375.51"
+gpu_drivers_version: "375.26"
 
 ingress_hostnetwork: true
 
@@ -87,7 +86,7 @@ images:
   heapster: "kubernetes/heapster:canary"
   grafana: "lupan/heapster_grafana:v2.6.0-2"
   influxdb: "lupan/heapster_influxdb:v0.5"
-  dashboard: "pineking/kubernetes-dashboard-amd64:v1.6.0"
+  dashboard: "pgcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.2"
 
 
 nodes:
