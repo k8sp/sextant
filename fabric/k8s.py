@@ -14,13 +14,16 @@ def get_mac_addr():
     cmd = """ default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq) && 
     default_iface=`echo ${default_iface} | awk '{ print $1 }'` &&
     mac_addr=`ip addr show dev ${default_iface} | awk '$1 ~ /^link\// { print $2 }'` && 
-    echo $mac_addr
+    echo $mac_addr | tr ':' '-'
     """
     run(cmd)
 
 def set_mac_hosts():
+    import copy
+    local = copy.deepcopy(mac_host)
+
     #hostname->ip
-    hosts = {}
+    hosts = []
     path = "/etc/hosts"
     with open(path, "r") as fp:
         for line in fp.read().split('\n'):
@@ -28,18 +31,20 @@ def set_mac_hosts():
                 parts = re.split('\s+', line)
                 ip = parts[0]
                 host_name = " ".join(parts[1:])
-                hosts[host_name] = ip
+                hosts.append([host_name, ip])
         fp.close()
 
     for n in hosts:
-        if n in mac_host:
-            hosts[n] = mac_host[n]
+        if n[0] in local:
+            n[1] = local[n[0]]
+            local[n[0]]= ""
 
     with open(path, "w") as fw:
         for n in hosts:
-            fw.write("%s %s\n" % (hosts[n], n) )
-        for n in mac_host:
-            fw.write("%s %s\n" % (mac_host[n], n) )
+            fw.write("%s %s\n" % (n[1], n[0]) )
+        for n in local:
+            if len(local[n]) > 0:
+                fw.write("%s %s\n" % (local[n], n) )
         fw.close()
 
 with open("hosts.yaml", 'r') as stream:
