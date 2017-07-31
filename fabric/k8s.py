@@ -18,13 +18,12 @@ def get_mac_addr():
     """
     run(cmd)
 
-def set_mac_hosts():
+def modify_mac_hosts(path):
     import copy
     local = copy.deepcopy(mac_host)
 
     #hostname->ip
     hosts = []
-    path = "/etc/hosts"
     with open(path, "r") as fp:
         for line in fp.read().split('\n'):
             if len(re.sub('\s*', '', line)) and not line.startswith('#'):
@@ -46,6 +45,13 @@ def set_mac_hosts():
             if len(local[n]) > 0:
                 fw.write("%s %s\n" % (local[n], n) )
         fw.close()
+
+def set_mac_hosts():
+    src_path = "/etc/hosts"
+    dst_path = env.host_string + "/hosts"
+    get(src_path)
+    modify_mac_hosts(dst_path)
+    put(dst_path, src_path)
 
 with open("hosts.yaml", 'r') as stream:
     try:
