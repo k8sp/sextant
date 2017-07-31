@@ -38,7 +38,7 @@ def check():
 
 @parallel
 def reboot():
-    run("reboot")
+    run("systemctl set-default multi-user.target && reboot")
 
 def display():
     run("uname -a")
