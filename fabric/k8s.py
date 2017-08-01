@@ -9,6 +9,7 @@ import re
 
 #mac_addr->ip
 mac_host={}
+boot_strapper=""
 
 def get_mac_addr():
     cmd = """ default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq) && 
@@ -53,6 +54,20 @@ def set_mac_hosts():
     modify_mac_hosts(dst_path)
     put(dst_path, src_path)
 
+def prepare_install():
+    cmd ="yum-config-manager --add-repo http://%s/static/CentOS7/repo/cloudinit/ && 
+        yum intall -y etcd flannel cloud-init wget docker-engine" % boot_strapper 
+    run(cmd)
+    run("wget -O /root/post-process.sh http://$BS_IP/centos/post-script/00-00-00-00-00-00")
+    run("wget  -P /root http://%s/static/CentOS7/post_cloudinit_provision.sh" % boot_strapper)
+
+def install():
+    run("cd root && bash post-process.sh")
+    run("cd root && bash post_cloudinit_provision.sh")
+
+def check():
+    return
+
 with open("hosts.yaml", 'r') as stream:
     try:
         y = yaml.load(stream)
@@ -65,6 +80,7 @@ with open("hosts.yaml", 'r') as stream:
             mac_host[t["mac"]]=t["host"]
 
         print mac_host
+        boot_strapper = y["boot_strapper"]
     except yaml.YAMLError as exc:
         print(exc)
         abort("load yaml error")

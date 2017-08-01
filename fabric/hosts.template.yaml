@@ -24,3 +24,4 @@ mac_host_dns:
     host: "192.168.16.26"
   - mac: "0c:c4:7a:82:c5:b8"
     host: "192.168.16.27"
+boot_strapper: 192.168.16.23
