@@ -55,10 +55,11 @@ def set_mac_hosts():
     put(dst_path, src_path)
 
 def prepare_install():
+    run("systemctl stop firewalld && systemctl disable firewalld")
     cmd ="yum-config-manager --add-repo http://%s/static/CentOS7/repo/cloudinit/ && 
         yum intall -y etcd flannel cloud-init wget docker-engine" % boot_strapper 
     run(cmd)
-    run("wget -O /root/post-process.sh http://$BS_IP/centos/post-script/00-00-00-00-00-00")
+    run("wget -O /root/post-process.sh http://%s/centos/post-script/00-00-00-00-00-00" % boot_strapper)
     run("wget  -P /root http://%s/static/CentOS7/post_cloudinit_provision.sh" % boot_strapper)
 
 def install():
