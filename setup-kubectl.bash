@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-KUBE_MASTER_HOSTNAME=00-25-90-c0-f7-80
-BS_IP=10.10.14.253
+KUBE_MASTER_HOSTNAME=<KUBE_MASTER_HOSTNAME>
+BS_IP=<BS_IP>
 setup_kubectl() {
   # Download kubectl binary
   wget --quiet -c -O "./kubectl" http://$BS_IP/static/kubectl
