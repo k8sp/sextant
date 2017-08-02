@@ -5,7 +5,7 @@ function log {
         logtype=$1
         msg=$2
         datetime=`date +'%F %H:%M:%S'`
-        logformat="[${logtype}]${datetime} funcname: ${FUNCNAME[@]/log/}  [line:`caller 0 | awk '{print$1}'`]\t${msg}"
+        logformat="[${logtype}]${datetime} ${FUNCNAME[@]/log/}  [line:`caller 0 | awk '{print$1}'`]\t${msg}"
         {
         case $logtype in
                 debug)

@@ -8,27 +8,27 @@ download_centos_images() {
     VERSION=CentOS7
     mkdir -p $BSROOT/tftpboot
     log info "Downloading syslinux ..."
-    wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { log fatal "Failed"; exit 1; }
     cd $BSROOT/tftpboot
-    tar xzf syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
-    cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
-    cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
-    cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
-    rm -rf syslinux-6.03 || { echo "Failed"; exit 1; } # Clean the untarred.
+    tar xzf syslinux-6.03.tar.gz || { log fatal "Failed"; exit 1; }
+    cp syslinux-6.03/bios/core/pxelinux.0 $BSROOT/tftpboot || { log fatal "Failed"; exit 1; }
+    cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot || { log fatal "Failed"; exit 1; }
+    cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot || { log fatal "Failed"; exit 1; }
+    rm -rf syslinux-6.03 || { log fatal "Failed"; exit 1; } # Clean the untarred.
     log info "Done"
 
     log info "Downloading CentOS 7 PXE vmlinuz image ..."
     cd $BSROOT/tftpboot
     mkdir -p $BSROOT/tftpboot/CentOS7
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
-    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { log fatal "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { log fatal "Failed"; exit 1; }
     log info "Done"
 
     log info "Downloading CentOS 7 ISO ..."
     mkdir -p $BSROOT/html/static/CentOS7
     centos7_src=$cluster_desc_mirror_site/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso
     echo $centos7_src
-    wget --quiet -c -N -P $BSROOT/html/static/CentOS7  ${centos7_src} || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -P $BSROOT/html/static/CentOS7  ${centos7_src} || { log fatal "Failed"; exit 1; }
     log info "Done"
 }
 
@@ -172,7 +172,7 @@ EOF
 
 
 generate_rpmrepo_config() {
-  log info "$Generating rpm repo configuration files ..."
+  log info "Generating rpm repo configuration files ..."
   mkdir -p $BSROOT/html/static/CentOS7/repo
 
    cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
@@ -218,7 +218,7 @@ EOF
              /usr/bin/yumdownloader  --enablerepo=elrepo-kernel --resolve \
              --destdir=/bsroot/html/static/CentOS7/repo/cloudinit ${REPO_IMAGES} && \
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/" || \
-             { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
+             { log fatal 'Failed to generate  cloud-init repo !' ; exit 1; }
 
   log info "Done"
 }
@@ -238,7 +238,7 @@ download_centos_gpu_drivers() {
   mkdir -p ${DRIVER_DOWNLOAD_TO}
   wget --quiet -c -N -P ${DRIVER_DOWNLOAD_TO} \
     ${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
-    || { log fatal "failed" }
+    || { log fatal "failed"; }
   log info "Done"
 }
 
