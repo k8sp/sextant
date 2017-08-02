@@ -17,29 +17,9 @@ function log {
                 error)
                         [[ $loglevel -le 3 ]] && echo -e "\033[31m${logformat}\033[0m" ;;
                 fatal)
-                        [[ $loglevel -le 4 ]] && echo -e "\033[31m${logformat}\033[0m" ; exit 1; ;;
+                        [[ $loglevel -le 4 ]] && echo -e "\033[31m${logformat}\033[0m" && exit 1; ;;
 
         esac
         } 
 }
 
-#
-#Wlog(){
-#    log warn "$@"
-#}
-#
-#Ilog(){
-#    log info "$@"
-#}
-#
-#Elog(){
-#    log error "$@"
-#}
-
-log info "this's info log"
-log error "this's error log"
-log warn "this's warn log"
-
-Wlog "this's warn log"
-Ilog "this's info log"
-Elog "this's warn log"

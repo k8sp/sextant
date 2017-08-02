@@ -25,6 +25,7 @@
 alias cp='cp'
 
 SEXTANT_ROOT=${PWD}
+source $SEXTANT_ROOT/scripts/log.sh
 source $SEXTANT_ROOT/scripts/common.sh
 
 check_prerequisites

@@ -4,14 +4,10 @@ GPU_DIR='gpu_drivers'
 ABSOLUTE_GPU_DIR="$BSROOT/html/static/CentOS7/$GPU_DIR"
 HTTP_GPU_DIR="http://$BS_IP/static/CentOS7/$GPU_DIR"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-RESET="\033[0;0m"
-
 download_centos_images() {
     VERSION=CentOS7
     mkdir -p $BSROOT/tftpboot
-    printf "${GREEN}Downloading syslinux ... ${RESET}"
+    log info "Downloading syslinux ..."
     wget --quiet -c -N -P $BSROOT/tftpboot https://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
     cd $BSROOT/tftpboot
     tar xzf syslinux-6.03.tar.gz || { echo "Failed"; exit 1; }
@@ -19,26 +15,26 @@ download_centos_images() {
     cp syslinux-6.03/bios/com32/menu/vesamenu.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
     cp syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 $BSROOT/tftpboot || { echo "Failed"; exit 1; }
     rm -rf syslinux-6.03 || { echo "Failed"; exit 1; } # Clean the untarred.
-    echo "Done"
+    log info "Done"
 
-    printf "${GREEN}Downloading CentOS 7 PXE vmlinuz image ... ${RESET}"
+    log info "Downloading CentOS 7 PXE vmlinuz image ..."
     cd $BSROOT/tftpboot
     mkdir -p $BSROOT/tftpboot/CentOS7
     wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/initrd.img  || { echo "Failed"; exit 1; }
     wget --quiet -c -N -P $BSROOT/tftpboot/CentOS7 $cluster_desc_mirror_site/$cluster_desc_centos_version/os/x86_64/images/pxeboot/vmlinuz  || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 
-    printf "${GREEN}Downloading CentOS 7 ISO ... ${RESET}"
+    log info "Downloading CentOS 7 ISO ..."
     mkdir -p $BSROOT/html/static/CentOS7
     centos7_src=$cluster_desc_mirror_site/$cluster_desc_centos_version/isos/x86_64/CentOS-7-x86_64-Everything-${cluster_desc_centos_version##*.}.iso
     echo $centos7_src
     wget --quiet -c -N -P $BSROOT/html/static/CentOS7  ${centos7_src} || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 }
 
 
 generate_pxe_centos_config() {
-    printf "${GREEN}Generating pxelinux.cfg ... ${RESET}"
+    log info "Generating pxelinux.cfg ..."
     mkdir -p $BSROOT/tftpboot/pxelinux.cfg
     cat > $BSROOT/tftpboot/pxelinux.cfg/default <<EOF
 default CentOS7
@@ -48,12 +44,12 @@ label CentOS7
   kernel CentOS7/vmlinuz
   append initrd=CentOS7/initrd.img ks=http://$BS_IP/static/CentOS7/ks.cfg
 EOF
-    echo "Done"
+    log info "Done"
 }
 
 
 generate_kickstart_config() {
-    printf "${GREEN}Generating kickstart config ... ${RESET}"
+    log info "Generating kickstart config ..."
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/ks.cfg <<EOF
 #platform=x86, AMD64, or Intel EM64T
@@ -133,12 +129,12 @@ bash -x /root/post_cloudinit_provision.sh >> /root/cloudinit.log
 %end
 
 EOF
-    echo "Done"
+    log info "Done"
 }
 
 
 generate_post_cloudinit_script() {
-    printf "${GREEN}Generating post cloudinit script ... ${RESET}"
+    log info "Generating post cloudinit script ..."
     mkdir -p $BSROOT/html/static/CentOS7
     cat > $BSROOT/html/static/CentOS7/post_cloudinit_provision.sh <<'EOF'
 #!/bin/bash
@@ -171,13 +167,12 @@ systemctl stop  NetworkManager
 systemctl disable  NetworkManager
 systemctl enable docker
 EOF
-    echo "Done"
-
+    log info "Done"
 }
 
 
 generate_rpmrepo_config() {
-  printf "${GREEN}Generating rpm repo configuration files ...\n${RESET}"
+  log info "$Generating rpm repo configuration files ..."
   mkdir -p $BSROOT/html/static/CentOS7/repo
 
    cat > $BSROOT/html/static/CentOS7/repo/cloud-init.repo <<EOF
@@ -187,7 +182,7 @@ baseurl=http://$BS_IP/static/CentOS7/repo/cloudinit/
 enabled=1
 gpgcheck=0
 EOF
-  printf "${GREEN}Generating docker repo configuration file.....\n${RESET}"
+  log info "Generating docker repo configuration file....."
   tee $BSROOT/docker.repo <<-'EOF'
 [dockerrepo]
 name=Docker Repository
@@ -225,13 +220,12 @@ EOF
              /usr/bin/createrepo -v  /bsroot/html/static/CentOS7/repo/cloudinit/" || \
              { echo 'Failed to generate  cloud-init repo !' ; exit 1; }
 
-  echo "Done"
+  log info "Done"
 }
 
 
 download_centos_gpu_drivers() {
-
-  printf "${GREEN}Downloading CentOS GPU drivers ...${RESET}"
+  log info "Downloading CentOS GPU drivers ..."
   mkdir -p $ABSOLUTE_GPU_DIR
   cp $SEXTANT_DIR/scripts/centos/gpu/nvidia-gpu-mkdev.sh $ABSOLUTE_GPU_DIR
   cp $SEXTANT_DIR/scripts/centos/gpu/build_centos_gpu_drivers.sh $ABSOLUTE_GPU_DIR
@@ -244,7 +238,7 @@ download_centos_gpu_drivers() {
   mkdir -p ${DRIVER_DOWNLOAD_TO}
   wget --quiet -c -N -P ${DRIVER_DOWNLOAD_TO} \
     ${DRIVER_DOWNLOAD_FROM}/${DRIVER_VERSION}/${DRIVER_ARCHIVE} \
-    || { echo "Failed"; exit 1; }
-  echo "Done"
+    || { log fatal "failed" }
+  log info "Done"
 }
 

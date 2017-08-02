@@ -59,7 +59,7 @@ cp $CLUSTER_DESC $BSROOT/config/cluster-desc.yml
 
 # check_prerequisites checks for required software packages.
 function check_prerequisites() {
-    printf "Checking prerequisites ... "
+    log info "Checking prerequisites ... "
     local err=0
     for tool in wget tar gpg docker tr go make; do
         command -v $tool >/dev/null 2>&1 || { echo "Install $tool before run this script"; err=1; }
@@ -67,12 +67,12 @@ function check_prerequisites() {
     if [[ $err -ne 0 ]]; then
         exit 1
     fi
-    echo "Done"
+    log info "Done"
 }
 
 
 check_cluster_desc_file() {
-    printf "Cross-compiling validate-yaml ... "
+    log info "Cross-compiling validate-yaml ... "
     docker run --rm -it \
           --volume $GOPATH:/go \
           -e CGO_ENABLED=0 \
@@ -80,17 +80,17 @@ check_cluster_desc_file() {
           -e GOARCH=amd64 \
           golang:wheezy \
           go get github.com/k8sp/sextant/golang/validate-yaml \
-          || { echo "Build sextant failed..."; exit 1; }
-    echo "Done"
+          || { log fatal "Build sextant failed..."; exit 1; }
+    log info "Done"
 
 
-    printf "Copying cloud-config template and cluster-desc.yml ... "
+    log info "Copying cloud-config template and cluster-desc.yml ... "
     mkdir -p $BSROOT/config > /dev/null 2>&1
     cp -r $SEXTANT_DIR/golang/template/templatefiles $BSROOT/config
     cp $CLUSTER_DESC $BSROOT/config
-    echo "Done"
+    log info "Done"
 
-    printf "Checking cluster description file ..."
+    log info "Checking cluster description file ..."
     docker run --rm -it \
         --volume $GOPATH:/go \
         --volume $BSROOT:/bsroot \
@@ -99,11 +99,11 @@ check_cluster_desc_file() {
           --cloud-config-dir /bsroot/config/templatefiles \
           -cluster-desc /bsroot/config/cluster-desc.yml \
           > /dev/null 2>&1 || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 }
 
 generate_registry_config() {
-    printf "Generating Docker registry config file ... "
+    log info "Generating Docker registry config file ... "
     mkdir -p $BSROOT/registry_data
     [ ! -d $BSROOT/config ] && mkdir -p $BSROOT/config
     cat > $BSROOT/config/registry.yml <<EOF
@@ -129,31 +129,31 @@ health:
     interval: 10s
     threshold: 3
 EOF
-    echo "Done"
+    log info "Done"
 }
 
 generate_ceph_install_scripts() {
-  printf "${GREEN}Generating Ceph installation scripts...${RESET}"
+  log info "Generating Ceph installation scripts..."
   mkdir -p $BSROOT/html/static/ceph
   # update install-mon.sh and set OSD_JOURNAL_SIZE
   OSD_JOURNAL_SIZE=$cluster_desc_ceph_osd_journal_size
   # update ceph install scripts to use image configured in cluster-desc.yml
   CEPH_DAEMON_IMAGE=$(echo $cluster_desc_images_ceph | sed -e 's/[\/&]/\\&/g')
-  printf "$CEPH_DAEMON_IMAGE..."
+  log info "$CEPH_DAEMON_IMAGE..."
   sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-mon.sh | \
       sed "s/<JOURNAL_SIZE>/$OSD_JOURNAL_SIZE/g" \
       > $BSROOT/html/static/ceph/install-mon.sh || { echo "install-mon Failed"; exit 1; }
 
   sed "s/ceph\/daemon/$CEPH_DAEMON_IMAGE/g" $INSTALL_CEPH_SCRIPT_DIR/install-osd.sh \
       > $BSROOT/html/static/ceph/install-osd.sh || { echo "install-osd Failed"; exit 1; }
-  echo "Done"
+  log info "Done"
 
 }
 
 
 build_bootstrapper_image() {
     # cloud-config-server and addon compile moved to check_cluster_desc_file
-    printf "${GREEN}Cross-compiling cloud-config-server, addons ... ${RESET}"
+    log info "Cross-compiling cloud-config-server, addons ... "
     docker run --rm -it \
           --volume $GOPATH:/go \
           -e CGO_ENABLED=0 \
@@ -161,31 +161,31 @@ build_bootstrapper_image() {
           -e GOARCH=amd64 \
           golang:wheezy \
           go get github.com/k8sp/sextant/golang/cloud-config-server github.com/k8sp/sextant/golang/addons \
-          || { echo "Build sextant failed..."; exit 1; }
-    echo "Done"
+          || { log fatal "Build sextant failed..."; exit 1; }
+    log info "Done"
 
 
     rm -rf $SEXTANT_DIR/docker/{cloud-config-server,addons}
     cp $GOPATH/bin/{cloud-config-server,addons} $SEXTANT_DIR/docker
-    echo "Done"
+    log info "Done"
 
-    printf "${GREEN}Building bootstrapper image ... ${RESET}"
+    log info "Building bootstrapper image ... "
     docker rm -f bootstrapper > /dev/null 2>&1 || echo "No such container: bootstrapper ,Pass..."
     docker rmi bootstrapper:latest > /dev/null 2>&1 || echo "No such images: bootstrapper ,Pass..."
     cd $SEXTANT_DIR/docker
     docker build -t bootstrapper .
     docker save bootstrapper:latest > $BSROOT/bootstrapper.tar || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 
-    printf "${GREEN}Copying bash scripts ... ${RESET}"
+    log info "Copying bash scripts ... "
     cp $SEXTANT_DIR/start_bootstrapper_container.sh $BSROOT/
     chmod +x $BSROOT/start_bootstrapper_container.sh
     cp $SEXTANT_DIR/scripts/load_yaml.sh $BSROOT/
-    echo "Done"
+    log info "Done"
 
-    printf "${GREEN}Make directory ...${RESET}"
+    log info "Make directory ..."
     mkdir -p $BSROOT/dnsmasq
-    echo "Done"
+    log info "Done"
 }
 
 
@@ -193,15 +193,15 @@ download_k8s_images() {
     # Fetch release binary tarball from github accroding to the versions
     # defined in "cluster-desc.yml"
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-    printf "${GREEN}Downloading kubelet ${hyperkube_version} ... ${RESET}"
+    log info "Downloading kubelet ${hyperkube_version} ... "
     wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
     
     # setup-network-environment will fetch the default system IP infomation
     # when using cloud-config file to initiate a kubernetes cluster node
-    printf "${GREEN}Downloading setup-network-environment file ... ${RESET}"
+    log info "Downloading setup-network-environment file ... "
     wget --quiet -c -N -O $BSROOT/html/static/setup-network-environment-1.0.1 https://github.com/kelseyhightower/setup-network-environment/releases/download/1.0.1/setup-network-environment || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 
 
     for DOCKER_IMAGE in $(set | grep '^cluster_desc_images_' | grep -o '".*"' | sed 's/"//g'); do
@@ -212,15 +212,15 @@ download_k8s_images() {
         local DOCKER_TAR_FILE=$BSROOT/`echo $DOCKER_IMAGE.tar | sed "s/:/_/g" |awk -F'/' '{print $NF}'`
         if [[ ! -f $DOCKER_TAR_FILE ]]; then
             if ! docker images --format '{{.Repository}}:{{.Tag}}' | grep $DOCKER_DOMAIN_IMAGE_URL > /dev/null; then
-                printf "${GREEN}Pulling image ${DOCKER_IMAGE} ... ${RESET}"
+                log info "Pulling image ${DOCKER_IMAGE} ... "
                 docker pull $DOCKER_IMAGE > /dev/null 2>&1
                 docker tag $DOCKER_IMAGE $DOCKER_DOMAIN_IMAGE_URL
-                echo "Done"
+                log info "Done"
             fi
-            printf "Exporting $DOCKER_TAR_FILE ... "
+            log info "Exporting $DOCKER_TAR_FILE ... "
             docker save $DOCKER_DOMAIN_IMAGE_URL > $DOCKER_TAR_FILE.progress
             mv $DOCKER_TAR_FILE.progress $DOCKER_TAR_FILE
-            echo "Done"
+            log info "Done"
         else 
             echo "Use existing $DOCKER_TAR_FILE"
         fi
@@ -239,36 +239,36 @@ generate_tls_assets() {
 
     else
 
-        printf "Generating CA TLS assets ... "
+        log info "Generating CA TLS assets ... "
         openssl genrsa -out ca-key.pem 2048 > /dev/null 2>&1
         openssl req -x509 -new -nodes -key ca-key.pem -days 3650 -out ca.pem -subj "/CN=kube-ca"  > /dev/null 2>&1
-        echo "Done"
+        log info "Done"
 
-        printf "Generating bootstrapper TLS assets ... "
+        log info "Generating bootstrapper TLS assets ... "
         openssl genrsa -out bootstrapper.key 2048 > /dev/null 2>&1
         openssl req -new -key bootstrapper.key -out bootstrapper.csr -subj "/CN=bootstrapper" > /dev/null 2>&1
         openssl x509 -req -in bootstrapper.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out bootstrapper.crt -days 3650 > /dev/null 2>&1
-        echo "Done"
+        log info "Done"
 
     fi
 }
 
 prepare_setup_kubectl() {
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
-    printf "${GREEN}Downloading kubectl ${hyperkube_version} ... ${RESET}"
+    log info "Downloading kubectl ${hyperkube_version} ... "
     wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl || { echo "Failed"; exit 1; }
-    echo "Done"
+    log info "Done"
 
-    printf "Preparing setup kubectl ... "
+    log info "Preparing setup kubectl ... "
     sed -i -e "s/<KUBE_MASTER_HOSTNAME>/$KUBE_MASTER_HOSTNAME/g" $SEXTANT_DIR/setup-kubectl.bash
     sed -i -e "s/<BS_IP>/$BS_IP/g" $SEXTANT_DIR/setup-kubectl.bash
     cp $SEXTANT_DIR/setup-kubectl.bash $BSROOT/setup_kubectl.bash
     chmod +x $BSROOT/setup_kubectl.bash
-    echo "Done"
+    log info "Done"
 }
 
 generate_addons_config() {
-    printf "Generating configuration files ..."
+    log info "Generating configuration files ..."
     mkdir -p $BSROOT/html/static/addons-config/
 
     docker run --rm -it \
@@ -285,6 +285,6 @@ generate_addons_config() {
         cp $SEXTANT_DIR/golang/addons/template/$file $BSROOT/html/static/addons-config/$file;
     done
 
-    echo "Done"
+    log info "Done"
 }
 

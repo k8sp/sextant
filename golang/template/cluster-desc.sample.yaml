@@ -1,5 +1,8 @@
-# NOTICE:If you change version of them such as kube,centos, it's better to 
+# NOTICE:
+# 1. If you change version of them such as kube,centos, it's better to 
 #    delete the bsroot directory because it does't update a exist file.
+#    or do what you know.
+# 2. Please check that $mirror_site/$centos_version/(isos|os) exist
 
 bootstrapper: 10.10.14.253
 subnet: 10.10.14.0
@@ -29,11 +32,10 @@ coreos_version: "1122.2.0"
 
 # centos version
 download_kernel: y
-# mirror_site, please check that $mirror_site/$centos_version/(isos|os) exist.
-# sunch as:
+# configure mirror_site, sunch as:
 #   http://mirrors.163.com/centos
 mirror_site: http://archive.kernel.org/centos-vault
-# please note this version number, it's important.
+# Configure the centos version for isos and rpms
 centos_version: "7.2.1511"
 
 # gpu drivers version
