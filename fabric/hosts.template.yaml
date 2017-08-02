@@ -13,15 +13,7 @@ kernel:
   new_version: "4.4.79-1.el7.elrepo.x86_64"
 gpu:
   driver_verion: 375.26
-mac_host_dns:
-  - mac: "00:25:90:c0:f7:80"
-    host: "192.168.16.23"
-  - mac: "0c:c4:7a:82:c5:bc"
-    host: "192.168.16.24"
-  - mac: "0c:c4:7a:82:c5:b8"
-    host: "192.168.16.25"
-  - mac: "0c:c4:7a:82:c5:b8"
-    host: "192.168.16.26"
-  - mac: "0c:c4:7a:82:c5:b8"
-    host: "192.168.16.27"
-boot_strapper: 192.168.16.23
+boot_strapper: "192.168.16.23"
+
+# host, mac, all
+set_type: host

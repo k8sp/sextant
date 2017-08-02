@@ -5,6 +5,7 @@ import fabric.operations as op
 
 new_kernel_version=""
 old_kernel_version=""
+boot_strapper=""
 
 def prepare():
     run("sed -i '/exclude=*/ s/^/#/' /etc/yum.conf")
@@ -15,7 +16,7 @@ def post():
 @parallel
 def upgrade():
     put("./upgrade_kenerl.sh", "/tmp/upgrade_kenerl.sh")
-    result = run("bash /tmp/upgrade_kenerl.sh")
+    result = run("bash /tmp/upgrade_kenerl.sh %s" % boot_strapper)
     if result.failed:
         abort("failed")
     run("grub2-set-default \"CentOS Linux (%s) 7 (Core)\"" % new_kernel_version)
@@ -54,6 +55,7 @@ with open("hosts.yaml", 'r') as stream:
 
         new_kernel_version=y["kernel"]["new_version"]
         old_kernel_version=y["kernel"]["old_version"]
+        boot_strapper = y["boot_strapper"]
 
         #print new_kernel_version, old_kernel_version
         print "grub2-set-default \"CentOS Linux (%s) 7 (Core)\"" % new_kernel_version

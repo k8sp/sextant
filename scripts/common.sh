@@ -194,7 +194,9 @@ download_k8s_images() {
     # defined in "cluster-desc.yml"
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     log info "Downloading kubelet ${hyperkube_version} ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubelet || { echo "Failed"; exit 1; }
+    src="https://storage.googleapis.com/kubernetes-release/release/${hyperkube_version}/bin/linux/amd64/kubelet"
+    log debug $src
+    wget --quiet -c -N -O $BSROOT/html/static/kubelet $src || { log fatal "Failed"; exit 1; }
     log info "Done"
     
     # setup-network-environment will fetch the default system IP infomation
@@ -256,7 +258,7 @@ generate_tls_assets() {
 prepare_setup_kubectl() {
     hyperkube_version=`grep "hyperkube:" $CLUSTER_DESC | grep -o '".*hyperkube.*:.*"' | sed 's/".*://; s/"//'`
     log info "Downloading kubectl ${hyperkube_version} ... "
-    wget --quiet -c -N -O $BSROOT/html/static/kubelet https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl || { echo "Failed"; exit 1; }
+    wget --quiet -c -N -O $BSROOT/html/static/kubectl https://storage.googleapis.com/kubernetes-release/release/$hyperkube_version/bin/linux/amd64/kubectl || { echo "Failed"; exit 1; }
     log info "Done"
 
     log info "Preparing setup kubectl ... "

@@ -10,8 +10,9 @@ http_gpu_dir=""
 boot_strapper=""
 
 def prepare():
-    cmd = """sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config && cat /etc/selinux/config
-        && reboot"""
+    cmd = """setenforce 0 
+        && sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config 
+        && cat /etc/selinux/config | grep SELINUX"""
     run(cmd)
 
 def install():
@@ -20,11 +21,12 @@ def install():
     cmd = "bash -x /root/build_centos_gpu_drivers.sh %s %s" % (driver_version, http_gpu_dir)
     run(cmd)
 
+#@parallel
 def check():
-    cmd="if [[ ! nvidia-smi |grep \"Driver Version\" | grep \"%s\" ]]; then exit 1; fi " % driver_version
+    cmd="ret=`nvidia-smi | grep  \"Driver Version\" | grep %s` ; if [[ -z $ret  ]]; then exit 1; fi " % driver_version
     result = run(cmd)
     if result.failed:
-        abort("check failed")
+        abort(env.host_string + ": check failed")
 
 with open("hosts.yaml", 'r') as stream:
     try:
@@ -35,6 +37,7 @@ with open("hosts.yaml", 'r') as stream:
 
         boot_strapper = y["boot_strapper"]
         driver_version = y["gpu"]["driver_version"]
+
         http_gpu_dir="http://%s/static/CentOS7/gpu_drivers" % boot_strapper
     except yaml.YAMLError as exc:
         print(exc)
