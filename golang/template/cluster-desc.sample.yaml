@@ -94,28 +94,35 @@ images:
   dashboard: "pgcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.0"
 
 
+# if you wan't use mac as hostname, please delete cur_host_name or 
+# set them to ""
 nodes:
   - mac: "00:25:90:c0:f7:80"
+    cur_host_name: "node1"
     ceph_monitor: n
     kube_master: y
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:bc"
+    cur_host_name: "node2"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:b8"
+    cur_host_name: "node3"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: y
   - mac: "00:25:90:c0:f6:ee"
+    cur_host_name: "node4"
     ceph_monitor: n
     kube_master: n
     etcd_member: n
     ingress_label: n
   - mac: "00:25:90:c0:f6:d6"
+    cur_host_name: "node5"
     ceph_monitor: n
     kube_master: n
     etcd_member: n

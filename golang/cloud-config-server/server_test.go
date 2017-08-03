@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -61,7 +62,7 @@ func TestCloudConfigHandler(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	//fmt.Println(rr.Body.String())
+	fmt.Println(rr.Body.String())
 
 	if rr.Body.String() != "" {
 		// Compare only a small fraction -- the etcd2 initial cluster -- for testing.
