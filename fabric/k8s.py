@@ -25,10 +25,9 @@ def install():
         && export docker_data_path=%s 
         && bash post-process.sh""" % (set_mac_hostname, docker_data_path))
 
-    if len(etcd_data_path) > 0 :
-        run(""" cd /root
+    run(""" cd /root
         && export bootstrapper_ip=%s 
-        && export etcd_data_path =%s 
+        && export etcd_data_path=%s 
         && bash post_cloudinit_provision.sh""" % (boot_strapper, etcd_data_path))
 
 def rm_clouinit_cache():

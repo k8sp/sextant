@@ -158,8 +158,8 @@ cd /var/lib/cloud/seed/nocloud-net/
 
 wget -O user-data http://$bootstrapper_ip/cloud-config/${mac_addr}
 
-if [[ -z ${etcd_data_path} ]]; then
-    sed -i 's@Environment=ETCD_DATA_DIR=.*@Environment=ETCD_DATA_DIR=${etcd_data_path}@' \
+if [[ ! -z ${etcd_data_path} ]]; then
+    sed -i "s@Environment=ETCD_DATA_DIR=.*@Environment=ETCD_DATA_DIR=${etcd_data_path}@" \
     /var/lib/cloud/seed/nocloud-net/user-data
 fi
 

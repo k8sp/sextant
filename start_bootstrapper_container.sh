@@ -51,7 +51,7 @@ docker run -d \
        --privileged \
        -v /var/run/docker.sock:/var/run/docker.sock \
        -v $BSROOT:/bsroot \
-       bootstrapper ${cluster_desc_start_pxe} || { echo "Failed"; exit -1; }
+       bootstrapper ${cluster_desc_start_pxe} || { log fatal "Failed"; exit -1; }
 
 # Sleep 3 seconds, waitting for registry started.
 sleep 3
