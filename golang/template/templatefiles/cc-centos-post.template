@@ -25,7 +25,7 @@ set_docker() {
     sed -i -e '/^ExecStart=/ s/$/ --iptables=false/' /usr/lib/systemd/system/docker.service
 
     # set path
-    if [[ -z "${docker_data_path}" }]]; then
+    if [[ ! -z "${docker_data_path}" }]]; then
     	sed -i -e "/^ExecStart=/ s@\$@  -g ${docker_data_path} @" /usr/lib/systemd/system/docker.service
     fi
 
@@ -68,12 +68,15 @@ else
 
 fi
 
-yum clean all
-yum makecache
+#yum clean all
+#yum makecache
 
 }
 
-set_hostname
+if [[ "${set_mac_hostname}" != " n" ]]; then
+    set_hostname
+fi
+
 set_docker
 set_ssh_config
 set_yum_repo

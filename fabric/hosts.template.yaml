@@ -17,3 +17,10 @@ boot_strapper: "192.168.16.23"
 
 # host, mac, all
 set_type: host
+
+# change hostname to mac?
+set_mac_hostname: n
+
+# set "" if not need to change default path
+docker_data_path: "/home/var/lib/docker"
+etcd_data_path: "/home/var/lib/etcd"

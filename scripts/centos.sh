@@ -139,7 +139,9 @@ generate_post_cloudinit_script() {
     cat > $BSROOT/html/static/CentOS7/post_cloudinit_provision.sh <<'EOF'
 #!/bin/bash
 default_iface=$(awk '$2 == 00000000 { print $1  }' /proc/net/route | uniq)
-bootstrapper_ip=$(grep nameserver /etc/resolv.conf|cut -d " " -f2)
+if [[ -z ${bootstrapper_ip} ]]; then
+    bootstrapper_ip=$(grep nameserver /etc/resolv.conf|cut -d " " -f2)
+fi
 printf "Default interface: ${default_iface}\n"
 default_iface=`echo ${default_iface} | awk '{ print $1 }'`
 
@@ -155,6 +157,11 @@ mkdir -p /var/lib/cloud/seed/nocloud-net/
 cd /var/lib/cloud/seed/nocloud-net/
 
 wget -O user-data http://$bootstrapper_ip/cloud-config/${mac_addr}
+
+if [[ -z ${etcd_data_path} ]]; then
+    sed -i 's@Environment=ETCD_DATA_DIR=.*@Environment=ETCD_DATA_DIR=${etcd_data_path}@' \
+    /var/lib/cloud/seed/nocloud-net/user-data
+fi
 
 cat > /var/lib/cloud/seed/nocloud-net/meta-data << eof
 instance-id: iid-local01

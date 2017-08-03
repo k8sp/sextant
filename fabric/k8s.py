@@ -8,6 +8,9 @@ import re
 
 
 boot_strapper=""
+set_mac_hostname=""
+docker_data_path=""
+etcd_data_path=""
 
 def prepare_install():
     run("systemctl stop firewalld && systemctl disable firewalld")
@@ -17,14 +20,26 @@ def prepare_install():
 
 def install():
     run("yum --enablerepo=Cloud-init install -y cloud-init docker-engine etcd flannel")
-    run("cd /root && bash post-process.sh")
-    run("cd /root && bash post_cloudinit_provision.sh")
+    run("""cd /root 
+        && export set_mac_hostname=%s 
+        && export docker_data_path=%s 
+        && bash post-process.sh""" % (set_mac_hostname, docker_data_path))
 
-def re_instal():
-    return
+    if len(etcd_data_path) > 0 :
+        run(""" cd /root
+        && export bootstrapper_ip=%s 
+        && export etcd_data_path =%s 
+        && bash post_cloudinit_provision.sh""" % (boot_strapper, etcd_data_path))
 
-def check():
-    return
+def rm_clouinit_cache():
+    run("rm -rf /var/lib/cloud/instances/iid-local01")
+
+
+def start_etcd():
+    run("""systemctl daemon-reload
+        && systemctl stop etcd
+        && systemctl enable etcd 
+        && systemctl start etcd""")
 
 with open("hosts.yaml", 'r') as stream:
     try:
@@ -33,6 +48,10 @@ with open("hosts.yaml", 'r') as stream:
         env.password = y["password"]
         env.hosts = y["hosts"]
         boot_strapper = y["boot_strapper"]
+
+        set_mac_hostname = y["set_mac_hostname"]
+        docker_data_path = y["docker_data_path"]
+        etcd_data_path = y["etcd_data_path"]
     except yaml.YAMLError as exc:
         print(exc)
         abort("load yaml error")

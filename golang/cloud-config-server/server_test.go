@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	tmplFile               = "src/github.com/k8sp/sextant/golang/template/cloud-config.template"
 	templateDir            = "../template/templatefiles"
 	clusterDescExampleFile = "../template/cluster-desc.sample.yaml"
 	loadTimeout            = 15 * time.Second
@@ -61,6 +60,8 @@ func TestCloudConfigHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
+
+	//fmt.Println(rr.Body.String())
 
 	if rr.Body.String() != "" {
 		// Compare only a small fraction -- the etcd2 initial cluster -- for testing.

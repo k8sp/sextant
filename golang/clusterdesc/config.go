@@ -4,9 +4,10 @@
 package clusterdesc
 
 import (
-	"github.com/topicai/candy"
 	"net"
 	"strings"
+
+	"github.com/topicai/candy"
 )
 
 // Cluster configures a cluster, which includes: (1) a
@@ -56,6 +57,7 @@ type Cluster struct {
 	DNSMASQSetNTP            bool     `yaml:"set_ntp"`
 	DNSMASQLease             string   `yaml:"lease"`
 	CentOSYumRepo            string   `yaml:"set_yum_repo"`
+	StartPXE                 bool     `yaml:"start_pxe"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.

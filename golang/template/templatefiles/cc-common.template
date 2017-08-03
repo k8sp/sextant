@@ -11,11 +11,13 @@
     permissions: 0600
     content: |
       {{ .CaCrt }}
+  {{- if .StartPXE }}
   - path: /etc/hosts
     owner: root
     content: |
       127.0.0.1 localhost
       {{ .BootstrapperIP }} {{ .Dockerdomain }}
+  {{- end}}
   {{/* ********************************************************* */}}
   {{- if .KubeMaster }}
   - path: /etc/kubernetes/ssl/apiserver.pem
