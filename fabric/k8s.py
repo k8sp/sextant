@@ -12,7 +12,7 @@ set_mac_hostname=""
 docker_data_path=""
 etcd_data_path=""
 
-def prepare_install():
+def prepare():
     run("systemctl stop firewalld && systemctl disable firewalld")
     run("wget -O /etc/yum.repos.d/Cloud-init.repo http://%s/static/CentOS7/repo/cloud-init.repo" % boot_strapper)
     run("wget -O /root/post-process.sh http://%s/centos/post-script/00-00-00-00-00-00" % boot_strapper)
@@ -32,7 +32,6 @@ def install():
 
 def rm_clouinit_cache():
     run("rm -rf /var/lib/cloud/instances/iid-local01")
-
 
 def start_etcd():
     run("""systemctl daemon-reload

@@ -48,6 +48,10 @@ def set_mac_hosts():
         modify_mac_hosts(dst_path, host_ip)
     put(dst_path, src_path)
 
+def display():
+    print host_ip
+    print mac_ip
+
 with open("hosts.yaml", 'r') as stream:
     try:
         y = yaml.load(stream)
@@ -73,5 +77,3 @@ for h in env.hosts:
                 mac_ip[mac] = ip
                 host_ip[host_name] = ip
 
-print host_ip
-print mac_ip
