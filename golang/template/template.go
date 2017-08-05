@@ -43,6 +43,7 @@ type ExecutionConfig struct {
 	CoreOSVersion            string
 	GPUDriversVersion        string
 	OSName                   string
+	StartPXE                 bool
 }
 
 // Execute load template files from "ccTemplateDir", parse clusterDescFile to
@@ -106,6 +107,7 @@ func GetConfigDataByMac(mac string, clusterdesc *clusterdesc.Cluster, caKey, caC
 		CoreOSVersion:     clusterdesc.CoreOSVersion,
 		GPUDriversVersion: clusterdesc.GPUDriversVersion,
 		OSName:            clusterdesc.OSName,
+		StartPXE:          clusterdesc.StartPXE,
 	}
 }
 

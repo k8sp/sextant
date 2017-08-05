@@ -1,3 +1,9 @@
+# NOTICE:
+# 1. If you change version of them such as kube,centos, it's better to 
+#    delete the bsroot directory because it does't update a exist file.
+#    or do what you know.
+# 2. Please check that $mirror_site/$centos_version/(isos|os) exist
+
 bootstrapper: 10.10.14.253
 subnet: 10.10.14.0
 netmask: 255.255.255.0
@@ -12,6 +18,9 @@ dockerdomain: "bootstrapper"
 k8s_service_cluster_ip_range: 10.100.0.0/24
 k8s_cluster_dns: 10.100.0.10
 
+#start pxe?
+start_pxe: n
+
 # Flannel backend only support "host-gw", "vxlan" and "udp" for now.
 flannel_backend: "host-gw"
 
@@ -22,12 +31,16 @@ coreos_channel: "stable"
 coreos_version: "1122.2.0"
 
 # centos version
-download_kernel: n
-centos_version: "7.3.1611"
+download_kernel: y
+# configure mirror_site, sunch as:
+#   http://mirrors.163.com/centos
+mirror_site: http://archive.kernel.org/centos-vault
+# Configure the centos version for isos and rpms
+centos_version: "7.2.1511"
 
 # gpu drivers version
-set_gpu: n
-gpu_drivers_version: "375.20"
+set_gpu: y
+gpu_drivers_version: "375.26"
 
 ingress_hostnetwork: true
 
@@ -64,44 +77,52 @@ ceph:
   osd_journal_size: 5000
 
 images:
-  hyperkube: "pineking/hyperkube-amd64:2169be"
-  pause: "typhoon1986/pause-amd64:3.0"
-  flannel: "typhoon1986/flannel:0.5.5"
-  ingress: "yancey1989/nginx-ingress-controller:0.8.3"
-  kubednsmasq: "pineking/kube-dnsmasq-amd64:1.4"
-  healthz: "pineking/exechealthz-amd64:1.2"
-  addon_manager: "pineking/kube-addon-manager-amd64:v6.4-alpha.3"
-  kubedns: "pineking/kubedns-amd64:1.9"
+  hyperkube: "gcr.io/google_containers/hyperkube-amd64:v1.6.2"
+  pause: "gcr.io/google_containers/pause-amd64:3.0"
+  flannel: "quay.io/coreos/flannel:v0.7.1-amd64"
+  ingress: "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.3"
+  default_backend: "gcr.io/google_containers/defaultbackend:1.0"
+  kubedns: "gcr.io/google_containers/kubedns-amd64:1.9"
+  kubednsmasq: "gcr.io/google_containers/kube-dnsmasq-amd64:1.4"
+  healthz: "gcr.io/google_containers/exechealthz-amd64:1.2"
+  addon_manager: "gcr.io/google_containers/kube-addon-manager-amd64:v6.4-beta.1"
   ceph: "typhoon1986/ceph-daemon:tag-build-master-jewel-ubuntu-14.04-fix370"
-  default_backend: "yancey1989/defaultbackend:1.0"
   ntp: "redaphid/docker-ntp-server"
   heapster: "kubernetes/heapster:canary"
   grafana: "lupan/heapster_grafana:v2.6.0-2"
   influxdb: "lupan/heapster_influxdb:v0.5"
-  dashboard: "pineking/kubernetes-dashboard-amd64:v1.6.0"
+  dashboard: "gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.0"
 
+
+# if you wan't use mac as hostname, please delete cur_host_name or 
+# set them to ""
 nodes:
   - mac: "00:25:90:c0:f7:80"
+    cur_host_name: "node1"
     ceph_monitor: n
     kube_master: y
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:bc"
+    cur_host_name: "node2"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: n
   - mac: "0c:c4:7a:82:c5:b8"
+    cur_host_name: "node3"
     ceph_monitor: n
     kube_master: n
     etcd_member: y
     ingress_label: y
   - mac: "00:25:90:c0:f6:ee"
+    cur_host_name: "node4"
     ceph_monitor: n
     kube_master: n
     etcd_member: n
     ingress_label: n
   - mac: "00:25:90:c0:f6:d6"
+    cur_host_name: "node5"
     ceph_monitor: n
     kube_master: n
     etcd_member: n

@@ -190,6 +190,7 @@
       --hostname-override={{ .MasterHostname }} \
       --cluster-dns={{ .K8sClusterDNS }} \
       --cluster-domain=cluster.local \
+      --cgroup-driver=systemd \
       --feature-gates=Accelerators=true 
       Restart=always
       RestartSec=10

@@ -4,9 +4,10 @@
 package clusterdesc
 
 import (
-	"github.com/topicai/candy"
 	"net"
 	"strings"
+
+	"github.com/topicai/candy"
 )
 
 // Cluster configures a cluster, which includes: (1) a
@@ -56,6 +57,7 @@ type Cluster struct {
 	DNSMASQSetNTP            bool     `yaml:"set_ntp"`
 	DNSMASQLease             string   `yaml:"lease"`
 	CentOSYumRepo            string   `yaml:"set_yum_repo"`
+	StartPXE                 bool     `yaml:"start_pxe"`
 }
 
 // CoreOS defines the system related operations, such as: system updates.
@@ -80,6 +82,7 @@ type Ceph struct {
 // Cluster.IPLow and Cluster.IPHigh.
 type Node struct {
 	MAC          string
+	CurHostName  string `yaml:"cur_host_name"`
 	IngressLabel bool
 	CephMonitor  bool   `yaml:"ceph_monitor"`
 	KubeMaster   bool   `yaml:"kube_master"`
@@ -107,6 +110,9 @@ func (c Cluster) GetIngressReplicas() int {
 // Hostname is defined as a method of Node, so can be call in
 // template.  For more details, refer to const tmplDHCPConf.
 func (n Node) Hostname() string {
+	if n.CurHostName != "" {
+		return n.CurHostName
+	}
 	return strings.ToLower(strings.Replace(n.Mac(), ":", "-", -1))
 }
 

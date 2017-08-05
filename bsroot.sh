@@ -22,13 +22,14 @@
 # bootstrap server when the bootstrapper server is "offline". Or, you can run
 # bsroot.sh directly on the bootstrap server.
 
+alias cp='cp'
+
 SEXTANT_ROOT=${PWD}
+source $SEXTANT_ROOT/scripts/log.sh
 source $SEXTANT_ROOT/scripts/common.sh
 
 check_prerequisites
 check_cluster_desc_file
-
-
 
 echo "Install OS: ${cluster_desc_os_name}"
 if [[ $cluster_desc_os_name == "CentOS" ]]; then
@@ -63,3 +64,4 @@ build_bootstrapper_image
 generate_tls_assets
 prepare_setup_kubectl
 generate_addons_config
+log info "bsroot done!"
