@@ -25,6 +25,10 @@ def install():
         && export docker_data_path=%s 
         && bash post-process.sh""" % (set_mac_hostname, docker_data_path))
 
+    if len(etcd_data_path) > 0 :
+        run("id -u etcd &>/dev/null || useradd etcd")
+        run("mkdir -p %s && chown etcd -R %s" % (etcd_data_path, etcd_data_path))
+
     run(""" cd /root
         && export bootstrapper_ip=%s 
         && export etcd_data_path=%s 

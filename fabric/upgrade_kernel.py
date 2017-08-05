@@ -15,8 +15,8 @@ def post():
 
 @parallel
 def upgrade():
-    put("./upgrade_kenerl.sh", "/tmp/upgrade_kenerl.sh")
-    result = run("bash /tmp/upgrade_kenerl.sh %s" % boot_strapper)
+    put("./upgrade_kernel.sh", "/tmp/upgrade_kernel.sh")
+    result = run("bash /tmp/upgrade_kernel.sh %s" % boot_strapper)
     if result.failed:
         abort("failed")
     run("grub2-set-default \"CentOS Linux (%s) 7 (Core)\"" % new_kernel_version)
