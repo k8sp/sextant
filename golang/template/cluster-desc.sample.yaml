@@ -91,7 +91,7 @@ images:
   heapster: "kubernetes/heapster:canary"
   grafana: "lupan/heapster_grafana:v2.6.0-2"
   influxdb: "lupan/heapster_influxdb:v0.5"
-  dashboard: "pgcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.0"
+  dashboard: "gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.0"
 
 
 # if you wan't use mac as hostname, please delete cur_host_name or 
