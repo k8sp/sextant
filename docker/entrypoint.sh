@@ -5,7 +5,7 @@ if [[ $# != 1 ]]; then
     exit 1
 fi
 
-if [[ $1 == " y" ]]; then
+if [[ $1 == "y" ]]; then
     # start dnsmasq
     mkdir -p /bsroot/dnsmasq
     dnsmasq --log-facility=-  --conf-file=/bsroot/config/dnsmasq.conf \
