@@ -18,11 +18,11 @@ then
     rm -f $filepath
   fi
   cat > $filepath <<EOF
-$ip $hostname
+$ip $filename
 EOF
-  if [[ $filename != $hostname ]]
+  if [[ $hostname != "" && $filename != $hostname ]]
   then
-    echo "$ip $filename" >> $filepath
+    echo "$ip $hostname" >> $filepath
   fi
 fi
 
