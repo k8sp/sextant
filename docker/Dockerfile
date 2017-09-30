@@ -11,6 +11,7 @@ COPY cloud-config-server /go/bin
 
 # NOTICE: change install.sh HTTP server ip:port when running entrypoint.sh
 COPY entrypoint.sh /
+COPY dhcp.sh /
 VOLUME ["/var/lib/registry"]
 WORKDIR "/go"
 ENTRYPOINT ["/entrypoint.sh"]
