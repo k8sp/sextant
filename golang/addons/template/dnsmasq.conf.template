@@ -29,4 +29,4 @@ pxe-service=x86PC, "Install CoreOS from network server", pxelinux
 enable-tftp
 tftp-root=/bsroot/tftpboot
 dhcp-script=/dhcp.sh
-hostsdir=/bsroot/hosts.d
+hostsdir=/bsroot/dnsmasq/hosts.d
