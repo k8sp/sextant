@@ -7,7 +7,7 @@ fi
 
 if [[ $1 == "y" ]]; then
     # start dnsmasq
-    mkdir -p /bsroot/dnsmasq
+    mkdir -p /bsroot/dnsmasq/hosts.d
     dnsmasq --log-facility=-  --conf-file=/bsroot/config/dnsmasq.conf \
       --dhcp-leasefile=/bsroot/dnsmasq/dnsmasq.leases
 fi

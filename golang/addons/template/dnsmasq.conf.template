@@ -28,3 +28,5 @@ pxe-prompt="Press F8 for menu.", 5
 pxe-service=x86PC, "Install CoreOS from network server", pxelinux
 enable-tftp
 tftp-root=/bsroot/tftpboot
+dhcp-script=/dhcp.sh
+hostsdir=/bsroot/dnsmasq/hosts.d
