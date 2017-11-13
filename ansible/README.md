@@ -183,6 +183,23 @@ $ ./run.sh run
         └── 0c-c4-7a-e5-59-40
 ```
 
+# k8s-user 
+
+* 管理员注册用户
+```bash
+
+curl -vX POST http://10.10.15.5:32019/users -d '[
+{"username":"test","namespace":"test","email":"zhanghui@unisound.com"}
+]'
+```
+
+* 用户配置 kubeconfig 
+```bash
+kubectl config set-credentials admin --client-key=/home/zhanghui/user/kubelet-key.pem --client-certificate=/home/zhanghui/user/kubelet.pem  --username kubelet
+kubectl config set-cluster default-cluster --certificate-authority  /home/atlas/bsroot/tls/ca.pem  --server https://0c-c4-7a-15-e1-9c:443
+kubectl config set-context abac-test  --user=admin  --namespace=admin  --cluster=default-cluster
+kubectl config use-context abac-test
+```
 
 
 # 参考
